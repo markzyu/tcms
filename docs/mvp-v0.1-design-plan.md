@@ -20,14 +20,16 @@ Everything else in motivation (pack drops, today's board, field kit, reversed CD
 
 PCMS is **6 projects** that can ship independently but share contracts:
 
-| # | Project | Owns | Defers |
-|---|---------|------|--------|
-| **P1** | **Runtime shell** | Tauri app, routing, Admin ↔ Tool navigation, Tauri commands for lifecycle | Multiple templates, pack drop |
-| **P2** | **Local CDN (LCDN)** | Single entry point, static layer, instance routes, `proxy_pass` to mini-app backends | Reversed CDN, framework cache, CSP polish |
-| **P3** | **Instance & config schema** | Mini-app instance model, on-disk layout, template manifest contract | CAS, signed packs, merge |
-| **P4** | **Template: contact-card** | CSR mini-app backend + Vue shell + content model | SSR, iframes, arrays |
-| **P5** | **Tool: template editor** | Reusable Edit/Preview chrome, schema-driven form, preview iframe | AI assist, version history UI |
-| **P6** | **Publish & ops** (later) | Pack drop zip, reversed CDN sync, hosting options, backup | v1 |
+
+| #      | Project                      | Owns                                                                                 | Defers                                    |
+| ------ | ---------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------- |
+| **P1** | **Runtime shell**            | Tauri app, routing, Admin ↔ Tool navigation, Tauri commands for lifecycle            | Multiple templates, pack drop             |
+| **P2** | **Local CDN (LCDN)**         | Single entry point, static layer, instance routes, `proxy_pass` to mini-app backends | Reversed CDN, framework cache, CSP polish |
+| **P3** | **Instance & config schema** | Mini-app instance model, on-disk layout, template manifest contract                  | CAS, signed packs, merge                  |
+| **P4** | **Template: contact-card**   | CSR mini-app backend + Vue shell + content model                                     | SSR, iframes, arrays                      |
+| **P5** | **Tool: template editor**    | Reusable Edit/Preview chrome, schema-driven form, preview iframe                     | AI assist, version history UI             |
+| **P6** | **Publish & ops** (later)    | Pack drop zip, reversed CDN sync, hosting options, backup                            | v1                                        |
+
 
 ### UI areas mapped
 
@@ -50,9 +52,9 @@ Mini apps are **never** opened as Tauri routes. Preview tab loads **LCDN URL in 
 
 ### Deliverables
 
-1. **`template.manifest.json`** (per template, bundled with app)
-2. **`instance.json`** (per mini-app instance, user data)
-3. **`content.json`** (CMS payload for contact card)
+1. `**template.manifest.json`** (per template, bundled with app)
+2. `**instance.json**` (per mini-app instance, user data)
+3. `**content.json**` (CMS payload for contact card)
 4. Directory layout under app sandbox (see below)
 5. **Standalone contact-card site** — Vue CSR reading `content.json`; runnable without PCMS shell for dev/demo
 
@@ -62,43 +64,219 @@ Mini apps are **never** opened as Tauri routes. Preview tab loads **LCDN URL in 
 instances/
   {instanceId}/
     instance.json
-    content.json
-    assets/
-      hero.jpg
+    history.json          # content + asset history, for v0.9
+    cas/
+      2f/
+        2f83b3f05c85b26369e9169930beb818d451b1b9.jpg
+      6a/
+        6a43da4a177ae0af2b335fe2358b6d5759bb3df9.json
 templates/
   contact-card/
     manifest.json
     schema/content.schema.json
+    schema/xxx.schema.json  # any other schema referenced by content
     app/                    # mini-app static bundle (Vue CSR)
 ```
 
 ### `instance.json` (v0)
 
+This json is the source of truth for the current Ops configs of the mini app instance.
+
 ```json
 {
   "id": "uuid",
+  "name": "My contact card",
   "templateId": "contact-card",
   "templateVersion": "1.0.0",
-  "slug": "me",
-  "mode": "csr",
-  "createdAt": "…",
-  "updatedAt": "…",
+  "createdAt": 1782051137000,
+  "updatedAt": 1782051137000,
+  "contentList": {
+    "contents": {
+      "main.en.json": "6a43da4a177ae0af2b335fe2358b6d5759bb3df9.json",
+      "main.es.json": "....",
+      "(page short name).(variant).json": "...."
+    },
+    "assets": [
+      "2f83b3f05c85b26369e9169930beb818d451b1b9.jpg"
+    ]
+  },
   "lcdn": {
-    "mountPath": "/cards/me"
+    "serverRenderer": "static",
+    "mountPath": "/cards/my-contact-card",
+    "slug": "my-contact-card",
+    "currentVariant": "en"
+  },
+  "rcdn": {
+    "enabled": false,
+    "publishHtml": true,
+    "serverRenderer": "static",
+    "mountPath": "/cards/my-contact-card",
+    "slug": "my-contact-card",
+    "currentVariant": "es"
   }
 }
 ```
 
-### Contact-card content model (flat, no arrays)
+contentList stores the CAS IDs of the contents and assets for localCDN to easily decide which files to serve, especially if the other files on disk are not used in the current version of the instance.
 
-| Field | Type | Notes |
-|-------|------|--------|
-| `displayName` | string | |
-| `headline` | string | e.g. “Photographer” |
-| `bio` | string | multiline |
-| `email` | string | |
-| `phone` | string | |
-| `heroImage` | string | asset filename under `assets/` |
+* `lcdn.serverRenderer` choices: `callCSR`, `callMiniSSR`, `static`
+
+### Contact-card content model
+
+This describes the schema of `content.json`.
+
+In phase 0, we have a flat model without arrays.
+
+
+| Field         | Type   | Notes                          |
+| ------------- | ------ | ------------------------------ |
+| `name`        | string | e.g. “John Doe”                |
+| `headline`    | string | e.g. “Photographer”            |
+| `bio`         | string | multiline                      |
+| `email`       | string |                                |
+| `phone`       | string |                                |
+| `heroImage`   | string | asset CAS ID under `assets/`   |
+
+For CAS IDs, it's a SHA256 hash of the asset content, followed by the file extension. Example: `2f83b3f05c85b26369e9169930beb818d451b1b9.jpg`.
+
+### `content.json` (v0)
+
+```json
+{
+  "name": "John Doe",
+  "headline": "Photographer",
+  "bio": "John is a photographer based in New York City. He is known for his street photography and his use of color. He has been photographing for 10 years. His favorite camera is the Leica M10.",
+  "email": "john@example.com",
+  "phone": "123-456-7890",
+  "heroImage": "2f83b3f05c85b26369e9169930beb818d451b1b9.jpg"
+}
+```
+
+### `content.schema.json` (v0)
+
+This is an example of how schemas themselves work and is intentionally unaligned with the actual `content.json`.
+
+```json
+{
+  "schemaVersion": "0.1.0",
+  "editorUiSchema": {
+    "fieldGroups": [
+      {
+        "name": "Basic Information",
+        "paths": ["name", "headline", "bio"],
+        "isSingleton": true
+      },
+      {
+        "name": "Contact Information",
+        "paths": ["email", "phone"],
+        "isSingleton": true
+      },
+      {
+        "isSingleField": true,
+        "isSingleton": true,
+        "paths": ["heroImage"]
+      },
+      {
+        "name": "Project {index}",
+        "paths": ["projects.{index}.name"],
+      }
+    ],
+    "arrayGroups": [
+      {
+        "groupDisplayName": "\"{groupName}\" Project",
+        "groupsPath": "projects",
+        "groupName": "projects.{groupIndex}.name",
+        "itemsPath": "projects.{groupIndex}.richTextList",
+        "itemName": "projects.{groupIndex}.richTextList.{itemIndex}.text",
+      },
+      {
+        "isSingleArray": true,
+        "groupDisplayName": "Biography Rich Text",
+        "itemsPath": "richTextList",
+        "itemName": "richTextList.{itemIndex}.text",
+      }
+    ]
+  },
+  "jsonSchema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "title": "Name",
+        "type": "string"
+      },
+      "projects": {
+        "title": "Projects",
+        "description": "(This is a demo of arrays) This is a list of projects that the person has worked on.",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "richTextList": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "text": { "type": "string" },
+                  "listIcon": { "type": "string" },
+                  "isBold": { "type": "boolean" },
+                  "isItalic": { "type": "boolean" },
+                  "isUnderline": { "type": "boolean" },
+                  "isStrikethrough": { "type": "boolean" },
+                  "isCode": { "type": "boolean" },
+                }
+              }
+            }
+          }
+        }
+      },
+      "headline": {
+        "title": "Headline",
+        "type": "string"
+      },
+      "bio": {
+        "title": "Bio",
+        "type": "string",
+        "isMarkdown": true
+      },
+      "email": {
+        "title": "Email",
+        "type": "string"
+      },
+      "phone": {
+        "title": "Phone",
+        "type": "string"
+      },
+      "heroImage": {
+        "title": "Hero Image",
+        "description": "This is a wide image that will be displayed at the top of the contact card.",
+        "type": "string"
+      },
+      "richTextList": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "text": { "type": "string" },
+            "listIcon": { "type": "string" },
+            "isBold": { "type": "boolean" },
+            "isItalic": { "type": "boolean" },
+            "isUnderline": { "type": "boolean" },
+            "isStrikethrough": { "type": "boolean" },
+            "isCode": { "type": "boolean" },
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Note: `richTextList` is an example of a rich text schema. In reality it would be reused through schema references, not by directly copying it everywhere.
+
+```json
+  "richTextList": {"$ref": "common.schema.json#/$defs/richTextList"}
+```
 
 ### `template.manifest.json` (v0)
 
@@ -107,18 +285,38 @@ templates/
   "id": "contact-card",
   "version": "1.0.0",
   "title": "Contact Card",
-  "defaultMode": "csr",
-  "contentSchema": "schema/content.schema.json",
-  "backend": "contact-card-server",
-  "lcdn": {
-    "contentPaths": ["content.json", "assets/**"],
-    "cacheHtml": true
+  "pages": {
+    "main": {
+      "path": "{instanceMountPath}",
+      "schema": "schema/content.schema.json"
+    },
+    "(page short name)": {
+      "path": "(the mount path of this specific page)",
+      "schema": "schema/anything.schema.json"
+    }
   },
-  "externalHosts": []
+  "defaultServerRenderer": "csr",
+  "csrBackend": {
+    "framework": "actix-builtins",
+    "cspRules": {
+      "default-src": "self {lcdnDomain} {rcdnDomain}",
+      "script-src": "self {lcdnDomain} {rcdnDomain}",
+      "style-src": "self {lcdnDomain} {rcdnDomain}",
+      "img-src": "self {lcdnDomain} {rcdnDomain}",
+      "font-src": "self {lcdnDomain} {rcdnDomain}",
+      "connect-src": "self {lcdnDomain} {rcdnDomain}",
+      "frame-src": "self {lcdnDomain} {rcdnDomain}",
+      "media-src": "self {lcdnDomain} {rcdnDomain}"
+    },
+    "apiPaths": []
+  }
 }
 ```
 
 This schema is the seed for pack drops later (`manifest.json` inside `.pcms.zip` matches this shape).
+
+* cspRules: The variable replacement syntax follows `Intl.MessageFormat` syntax.
+* apiPaths: API paths from the sidecar/builtin backends that are enabled for this template. There is no need to list HTML paths here.
 
 ---
 
@@ -128,10 +326,10 @@ This schema is the seed for pack drops later (`manifest.json` inside `.pcms.zip`
 
 ### LCDN v0 capabilities
 
-- Read **`lcdn.config.json`** (or equivalent) listing registered instances
+- Read `**lcdn.config.json`** (or equivalent) listing registered instances
 - Bind **localhost + optional LAN** (private networks per tech doc)
 - For each instance at `/cards/{slug}/`:
-  - Serve `content.json`, `assets/*` from instance dir
+  - Serve `content.json`, `assets/`* from instance dir
   - Serve cached/bundled HTML entry (CSR shell)
   - `proxy_pass` API/dynamic paths to mini-app backend port if needed
 - Expose preview URL to Tauri: `http://127.0.0.1:{lcdnPort}/cards/me/`
@@ -191,10 +389,10 @@ Edit `content.json` on disk → refresh iframe → contact card updates via LCDN
 </ToolShell>
 ```
 
-- **`ToolShell`** — header, back to Admin, optional save indicator
-- **`ToolNav`** — two-tab bar; reusable by future tools
-- **`EditView`** — schema-driven form from `content.schema.json`
-- **`PreviewView`** — sandboxed iframe → `instance_get_preview_url()`
+- `**ToolShell**` — header, back to Admin, optional save indicator
+- `**ToolNav**` — two-tab bar; reusable by future tools
+- `**EditView**` — schema-driven form from `content.schema.json`
+- `**PreviewView**` — sandboxed iframe → `instance_get_preview_url()`
 
 ### Save path
 
@@ -202,7 +400,7 @@ Edit `content.json` on disk → refresh iframe → contact card updates via LCDN
 2. Save → Tauri writes `content.json` + triggers LCDN cache refresh (when HTML snapshot enabled)
 3. Preview tab reloads iframe (or listens for save event)
 
-Future tools (Hosting options, CDN ops, backup) reuse **`ToolShell` + `ToolNav`**; Admin never embeds editor UI inline.
+Future tools (Hosting options, CDN ops, backup) reuse `**ToolShell` + `ToolNav**`; Admin never embeds editor UI inline.
 
 ---
 
@@ -212,11 +410,13 @@ Future tools (Hosting options, CDN ops, backup) reuse **`ToolShell` + `ToolNav`*
 
 Pick **one** primary story first (recommended: **Today's board + pack drop export** before reversed CDN):
 
-| Story | What to add |
-|-------|-------------|
+
+| Story                 | What to add                                                  |
+| --------------------- | ------------------------------------------------------------ |
 | **Today's board (C)** | LCDN on LAN IP; full-screen preview route; “open in browser” |
-| **Pack drop (A/B)** | Export `instances/{id}/` → `.pcms.zip` per motivation doc |
-| **Public link (A/C)** | Reversed CDN upload of assets + optional HTML toggle |
+| **Pack drop (A/B)**   | Export `instances/{id}/` → `.pcms.zip` per motivation doc    |
+| **Public link (A/C)** | Reversed CDN upload of assets + optional HTML toggle         |
+
 
 Also: asset picker for hero image, HTML cache on save, persist backend port in `instance.json` for stable LAN URLs.
 
@@ -263,16 +463,16 @@ Ordered list of work **after** the four epics; not all are v0.1 scope.
 
 ### Later
 
-5. Second template (restaurant menu — arrays + iframe manifest)
-6. JSON editor tool (generic, power users)
-7. CDN ops tool
-8. Reversed CDN providers (separate integrations)
-9. SSR mode toggle per instance
-10. Developer mode / external backend whitelist
-11. Content-addressable storage + version indexes (field kit / market B)
-12. Signed packs / trust circle
-13. Personal Tools shelf (Melt, SHASUM, etc.)
-14. Remote admin UI mini app
+1. Second template (restaurant menu — arrays + iframe manifest)
+2. JSON editor tool (generic, power users)
+3. CDN ops tool
+4. Reversed CDN providers (separate integrations)
+5. SSR mode toggle per instance
+6. Developer mode / external backend whitelist
+7. Content-addressable storage + version indexes (field kit / market B)
+8. Signed packs / trust circle
+9. Personal Tools shelf (Melt, SHASUM, etc.)
+10. Remote admin UI mini app
 
 ---
 
