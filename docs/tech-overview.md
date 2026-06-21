@@ -26,13 +26,13 @@ Local CDN serves for other mini apps:
 * The authored contents (text)
 * The relevant assets (images and files)
 * JS framework, locally cached. Configurable to use remote CDN if needed.
-* Any SSR cache of another mini app's HTML
+* Any cache of another mini app's HTML (SSR or CSR)
 * A proxy, on the backend, from a Local CDN URL to the mini apps (on a different port). This is not a redirect. It's an nginx proxy_pass.
 
 Local CDN is the **single entry point** for mini apps: all traffic goes through its port via `proxy_pass`, not the mini app server ports directly. When a user runs multiple mini apps and visits one of them:
 
-* We either provide a URL to the SSR content on the mini app
-* Or, we provide a URL to the mini app on a subdomain of the mini app
+* We either provide a URL to the cached HTML content of the mini app (SSR or CSR)
+* Or, we provide a URL to the mini app server on a subdomain of the mini app (to generate a new HTML upon request)
 
 Local CDN should enforce CSP policies to only allow access from its own domain. Users should never have to visit the mini app's own server port.
 
@@ -42,11 +42,11 @@ Local CDN is optimized for **local preview** inside PCMS. It is a poor fit for *
 
 ### Remote static CDN (the reverse of Local CDN)
 
-For phone publishing, PCMS supports a **reversed** Local CDN setup: authored content, assets, cached JS frameworks, and (optionally) SSR HTML cache are **uploaded/synced** to a remote object store the user configures (GitHub, S3, Cloudflare R2, etc.) via a stored API token. *Side note:* GitHub, S3, R2, and similar targets are likely **separate integrations**—API behavior and pricing differ.
+For phone publishing, PCMS supports a **reversed** Local CDN setup: authored content, assets, cached JS frameworks, and (optionally) HTML cache are **uploaded/synced** to a remote object store the user configures (GitHub, S3, Cloudflare R2, etc.) via a stored API token. *Side note:* GitHub, S3, R2, and similar targets are likely **separate integrations**—API behavior and pricing differ.
 
 Frontend routing is **context-aware**: in preview, prefer localhost / Local CDN; for external visitors, prefer the remote CDN.
 
-Public visitors load synced static assets from that remote CDN; **SSR HTML cache is served from the remote CDN when enabled** (intentional snapshot). Live/dynamic SSR and uncached routes still originate from the phone (port forwarding / reverse proxy still required). Ops tools expose **reversed Local CDN** on/off and a separate **SSR on remote CDN** toggle (SSR upload can stay off while other static sync remains on). Local CDN remains the authoring and preview path; reversed CDN is the publish path.
+Public visitors load synced static assets from that remote CDN; **HTML cache is served from the remote CDN when enabled** (intentional snapshot). Live/dynamic HTML calls and uncached routes still originate from the phone (port forwarding / reverse proxy still required). Ops tools expose **reversed Local CDN** on/off and a separate **HTML on remote CDN** toggle (HTML upload can stay off while other static sync remains on). Local CDN remains the authoring and preview path; reversed CDN is the publish path.
 
 *Side note:* Reversed CDN does not remove the need to keep the app **foregrounded** while the phone serves live traffic—the screen stays on; on iOS this likely uses the same fullscreen screensaver as local serving. Upload/sync on iOS probably also requires foreground (TBD).
 
@@ -56,7 +56,7 @@ There are 3 modes for users to publish their websites
 
 * Serving directly from the phone: Users must secure port forwarding and register their own domains.
   
-  For usable performance, enable **reversed Local CDN** (remote static bucket + token) so visitors are not pulling all assets through the phone. When enabled, static assets are served from the remote CDN; SSR HTML cache too if that toggle is on. Live/dynamic SSR still hits the phone.
+  For usable performance, enable **reversed Local CDN** (remote static bucket + token) so visitors are not pulling all assets through the phone. When enabled, static assets are served from the remote CDN; HTML cache too if that toggle is on. Live/dynamic HTML call still hits the phone.
 * Exporting to a personal server: Users must have a computer that is publicly accessible. Phone exports CDN static content + an install script for the server binaries.
 * (Static HTMLs only) Exporting to an external service: Phone exports CDN static content for templates that are completely static. User can upload this to Github Pages, netlify, or any service of their choice.
 

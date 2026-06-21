@@ -10,7 +10,7 @@ After market and honesty checks, the center of gravity is:
 
 > ✅ **Local-first reality** — author on phone, preview on device or LAN, **ship** via pack drop, wall board, or synced static bucket when online.
 
-> 💬 **Phone-origin webserver** — foreground, port-forward, dynamic SSR — remains **supported** for power users and last-resort publish, but **not** the story we lead with for helping everyday users.
+> 💬 **Phone-origin webserver** — foreground, port-forward, half-hydrated SSR — remains **supported** for power users and last-resort publish, but **not** the story we lead with for helping everyday users.
 
 Same engine, many verticals (board, pack drop, field kit, maker play). v1 can prove the **spine** with a small set of templates — not every row in the table at once.
 
@@ -19,9 +19,9 @@ Same engine, many verticals (board, pack drop, field kit, maker play). v1 can pr
 | Concept | What it is |
 |--------|------------|
 | **Local CDN** | On-phone preview layer: single entry point, proxies to mini-app backends on localhost. For **authoring and in-venue LAN preview**, not public internet traffic. |
-| **Content pack drop** | Export a site bundle (HTML, assets, config, optional SSR snapshot) and **transfer offline** (share sheet, Xender-style, backup/restore). Recipient imports into PCMS or opens via browser if served locally. **No mobile data** to duplicate what a colleague already has. |
+| **Content pack drop** | Export a site bundle (HTML, assets, config, optional HTML snapshot) and **transfer offline** (share sheet, Xender-style, backup/restore). Recipient imports into PCMS or opens via browser if served locally. **No mobile data** to duplicate what a colleague already has. |
 | **Today’s board** | Owner updates content on phone → **display device** (old phone, tablet, TV stick) on same Wi‑Fi shows the loop. Viewers **look at the screen**; they don’t install PCMS. |
-| **Public link / reversed CDN** | When online, sync **static assets** (and optional SSR snapshot) to **user’s bucket** (S3, R2, GitHub, etc.). QR or WhatsApp bio points to `https://…`. Phone is **not** the origin for static traffic. |
+| **Public link / reversed CDN** | When online, sync **static assets** (and optional HTML snapshot) to **user’s bucket** (S3, R2, GitHub, etc.). QR or WhatsApp bio points to `https://…`. Phone is **not** the origin for static traffic. |
 | **LAN QR preview** | Fallback when nobody has data: join shop Wi‑Fi/hotspot, open local URL in **browser**. For demos and dead zones — not the main customer path. |
 | **Phone-origin server** | Port-forwarding + foreground app (screensaver on iOS) so **live/dynamic** traffic hits the phone. **Last resort** for power users — not the default pitch for A or C. |
 
@@ -43,7 +43,7 @@ Typical contents:
 | **`config/`** | User JSON / tokens paths (secrets may be stripped or encrypted on export) |
 | **`content/`** | Authored text, menu items, event dates, field-brief copy |
 | **`assets/`** | Images, video, PDFs, fonts |
-| **`cache/`** | Optional SSR HTML snapshot, cached JS framework files |
+| **`cache/`** | Optional HTML snapshot (CSR or SSR), cached JS framework files |
 | **`meta.json`** | Export time, source device, optional signature (future trust circle) |
 
 What is **not** in a pack: the PCMS app itself, trusted backend **binaries** (those ship with the app store install), or a substitute for installing a template the recipient’s app doesn’t already support.
@@ -95,7 +95,7 @@ End customers do **not** receive zips. Owner imports or authors, then **reversed
 
 #### Path 4 — Static-only, no PCMS on recipient (edge case)
 
-If the template is **fully static** (no live SSR, no mini-app backend needed), an advanced user could unzip and host `index.html` elsewhere — same as tech-overview “export static HTMLs” mode. That is **export for hosting**, not the main pack-drop UX. PCMS optimizes for Path 1.
+If the template is **fully static** (no mini-app backend needed to serve HTML calls), an advanced user could unzip and host `index.html` elsewhere — same as tech-overview “export static HTMLs” mode. That is **export for hosting**, not the main pack-drop UX. PCMS optimizes for Path 1.
 
 ### Pack drop vs other publish paths
 
