@@ -324,6 +324,13 @@ This schema is the seed for pack drops later (`manifest.json` inside `.pcms.zip`
 
 Page short names are defined in the `pages` object. And there is a way to dynamically generate a list of pages by index, for example: `projects-{index}`. This is useful for website templates that help user easily generate lists of pages.
 
+Dynamic Page Short names:
+* When page short names contain variables like `{index}`, they are called "Dynamic Page Short Names".
+* The variables match alphanumeric characters only, not including `-`. 
+* The `template.manifest.json` defines the pattern of a dynamic page short name.
+* The `instance.json` defines each individual actual instance of the dynamic page short name. (e.g. `projects-0`, `projects-1`, `projects-2`)
+
+
 Backend configs:
 
 * cspRules: The variable replacement syntax follows `Intl.MessageFormat` syntax.
