@@ -2,8 +2,6 @@
 
 High-level architecture from design discussions. Intentionally brief; see **Open questions** for unresolved detail.
 
----
-
 ## Architecture summary
 
 PCMS is a **native mobile app** that has multiple different Frontend parts, split into security levels:
@@ -15,9 +13,11 @@ PCMS is a **native mobile app** that has multiple different Frontend parts, spli
 Admin shell and Tools are hosted separately from the mini apps, on separate backends with completely separate security and trust boundaries.
 
 * Admin shell and Tools are standard Tauri pages, and they can invoke Tauri commands for OS interactions (opening files, running binaries, etc).
-* Mini web apps are **standard web servers, running on localhost or private IPs only**. OS integration with the Android/iOS/Desktop host, would not go through the webview. Instead they must use their own backend implementations (either none by default, or, through a separate server binary)
+* Mini web apps are **standard web servers** whose backends **bind to localhost only**; visitors reach them via Local CDN's `proxy_pass` on **localhost or private IPs**. OS integration with the Android/iOS/Desktop host would not go through the webview. Instead they must use their own backend implementations (either none by default, or through a separate server binary).
 
 But there is one more hidden backend component: Local CDN (LCDN)
+
+### Local CDN
 
 In terms of security boundaries, Local CDN is a hidden mini app. It is a separate binary that just reads configurations and hosts static files. It runs in the **foreground** whenever there is at least one running mini app. On iOS, keeping servers alive requires the app to stay foregrounded; PCMS shows a **fullscreen screensaver** while serving (not shown in Developer Mode; see below). 
 
@@ -29,7 +29,7 @@ Local CDN serves for other mini apps:
 * Any SSR cache of another mini app's HTML
 * A proxy, on the backend, from a Local CDN URL to the mini apps (on a different port). This is not a redirect. It's an nginx proxy_pass.
 
-Because it is a CDN, its port number is the actual public endpoint that all apps are served on. When a user runs multiple mini apps and visits one of them:
+Local CDN is the **single entry point** for mini apps: all traffic goes through its port via `proxy_pass`, not the mini app server ports directly. When a user runs multiple mini apps and visits one of them:
 
 * We either provide a URL to the SSR content on the mini app
 * Or, we provide a URL to the mini app on a subdomain of the mini app
@@ -38,11 +38,25 @@ Local CDN should enforce CSP policies to only allow access from its own domain. 
 
 As a result, the final URL for each mini app isn't actually the address to the mini app servers. They are all just visiting the Local CDN server.
 
+Local CDN is optimized for **local preview** inside PCMS. It is a poor fit for **public traffic** when the user publishes from the phone—even on WiFi, pushing all static assets through the handset is slow and fragile.
+
+### Remote static CDN (the reverse of Local CDN)
+
+For phone publishing, PCMS supports a **reversed** Local CDN setup: authored content, assets, cached JS frameworks, and (optionally) SSR HTML cache are **uploaded/synced** to a remote object store the user configures (GitHub, S3, Cloudflare R2, etc.) via a stored API token. *Side note:* GitHub, S3, R2, and similar targets are likely **separate integrations**—API behavior and pricing differ.
+
+Frontend routing is **context-aware**: in preview, prefer localhost / Local CDN; for external visitors, prefer the remote CDN.
+
+Public visitors load synced static assets from that remote CDN; **SSR HTML cache is served from the remote CDN when enabled** (intentional snapshot). Live/dynamic SSR and uncached routes still originate from the phone (port forwarding / reverse proxy still required). Ops tools expose **reversed Local CDN** on/off and a separate **SSR on remote CDN** toggle (SSR upload can stay off while other static sync remains on). Local CDN remains the authoring and preview path; reversed CDN is the publish path.
+
+*Side note:* Reversed CDN does not remove the need to keep the app **foregrounded** while the phone serves live traffic—the screen stays on; on iOS this likely uses the same fullscreen screensaver as local serving. Upload/sync on iOS probably also requires foreground (TBD).
+
 ## Publishing
 
 There are 3 modes for users to publish their websites
 
-* Serving directly from the phone: Users must secure their own port forwarding solutions and register their own domains
+* Serving directly from the phone: Users must secure port forwarding and register their own domains.
+  
+  For usable performance, enable **reversed Local CDN** (remote static bucket + token) so visitors are not pulling all assets through the phone. When enabled, static assets are served from the remote CDN; SSR HTML cache too if that toggle is on. Live/dynamic SSR still hits the phone.
 * Exporting to a personal server: Users must have a computer that is publicly accessible. Phone exports CDN static content + an install script for the server binaries.
 * (Static HTMLs only) Exporting to an external service: Phone exports CDN static content for templates that are completely static. User can upload this to Github Pages, netlify, or any service of their choice.
 
@@ -64,7 +78,7 @@ Mini app servers must open port on localhost only. Mini app servers would run wi
 
 Local CDN servers must open port on localhost and private networks only.
 
-Local CDN's CSP policy should be indirectly configurable, to allow adding records for public domain names.
+Local CDN's CSP policy should be indirectly configurable, to allow adding records for public domain names. When reversed Local CDN is enabled, CSP and manifest allowlists must also permit the user's remote static CDN origin(s).
 
 
 ## Developer Mode

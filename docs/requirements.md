@@ -6,7 +6,7 @@
 
 - Run a **local mini-app platform** on Android and iOS.
 - Compartmentalize the phone ops cycle into 3 types of workflows, and thus 3 types of UIs: admin shell, tools, and the hosted “mini apps” from templates.
-- Ships a sophisticated "Local CDN" server that is meant to serve these mini apps in a configurable way that is friendly to the phone, with proper security restrictions to comply with app store requirements.
+- Ships a sophisticated "Local CDN" server for **local preview**, plus an optional **reversed Local CDN** path that syncs the same static layer to a user-configured remote bucket (GitHub, S3, Cloudflare, etc.) when publishing from the phone.
 - Keep the experience **simple and safe for end users** (install template, configure tokens/paths, open and preview their website without unsafely publishing it everywhere rightaway).
 - Allow **power users** to make use of local DBs, local CDN configurations, cloud services tokens, custom publishing methods, and similar power tools. But they should expect to do some glue work in other apps (e.g. Termux on Android, Pythonista on iPad).
 - Support **multi-lingual configuration without multi-tenant hosting** (no parallel language URLs for user apps); config schema may exist for multiple languages, but is served flat for a small number of uses/users.
@@ -34,9 +34,9 @@ We won't implement the following
 ### Tools
 
 - JSON editor: A phone-friendly editor that relies on JSON schemas to simplify the editing experience of JSONs. This would be shown as the main interface to create a new mini app from template. This can also optionally integrate with AI API keys to assist folks who just want to chat with an AI (authentication with cloud services). But it must be able to show the edits in real time on Phone UI.
-- Hosting options: Instead of using the generic JSON editor for this, we should desing a native UI for ease of use. This is part of the Settings in PCMS app. These options include a field for public hostname, a list of mini apps and their configurations (highlighting the URL pathname). This "Hosting options" tool is also what shows up when editing a mini app instance.
+- Hosting options: Instead of using the generic JSON editor for this, we should desing a native UI for ease of use. This is part of the Settings in PCMS app. These options include a field for public hostname, a list of mini apps and their configurations (highlighting the URL pathname), and **reversed Local CDN** settings (remote provider, bucket/repo, API token, public static base URL). This "Hosting options" tool is also what shows up when editing a mini app instance.
 - Backup and restore: Authentication with cloud services can also provide access to buckets and storage APIs. Use these to backup and retore the content of PCMS apps. This "Backup and restore" UI must support partially restoring only a specific mini app from any existing version of backup. But it won't support merging.
-- CDN Operations: Allow dynamically caching any JS framework. Allow configuring a local URL that proxies requests to all external CDNs. Allow configuring whether the local URL prefers external CDN first, or prefers cache first. Allow clearing cache by framework. Allow configuring allowlists and banlists.
+- CDN Operations: Allow dynamically caching any JS framework. Allow configuring a local URL that proxies requests to all external CDNs. Allow configuring whether the local URL prefers external CDN first, or prefers cache first (**context-aware routing**: preview prefers localhost/Local CDN; external visitors prefer remote CDN when reversed CDN is enabled). Allow clearing cache by framework. Allow configuring allowlists and banlists. Allow **publish/sync** of the local static layer to a remote bucket (reversed Local CDN)—manual or on content change—when a token is configured. Separate toggles: **reversed Local CDN** on/off and **SSR on remote CDN** on/off (SSR upload can be disabled while other static sync stays on).
 
 - Other "Tools", which are reallly just webapps with Tauri access meant to provide super user abilities: Simple tools with file access (for my own dev purposes), phone UIs for cloud servies. Examples: SHASUM calculator with Virustotal integration (requires API key). Path of Exile tool to quickly search economy data, with access to native OCR (on device). A basic video editor powered by Melt (perhaps can even generate vague cutpoints using Whisper).
 
@@ -82,5 +82,5 @@ Eventually there might also be a remote management UI to start/stop/configure mi
 - **Service workers** and PWA assumptions inside embedded WebView. (Most likely we shouldn't need this and should rely on content refresh via local CDN)
 - Upper bound of **hosted app weight** (bundle size, IndexedDB, WebGL) before unsupported.
     - Optional **download bundles** on the iOS App Store to split a large IPA—these are still author-signed trusted binaries, not user-defined custom servers.
-- How to store cloud **secret/token** UX (Keychain/Keystore)
+- How to store cloud **secret/token** UX (Keychain/Keystore)—including reversed Local CDN bucket tokens and sync credentials
 - Multi-user / shared-phone data separation? (How well does the current security model protect against other apps on the same device)
