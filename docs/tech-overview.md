@@ -64,7 +64,7 @@ There is technically a 4th mode: Serving on another phone. But it is basically t
 
 ## Versioning and CAS
 
-Eventaullly, there should be a versioning system based on a basic Content Addressable System / CAS.
+Eventually, there should be a versioning system based on a basic Content Addressable System / CAS.
 
 Each asset imported should be given a CAS ID / a hash.
 
@@ -76,7 +76,7 @@ For templates, we keep history of UUIDs AND CAS IDs like this:
 * We keep the list of last X days of recently published versions of IDs
 * In both cases, the IDs include both the UUID of json itself, and a flattened list of CAS IDs that it currently depends on
 
-In MVP product, the versioning system doesn't exist but the schemas should at least use CAS IDs as the ID for everything in the template JSON, and should define how UUID works.
+In MVP v0.1, the versioning system and CAS storage do not exist. Phase 0 uses plain files under `content/` and `assets/` with locale variants; see [mvp-v0.1-design-plan.md](./mvp-v0.1-design-plan.md). Draft CAS/multi-page shapes live in [futures-looking.md](./futures-looking.md).
 
 ## Security considerations
 

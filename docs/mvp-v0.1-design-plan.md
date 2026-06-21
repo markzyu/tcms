@@ -1,20 +1,16 @@
 # PCMS — MVP v0.1 Design Plan
 
-# STATUS: DRAFT (NEED FULL, HUMAN REVIEW. ALSO NEED REVIEW ON SCRUM BOARD)
+# STATUS: PARTIAL DRAFT (Phase 0 is reviewed)
 
 High-level project map and phased delivery plan for the first vertical slice: **contact card** template proving the PCMS spine.
 
-Complements [requirements.md](./requirements.md), [tech-overview.md](./tech-overview.md), and [motivation.md](./motivation.md).
-
----
+Complements [requirements.md](./requirements.md), [tech-overview.md](./tech-overview.md), [motivation.md](./motivation.md), and [futures-looking.md](./futures-looking.md) (draft contracts not in Phase 0 scope).
 
 ## North star (v0.1)
 
 > **Create a contact card on phone, edit in a Tool, preview through Local CDN, show on same device.**
 
 Everything else in motivation (pack drops, today's board, field kit, reversed CDN) hangs off this spine once instance schema + LCDN + editor tool exist.
-
----
 
 ## Multi-project map
 
@@ -44,102 +40,81 @@ Admin shell (P1)          Tools (P5)                 Mini apps (P4)
 
 Mini apps are **never** opened as Tauri routes. Preview tab loads **LCDN URL in sandboxed iframe**.
 
----
-
 ## Phase 0 — Contracts + standalone template
 
-**Goal:** Freeze the internal configuration schema and ship the contact-card as a **standalone site** (CMS schema + Vue CSR) before LCDN integration.
+**Goal:** Freeze the **minimal** internal configuration schema and ship the contact-card as a **standalone site** (CMS schema + Vue CSR) before LCDN integration.
+
+Forward-looking shapes (CAS, multi-page manifest, rich editor UI, LCDN/rcdn ops blocks) are in [futures-looking.md](./futures-looking.md) — not Phase 0 scope.
 
 ### Deliverables
 
-1. `**template.manifest.json`** (per template, bundled with app)
-2. `**instance.json**` (per mini-app instance, user data)
-3. `**content.json**` (CMS payload for contact card)
+1. **`template.manifest.json`** (per template, bundled with app)
+2. **`instance.json`** (per mini-app instance, user data)
+3. **Variant content files** — `content/{pageShortName}.{variant}.json` (contact card: `main.en.json`, etc.)
 4. Directory layout under app sandbox (see below)
-5. **Standalone contact-card site** — Vue CSR reading `content.json`; runnable without PCMS shell for dev/demo
+5. **Standalone contact-card site** — Vue CSR reading the active variant content file; runnable without PCMS shell for dev/demo
 
 ### Directory layout
 
 ```
 instances/
-  {instanceId}/
+  {instanceSlug}/
     instance.json
-    history.json          # content + asset history, for v0.9
-    cas/
-      2f/
-        2f83b3f05c85b26369e9169930beb818d451b1b9.jpg
-      6a/
-        6a43da4a177ae0af2b335fe2358b6d5759bb3df9.json
+    content/
+      main.en.json
+      main.es.json
+    assets/
+      hero.jpg
 templates/
   contact-card/
     manifest.json
     schema/content.schema.json
-    schema/xxx.schema.json  # any other schema referenced by content
     app/                    # mini-app static bundle (Vue CSR)
 ```
 
+### Content file naming
+
+Content files use **`{pageShortName}.{variant}.json`**.
+
+* **Page short name** — key from `template.manifest.json` → `pages` (contact card: `main`).
+* **Variant** — locale or edition tag (e.g. `en`, `es`). One variant is **active** at a time via `instance.json` → `currentVariant`.
+* Phase 0 contact card is **single-page, flat fields, no arrays**. Multiple variants are supported; only the active variant is served in preview/publish until the user switches.
+
 ### `instance.json` (v0)
 
-This json is the source of truth for the current Ops configs of the mini app instance.
+Source of truth for instance metadata and which content variant is active.
 
 ```json
 {
-  "id": "uuid",
+  "slug": "my-contact-card"
   "name": "My contact card",
   "templateId": "contact-card",
   "templateVersion": "1.0.0",
   "createdAt": 1782051137000,
   "updatedAt": 1782051137000,
-  "contentList": {
-    "contents": {
-      "main.en.json": "6a43da4a177ae0af2b335fe2358b6d5759bb3df9.json",
-      "main.es.json": "....",
-      "(page short name).(variant).json": "...."
-    },
-    "assets": [
-      "2f83b3f05c85b26369e9169930beb818d451b1b9.jpg"
-    ]
-  },
-  "lcdn": {
-    "serverRenderer": "static",
-    "mountPath": "/cards/my-contact-card",
-    "slug": "my-contact-card",
-    "currentVariant": "en"
-  },
-  "rcdn": {
-    "enabled": false,
-    "publishHtml": true,
-    "serverRenderer": "static",
-    "mountPath": "/cards/my-contact-card",
-    "slug": "my-contact-card",
-    "currentVariant": "es"
-  }
+  "currentVariant": "en",
+  "variants": ["en", "es"],
 }
 ```
 
-contentList stores the CAS IDs of the contents and assets for localCDN to easily decide which files to serve, especially if the other files on disk are not used in the current version of the instance.
-
-* `lcdn.serverRenderer` choices: `callCSR`, `callMiniSSR`, `static`
+* **`slug`** — the URL slug for this instance. This will later by replaced by the "Page Short Name" in [futures-looking.md](./futures-looking.md).
+* **`currentVariant`** — which `{pageShortName}.{variant}.json` files are live for preview/publish.
+* **`variants`** — declared locale/edition tags for this instance. Phase 0 may ship with one variant seeded; the field exists so multi-lingual config does not require a schema migration later.
 
 ### Contact-card content model
 
-This describes the schema of `content.json`.
+Flat model for `content/main.{variant}.json` — no arrays in Phase 0.
 
-In phase 0, we have a flat model without arrays.
+| Field       | Type   | Notes                              |
+| ----------- | ------ | ---------------------------------- |
+| `name`      | string | e.g. “John Doe”                    |
+| `headline`  | string | e.g. “Photographer”                |
+| `bio`       | string | multiline                          |
+| `email`     | string |                                    |
+| `phone`     | string |                                    |
+| `heroImage` | string | filename under `assets/` (e.g. `hero.jpg`) |
 
-
-| Field         | Type   | Notes                          |
-| ------------- | ------ | ------------------------------ |
-| `name`        | string | e.g. “John Doe”                |
-| `headline`    | string | e.g. “Photographer”            |
-| `bio`         | string | multiline                      |
-| `email`       | string |                                |
-| `phone`       | string |                                |
-| `heroImage`   | string | asset CAS ID under `assets/`   |
-
-For CAS IDs, it's a SHA256 hash of the asset content, followed by the file extension. Example: `2f83b3f05c85b26369e9169930beb818d451b1b9.jpg`.
-
-### `content.json` (v0)
+### `content/main.en.json` (v0 example)
 
 ```json
 {
@@ -148,13 +123,13 @@ For CAS IDs, it's a SHA256 hash of the asset content, followed by the file exten
   "bio": "John is a photographer based in New York City. He is known for his street photography and his use of color. He has been photographing for 10 years. His favorite camera is the Leica M10.",
   "email": "john@example.com",
   "phone": "123-456-7890",
-  "heroImage": "2f83b3f05c85b26369e9169930beb818d451b1b9.jpg"
+  "heroImage": "hero.jpg"
 }
 ```
 
 ### `content.schema.json` (v0)
 
-This is an example of how schemas themselves work and is intentionally unaligned with the actual `content.json`.
+Aligned with contact-card Phase 0 — flat fields only, minimal editor UI groups.
 
 ```json
 {
@@ -175,166 +150,59 @@ This is an example of how schemas themselves work and is intentionally unaligned
         "isSingleField": true,
         "isSingleton": true,
         "paths": ["heroImage"]
-      },
-      {
-        "name": "Project {index}",
-        "paths": ["projects.{index}.name"],
-      }
-    ],
-    "arrayGroups": [
-      {
-        "groupDisplayName": "\"{groupName}\" Project",
-        "groupsPath": "projects",
-        "groupName": "projects.{groupIndex}.name",
-        "itemsPath": "projects.{groupIndex}.richTextList",
-        "itemName": "projects.{groupIndex}.richTextList.{itemIndex}.text",
-      },
-      {
-        "isSingleArray": true,
-        "groupDisplayName": "Biography Rich Text",
-        "itemsPath": "richTextList",
-        "itemName": "richTextList.{itemIndex}.text",
       }
     ]
   },
   "jsonSchema": {
     "type": "object",
     "properties": {
-      "name": {
-        "title": "Name",
-        "type": "string"
-      },
-      "projects": {
-        "title": "Projects",
-        "description": "(This is a demo of arrays) This is a list of projects that the person has worked on.",
-        "type": "array",
-        "items": {
-          "type": "object",
-          "properties": {
-            "name": { "type": "string" },
-            "richTextList": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "text": { "type": "string" },
-                  "listIcon": { "type": "string" },
-                  "isBold": { "type": "boolean" },
-                  "isItalic": { "type": "boolean" },
-                  "isUnderline": { "type": "boolean" },
-                  "isStrikethrough": { "type": "boolean" },
-                  "isCode": { "type": "boolean" },
-                }
-              }
-            }
-          }
-        }
-      },
-      "headline": {
-        "title": "Headline",
-        "type": "string"
-      },
-      "bio": {
-        "title": "Bio",
-        "type": "string",
-        "isMarkdown": true
-      },
-      "email": {
-        "title": "Email",
-        "type": "string"
-      },
-      "phone": {
-        "title": "Phone",
-        "type": "string"
-      },
+      "name": { "title": "Name", "type": "string" },
+      "headline": { "title": "Headline", "type": "string" },
+      "bio": { "title": "Bio", "type": "string" },
+      "email": { "title": "Email", "type": "string" },
+      "phone": { "title": "Phone", "type": "string" },
       "heroImage": {
         "title": "Hero Image",
-        "description": "This is a wide image that will be displayed at the top of the contact card.",
+        "description": "Filename under assets/ for this instance.",
         "type": "string"
-      },
-      "richTextList": {
-        "type": "array",
-        "items": {
-          "type": "object",
-          "properties": {
-            "text": { "type": "string" },
-            "listIcon": { "type": "string" },
-            "isBold": { "type": "boolean" },
-            "isItalic": { "type": "boolean" },
-            "isUnderline": { "type": "boolean" },
-            "isStrikethrough": { "type": "boolean" },
-            "isCode": { "type": "boolean" },
-          }
-        }
       }
-    }
+    },
+    "required": ["name"]
   }
 }
 ```
 
-Note: `richTextList` is an example of a rich text schema. In reality it would be reused through schema references, not by directly copying it everywhere.
-
-```json
-  "richTextList": {"$ref": "common.schema.json#/$defs/richTextList"}
-```
-
 ### `template.manifest.json` (v0)
+
+Contact-card only — single page, CSR default. LCDN mount paths and backend config come in Phase 1; see [futures-looking.md](./futures-looking.md) for the expanded manifest shape.
 
 ```json
 {
   "id": "contact-card",
   "version": "1.0.0",
   "title": "Contact Card",
+  "defaultMode": "csr",
   "pages": {
     "main": {
-      "publicPath": "{instanceMountPath}",
-      "apiPath": "/",
       "schema": "schema/content.schema.json"
-    },
-    "projects-{index}": {
-      "publicPath": "{instanceMountPath}/projects/{index}",
-      "apiPath": "/projects/{index}",
-      "schema": "schema/projects.schema.json"
-    },
-    "(page short name)": {
-      "publicPath": "(the mount path of this specific page)",
-      "apiPath": "(the path as rendered by the csrBackend)",
-      "schema": "schema/anything.schema.json"
     }
-  },
-  "defaultServerRenderer": "csr",
-  "csrBackend": {
-    "framework": "actix-builtins",
-    "cspRules": {
-      "default-src": "self {lcdnDomain} {rcdnDomain}",
-      "script-src": "self {lcdnDomain} {rcdnDomain}",
-      "style-src": "self {lcdnDomain} {rcdnDomain}",
-      "img-src": "self {lcdnDomain} {rcdnDomain}",
-      "font-src": "self {lcdnDomain} {rcdnDomain}",
-      "connect-src": "self {lcdnDomain} {rcdnDomain}",
-      "frame-src": "self {lcdnDomain} {rcdnDomain}",
-      "media-src": "self {lcdnDomain} {rcdnDomain}"
-    },
-    "apiPaths": []
   }
 }
 ```
 
-This schema is the seed for pack drops later (`manifest.json` inside `.pcms.zip` matches this shape).
+### Standalone dev workflow
 
-Page short names are defined in the `pages` object. And there is a way to dynamically generate a list of pages by index, for example: `projects-{index}`. This is useful for website templates that help user easily generate lists of pages.
+For local development without Tauri or LCDN:
 
-Dynamic Page Short names:
-* When page short names contain variables like `{index}`, they are called "Dynamic Page Short Names".
-* The variables match alphanumeric characters only, not including `-`. 
-* The `template.manifest.json` defines the pattern of a dynamic page short name.
-* The `instance.json` defines each individual actual instance of the dynamic page short name. (e.g. `projects-0`, `projects-1`, `projects-2`)
+1. Point the Vue app at a fixture instance dir (or copy `content/main.en.json` + `assets/` beside the dev server).
+2. Load content from `content/main.{variant}.json` where `{variant}` matches `currentVariant` (default `en`).
+3. Resolve `heroImage` relative to `assets/`.
 
+---
 
-Backend configs:
+---
 
-* cspRules: The variable replacement syntax follows `Intl.MessageFormat` syntax.
-* apiPaths: API paths from the sidecar/builtin backends that are enabled for this template. There is no need to list HTML paths here.
+# STATUS: DRAFT (Phase 1 and beyond, NEED FULL, HUMAN REVIEW. ALSO NEED REVIEW ON SCRUM BOARD)
 
 ---
 
@@ -344,19 +212,19 @@ Backend configs:
 
 ### LCDN v0 capabilities
 
-- Read `**lcdn.config.json`** (or equivalent) listing registered instances
+- Read **`lcdn.config.json`** (or equivalent) listing registered instances
 - Bind **localhost + optional LAN** (private networks per tech doc)
 - For each instance at `/cards/{slug}/`:
-  - Serve `content.json`, `assets/`* from instance dir
+  - Serve active variant content (`content/main.{currentVariant}.json`), other variant files on request, and `assets/*` from instance dir
   - Serve cached/bundled HTML entry (CSR shell)
   - `proxy_pass` API/dynamic paths to mini-app backend port if needed
-- Expose preview URL to Tauri: `http://127.0.0.1:{lcdnPort}/cards/me/`
+- Expose preview URL to Tauri: `http://127.0.0.1:{lcdnPort}/cards/{slug}/`
 
 ### Mini-app backend v0 (contact-card)
 
 - Sidecar / in-process server on **random localhost port**
 - Serves template `app/` static files (Vue bundle)
-- For CSR v0, dynamic work is minimal: optionally regenerate HTML cache on content change, or shell fetches `content.json` from LCDN path
+- For CSR v0, dynamic work is minimal: optionally regenerate HTML cache on content change, or shell fetches active variant content from LCDN path
 
 ### Tauri commands (minimal)
 
@@ -374,7 +242,7 @@ Backend configs:
 
 ### Success criteria
 
-Edit `content.json` on disk → refresh iframe → contact card updates via LCDN URL.
+Edit `content/main.{variant}.json` on disk → refresh iframe → contact card updates via LCDN URL.
 
 ---
 
@@ -393,7 +261,7 @@ Edit `content.json` on disk → refresh iframe → contact card updates via LCDN
 ### Admin shell v0
 
 - List instances (even if one seeded initially)
-- “New contact card” → creates instance dir + default `content.json`
+- “New contact card” → creates instance dir + default `content/main.en.json` (and `instance.json` with `currentVariant: "en"`)
 - Row action **“Edit”** → `navigateTo('/tools/template-editor?instanceId=…')`
 - Shows LCDN status (running / stopped)
 
@@ -407,18 +275,18 @@ Edit `content.json` on disk → refresh iframe → contact card updates via LCDN
 </ToolShell>
 ```
 
-- `**ToolShell**` — header, back to Admin, optional save indicator
-- `**ToolNav**` — two-tab bar; reusable by future tools
-- `**EditView**` — schema-driven form from `content.schema.json`
-- `**PreviewView**` — sandboxed iframe → `instance_get_preview_url()`
+- **`ToolShell`** — header, back to Admin, optional save indicator
+- **`ToolNav`** — two-tab bar; reusable by future tools
+- **`EditView`** — schema-driven form from `content.schema.json` for the active variant
+- **`PreviewView`** — sandboxed iframe → `instance_get_preview_url()`
 
 ### Save path
 
-1. Edit tab mutates in-memory model
-2. Save → Tauri writes `content.json` + triggers LCDN cache refresh (when HTML snapshot enabled)
+1. Edit tab mutates in-memory model for the active variant (`instance.currentVariant`)
+2. Save → Tauri writes `content/main.{variant}.json` + triggers LCDN cache refresh (when HTML snapshot enabled)
 3. Preview tab reloads iframe (or listens for save event)
 
-Future tools (Hosting options, CDN ops, backup) reuse `**ToolShell` + `ToolNav**`; Admin never embeds editor UI inline.
+Future tools (Hosting options, CDN ops, backup) reuse **`ToolShell` + `ToolNav`**; Admin never embeds editor UI inline.
 
 ---
 
@@ -442,11 +310,11 @@ Also: asset picker for hero image, HTML cache on save, persist backend port in `
 
 ## Design decisions (lock early)
 
-1. **Content authority:** `content.json` in instance dir is source of truth; LCDN serves it; mini-app reads via LCDN URL (not Tauri).
+1. **Content authority:** `content/main.{variant}.json` in instance dir is source of truth; LCDN serves it; mini-app reads via LCDN URL (not Tauri).
 2. **Tool invocation contract:** Admin passes `instanceId` + `toolId`; tool loads schema from template bundle.
 3. **Preview always via LCDN:** Preview tab never points iframe at mini-app port directly.
-4. **CSR default:** Contact card needs no SSR for v0; SSR toggle in `instance.json` unused until template 2.
-5. **Port strategy:** Random port per session OK for v0; persist in `instance.json` for board mode.
+4. **CSR default:** Contact card needs no SSR for v0; SSR toggle deferred until template 2 (see [futures-looking.md](./futures-looking.md)).
+5. **Port strategy:** Random port per session OK for v0; persist backend port in `instance.json` for board mode (Phase 3).
 
 ---
 
@@ -496,9 +364,9 @@ Ordered list of work **after** the four epics; not all are v0.1 scope.
 
 ## Smallest vertical slice (sprint 1 checklist)
 
-1. `instance.json` + `content.json` + JSON Schema (contact card)
-2. LCDN serves `/cards/{slug}/content.json` + assets + index.html
-3. contact-card Vue CSR reads `content.json` from LCDN path
+1. `instance.json` + `content/main.en.json` + JSON Schema (contact card)
+2. LCDN serves active variant content + assets + index.html at `/cards/{slug}/`
+3. contact-card Vue CSR reads active variant content from LCDN path
 4. Tool: Edit | Preview (iframe)
 5. Admin: one button → open editor for default instance
 
