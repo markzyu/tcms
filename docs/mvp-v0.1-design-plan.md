@@ -287,11 +287,18 @@ Note: `richTextList` is an example of a rich text schema. In reality it would be
   "title": "Contact Card",
   "pages": {
     "main": {
-      "path": "{instanceMountPath}",
+      "publicPath": "{instanceMountPath}",
+      "apiPath": "/",
       "schema": "schema/content.schema.json"
     },
+    "projects-{index}": {
+      "publicPath": "{instanceMountPath}/projects/{index}",
+      "apiPath": "/projects/{index}",
+      "schema": "schema/projects.schema.json"
+    },
     "(page short name)": {
-      "path": "(the mount path of this specific page)",
+      "publicPath": "(the mount path of this specific page)",
+      "apiPath": "(the path as rendered by the csrBackend)",
       "schema": "schema/anything.schema.json"
     }
   },
@@ -314,6 +321,10 @@ Note: `richTextList` is an example of a rich text schema. In reality it would be
 ```
 
 This schema is the seed for pack drops later (`manifest.json` inside `.pcms.zip` matches this shape).
+
+Page short names are defined in the `pages` object. And there is a way to dynamically generate a list of pages by index, for example: `projects-{index}`. This is useful for website templates that help user easily generate lists of pages.
+
+Backend configs:
 
 * cspRules: The variable replacement syntax follows `Intl.MessageFormat` syntax.
 * apiPaths: API paths from the sidecar/builtin backends that are enabled for this template. There is no need to list HTML paths here.
