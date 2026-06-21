@@ -19,7 +19,7 @@ Same engine, many verticals (board, pack drop, field kit, maker play). v1 can pr
 | Concept | What it is |
 |--------|------------|
 | **Local CDN** | On-phone preview layer: single entry point, proxies to mini-app backends on localhost. For **authoring and in-venue LAN preview**, not public internet traffic. |
-| **Content pack drop** | Export a site bundle (HTML, assets, config, optional HTML snapshot) and **transfer offline** (share sheet, Xender-style, backup/restore). Recipient imports into PCMS or opens via browser if served locally. **No mobile data** to duplicate what a colleague already has. |
+| **Content pack drop** | Export a site bundle (HTML, assets, config) and **transfer offline** (share sheet, Xender-style, backup/restore). Recipient imports into PCMS or opens via browser if served locally. **No mobile data** to duplicate what a colleague already has. |
 | **Today’s board** | Owner updates content on phone → **display device** (old phone, tablet, TV stick) on same Wi‑Fi shows the loop. Viewers **look at the screen**; they don’t install PCMS. |
 | **Public link / reversed CDN** | When online, sync **static assets** (and optional HTML snapshot) to **user’s bucket** (S3, R2, GitHub, etc.). QR or WhatsApp bio points to `https://…`. Phone is **not** the origin for static traffic. |
 | **LAN QR preview** | Fallback when nobody has data: join shop Wi‑Fi/hotspot, open local URL in **browser**. For demos and dead zones — not the main customer path. |
