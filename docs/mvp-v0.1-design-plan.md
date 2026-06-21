@@ -10,6 +10,8 @@ Complements [requirements.md](./requirements.md), [tech-overview.md](./tech-over
 
 > **Create a contact card on phone, edit in a Tool, preview through Local CDN, show on same device.**
 
+> **Mini-app templates use **React** (CSR) in v0.1. The Admin shell and Tools use **Vue** (Tauri). Vue as a mini-app framework is deferred.**
+
 Everything else in motivation (pack drops, today's board, field kit, reversed CDN) hangs off this spine once instance schema + LCDN + editor tool exist.
 
 ## Multi-project map
@@ -22,7 +24,7 @@ PCMS is **6 projects** that can ship independently but share contracts:
 | **P1** | **Runtime shell**            | Tauri app, routing, Admin ↔ Tool navigation, Tauri commands for lifecycle            | Multiple templates, pack drop             |
 | **P2** | **Local CDN (LCDN)**         | Single entry point, static layer, instance routes, `proxy_pass` to mini-app backends | Reversed CDN, framework cache, CSP polish |
 | **P3** | **Instance & config schema** | Mini-app instance model, on-disk layout, template manifest contract                  | CAS, signed packs, merge                  |
-| **P4** | **Template: contact-card**   | CSR mini-app backend + Vue shell + content model                                     | SSR, iframes, arrays                      |
+| **P4** | **Template: contact-card**   | React CSR mini-app + content model                                                   | SSR, iframes, arrays, Vue mini-apps       |
 | **P5** | **Tool: template editor**    | Reusable Edit/Preview chrome, schema-driven form, preview iframe                     | AI assist, version history UI             |
 | **P6** | **Publish & ops** (later)    | Pack drop zip, reversed CDN sync, hosting options, backup                            | v1                                        |
 
@@ -42,7 +44,7 @@ Mini apps are **never** opened as Tauri routes. Preview tab loads **LCDN URL in 
 
 ## Phase 0 — Contracts + standalone template
 
-**Goal:** Freeze the **minimal** internal configuration schema and ship the contact-card as a **standalone site** (CMS schema + Vue CSR) before LCDN integration.
+**Goal:** Freeze the **minimal** internal configuration schema and ship the contact-card as a **standalone site** (CMS schema + React CSR) before LCDN integration.
 
 Forward-looking shapes (CAS, multi-page manifest, rich editor UI, LCDN/rcdn ops blocks) are in [futures-looking.md](./futures-looking.md) — not Phase 0 scope.
 
@@ -52,7 +54,7 @@ Forward-looking shapes (CAS, multi-page manifest, rich editor UI, LCDN/rcdn ops 
 2. **`instance.json`** (per mini-app instance, user data)
 3. **Variant content files** — `content/{pageShortName}.{variant}.json` (contact card: `main.en.json`, etc.)
 4. Directory layout under app sandbox (see below)
-5. **Standalone contact-card site** — Vue CSR reading the active variant content file; runnable without PCMS shell for dev/demo
+5. **Standalone contact-card site** — React CSR reading the active variant content file; runnable without PCMS shell for dev/demo
 
 ### Directory layout
 
@@ -69,7 +71,7 @@ templates/
   contact-card/
     manifest.json
     schema/content.schema.json
-    app/                    # mini-app static bundle (Vue CSR)
+    app/                    # mini-app static bundle (React CSR)
 ```
 
 ### Content file naming
@@ -181,7 +183,10 @@ Contact-card only — single page, CSR default. LCDN mount paths and backend con
   "id": "contact-card",
   "version": "1.0.0",
   "title": "Contact Card",
-  "defaultMode": "csr",
+  "dependencies": {
+    "react": "/react@18.3.1/dist/react.production.min.js",
+    "react-dom": "/react-dom@18.3.1/dist/react-dom.production.min.js"
+  },
   "pages": {
     "main": {
       "schema": "schema/content.schema.json"
@@ -189,14 +194,6 @@ Contact-card only — single page, CSR default. LCDN mount paths and backend con
   }
 }
 ```
-
-### Standalone dev workflow
-
-For local development without Tauri or LCDN:
-
-1. Point the Vue app at a fixture instance dir (or copy `content/main.en.json` + `assets/` beside the dev server).
-2. Load content from `content/main.{variant}.json` where `{variant}` matches `currentVariant` (default `en`).
-3. Resolve `heroImage` relative to `assets/`.
 
 ---
 
@@ -223,7 +220,7 @@ For local development without Tauri or LCDN:
 ### Mini-app backend v0 (contact-card)
 
 - Sidecar / in-process server on **random localhost port**
-- Serves template `app/` static files (Vue bundle)
+- Serves template `app/` static files (React bundle)
 - For CSR v0, dynamic work is minimal: optionally regenerate HTML cache on content change, or shell fetches active variant content from LCDN path
 
 ### Tauri commands (minimal)
@@ -324,7 +321,7 @@ Also: asset picker for hero image, HTML cache on save, persist backend port in `
 pcms/
   docs/
   lcdn/                    # P2: custom server
-  templates/contact-card/  # P4: manifest, schema, vue app, backend
+  templates/contact-card/  # P4: manifest, schema, React app, backend
   src/                     # P1/P5: Tauri + Vue Admin + Tools
     admin/
     tools/
@@ -366,7 +363,7 @@ Ordered list of work **after** the four epics; not all are v0.1 scope.
 
 1. `instance.json` + `content/main.en.json` + JSON Schema (contact card)
 2. LCDN serves active variant content + assets + index.html at `/cards/{slug}/`
-3. contact-card Vue CSR reads active variant content from LCDN path
+3. contact-card React CSR reads active variant content from LCDN path
 4. Tool: Edit | Preview (iframe)
 5. Admin: one button → open editor for default instance
 

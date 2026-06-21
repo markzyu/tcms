@@ -21,7 +21,7 @@ templates/
     manifest.json
     schema/content.schema.json
     schema/xxx.schema.json  # any other schema referenced by content
-    app/                    # mini-app static bundle (Vue CSR)
+    app/                    # mini-app static bundle (React CSR or Vue SSR)
 ```
 
 ### CAS IDs
@@ -253,6 +253,10 @@ Note: `richTextList` is an example of a rich text schema. In reality it would be
     }
   },
   "defaultServerRenderer": "csr",
+  "dependencies": {
+    "react": "/react@18.3.1/dist/react.production.min.js",
+    "react-dom": "/react-dom@18.3.1/dist/react-dom.production.min.js"
+  },
   "csrBackend": {
     "framework": "actix-builtins",
     "cspRules": {
