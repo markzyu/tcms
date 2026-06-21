@@ -86,7 +86,7 @@ Source of truth for instance metadata and which content variant is active.
 
 ```json
 {
-  "slug": "my-contact-card"
+  "slug": "my-contact-card",
   "name": "My contact card",
   "templateId": "contact-card",
   "templateVersion": "1.0.0",
