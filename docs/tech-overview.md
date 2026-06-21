@@ -62,6 +62,22 @@ There are 3 modes for users to publish their websites
 
 There is technically a 4th mode: Serving on another phone. But it is basically the same as the "backup and restore" feature of PCMS app data.
 
+## Versioning and CAS
+
+Eventaullly, there should be a versioning system based on a basic Content Addressable System / CAS.
+
+Each asset imported should be given a CAS ID / a hash.
+
+Each edit of a template json, should be given a UUID.
+
+For templates, we keep history of UUIDs AND CAS IDs like this:
+
+* We keep the list of IDs of drafts (edits since last publish)
+* We keep the list of last X days of recently published versions of IDs
+* In both cases, the IDs include both the UUID of json itself, and a flattened list of CAS IDs that it currently depends on
+
+In MVP product, the versioning system doesn't exist but the schemas should at least use CAS IDs as the ID for everything in the template JSON, and should define how UUID works.
+
 ## Security considerations
 
 (A) For the Admin shell, and for tools, we rely heavily on Tauri's security models. We would need to write Tauri commands that access Mobile Phone's OS. Here we should prefer **narrow, user-confirmed OS access** over broad commands that can access random parts of filesystem or wide network privileges.
