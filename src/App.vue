@@ -1,154 +1,160 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
-import {
-  buildFullDocument,
-  renderAppMarkup,
-  type RenderContext,
-} from "./ssr/buildDocument";
+import { ref } from "vue";
+import { invoke } from "@tauri-apps/api/core";
 
-const context = ref<RenderContext>("preview");
-const innerMarkup = ref("");
-const fullDocument = ref("");
-const loading = ref(true);
-const error = ref("");
+const greetMsg = ref("");
+const name = ref("");
 
-async function regenerate() {
-  loading.value = true;
-  error.value = "";
-  try {
-    innerMarkup.value = await renderAppMarkup(
-      (await import("./example/cmsData")).exampleMenuCms,
-    );
-    fullDocument.value = await buildFullDocument(context.value);
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : String(e);
-  } finally {
-    loading.value = false;
-  }
+async function greet() {
+  // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+  greetMsg.value = await invoke("greet", { name: name.value });
 }
-
-onMounted(regenerate);
 </script>
 
 <template>
-  <main class="shell">
-    <header>
-      <h1>PCMS SSR demo</h1>
-      <p class="lede">
-        <code>renderToString</code> returns <strong>inner HTML only</strong>.
-        Export wraps it in a document shell (URLs, CMS JSON, optional client ESM).
-      </p>
-      <div class="controls">
-        <label>
-          Context
-          <select v-model="context" @change="regenerate">
-            <option value="preview">preview (Local CDN)</option>
-            <option value="publish">publish (reversed CDN)</option>
-          </select>
-        </label>
-        <button type="button" @click="regenerate">Regenerate</button>
-      </div>
-    </header>
+  <main class="container">
+    <h1>Welcome to Tauri + Vue</h1>
 
-    <p v-if="loading">Rendering…</p>
-    <p v-if="error" class="error">{{ error }}</p>
+    <div class="row">
+      <a href="https://vite.dev" target="_blank">
+        <img src="/vite.svg" class="logo vite" alt="Vite logo" />
+      </a>
+      <a href="https://tauri.app" target="_blank">
+        <img src="/tauri.svg" class="logo tauri" alt="Tauri logo" />
+      </a>
+      <a href="https://vuejs.org/" target="_blank">
+        <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
+      </a>
+    </div>
+    <p>Click on the Tauri, Vite, and Vue logos to learn more.</p>
 
-    <section v-if="!loading && !error">
-      <h2>1. Raw <code>renderToString</code> output</h2>
-      <p class="hint">
-        No <code>&lt;html&gt;</code>, no CSS, no scripts. Real tags for content
-        (works if you save only this inside an existing page).
-      </p>
-      <pre class="code">{{ innerMarkup }}</pre>
-
-      <h2>2. Full export document</h2>
-      <p class="hint">
-        What LCDN / reversed CDN stores: shell + inlined CMS + import map +
-        client entry (preview vs publish URLs differ).
-      </p>
-      <pre class="code">{{ fullDocument }}</pre>
-
-      <h2>3. Preview (iframe, JS disabled)</h2>
-      <p class="hint">
-        Content visible without scripts — snapshot HTML carries the markup.
-      </p>
-      <iframe
-        class="preview"
-        sandbox="allow-same-origin"
-        :srcdoc="fullDocument"
-      />
-    </section>
+    <form class="row" @submit.prevent="greet">
+      <input id="greet-input" v-model="name" placeholder="Enter a name..." />
+      <button type="submit">Greet</button>
+    </form>
+    <p>{{ greetMsg }}</p>
   </main>
 </template>
 
+<style scoped>
+.logo.vite:hover {
+  filter: drop-shadow(0 0 2em #747bff);
+}
+
+.logo.vue:hover {
+  filter: drop-shadow(0 0 2em #249b73);
+}
+
+</style>
 <style>
 :root {
-  font-family: system-ui, sans-serif;
-  line-height: 1.5;
-  color: #1a1a1a;
-  background: #f4f4f5;
+  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+
+  color: #0f0f0f;
+  background-color: #f6f6f6;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
 }
 
-.shell {
-  max-width: 52rem;
-  margin: 0 auto;
-  padding: 1.5rem;
-}
-
-.lede {
-  color: #444;
-}
-
-.controls {
-  display: flex;
-  gap: 1rem;
-  align-items: end;
-  margin-top: 1rem;
-}
-
-.controls label {
+.container {
+  margin: 0;
+  padding-top: 10vh;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.875rem;
+  justify-content: center;
+  text-align: center;
 }
 
-select,
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: 0.75s;
+}
+
+.logo.tauri:hover {
+  filter: drop-shadow(0 0 2em #24c8db);
+}
+
+.row {
+  display: flex;
+  justify-content: center;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+
+a:hover {
+  color: #535bf2;
+}
+
+h1 {
+  text-align: center;
+}
+
+input,
 button {
-  font: inherit;
-  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  color: #0f0f0f;
+  background-color: #ffffff;
+  transition: border-color 0.25s;
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
 }
 
-h2 {
-  margin-top: 2rem;
-  font-size: 1.1rem;
+button {
+  cursor: pointer;
 }
 
-.hint {
-  font-size: 0.875rem;
-  color: #555;
+button:hover {
+  border-color: #396cd8;
+}
+button:active {
+  border-color: #396cd8;
+  background-color: #e8e8e8;
 }
 
-.code {
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 1rem;
-  overflow: auto;
-  font-size: 0.75rem;
-  white-space: pre-wrap;
-  word-break: break-word;
+input,
+button {
+  outline: none;
 }
 
-.preview {
-  width: 100%;
-  height: 280px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: #fff;
+#greet-input {
+  margin-right: 5px;
 }
 
-.error {
-  color: #b00020;
+@media (prefers-color-scheme: dark) {
+  :root {
+    color: #f6f6f6;
+    background-color: #2f2f2f;
+  }
+
+  a:hover {
+    color: #24c8db;
+  }
+
+  input,
+  button {
+    color: #ffffff;
+    background-color: #0f0f0f98;
+  }
+  button:active {
+    background-color: #0f0f0f69;
+  }
 }
+
 </style>
