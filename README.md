@@ -1,10 +1,24 @@
 This is a new project, work in progress.
 
-For dev work, please run
-
+To get started run:
+```bash
+cd pcms
+yarn
+yarn tauri android init
+yarn tauri ios init
 ```
-nvm use
-npm i
-npm run tauri dev
-npm run tauri android dev
+
+For Desktop development, run:
+```bash
+yarn tauri dev
+```
+
+For Android development, run:
+```bash
+yarn tauri android dev
+```
+
+For iOS development, run:
+```bash
+yarn tauri ios dev
 ```
