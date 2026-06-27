@@ -15,9 +15,14 @@ type CDNType = "localCDN" | "reversedCDN" | "packDrop";
 
 interface CDNRouter {
   /**
-   * The main helper function to fetch the content JSON for a page. This keeps track of the page variant
-   * and the instance ID in a way that is more future proof.
-   * 
+   * Content JSON baked into `cdnRouter.js` at preview/export time, keyed by page short name.
+   * Templates must read this for the initial render in v0.1.
+   */
+  initialContentJson: Record<string, unknown>;
+  /**
+   * Fetch content JSON for a page when the active variant changes.
+   * Reserved for post–v0.1 variant switching — do not use for initial render.
+   *
    * @param pageShortName - The short name of the page.
    * @param contentSanitizer - A function that sanitizes the content JSON. If not specified, we use a default JSON schema validator. Please make sure to specify a sanitizer if you want to have backwards compatibility between template versions.
    */
@@ -61,7 +66,9 @@ interface CDNRouter {
 
 The `getXXXPath` APIs should not need to perform network calls. And it returns only the paths. If a mini app has no permission to access the content, the path is still returned, but it is not guaranteed to be accessible.
 
-The only async parts of the APIs are `loadJsLibrary` and `loadEsModule`, and the `cdnRouter.js` initialization onload event.
+In v0.1, mini-app templates read **`initialContentJson[pageShortName]`** synchronously on first render. The CDN embeds that object when generating `cdnRouter.js` (local CDN / reversed CDN) or when the author edits the pack-drop template.
+
+The only async parts of the APIs in v0.1 are `loadJsLibrary` and `loadEsModule`. `fetchContentJson` is async but **not used in v0.1** — it exists for post–v0.1 variant switching without a full page reload.
 
 How to initialize the CDN Router object:
 
@@ -83,13 +90,11 @@ Exported pack drops should not need a special server. Instead, it asks users to 
 
 ## Other prep-work needed upfront, to prepare for future extensions
 
-One major extension is to support switching the variant without reloading the page. This can likely be done by registering a listener through `CDNRouter.addOnVariantChangedListener()`.
+One major extension is to support switching the variant without reloading the page. This can likely be done by registering a listener through `CDNRouter.addOnVariantChangedListener()` and calling **`fetchContentJson(pageShortName)`** to refresh content when the variant changes.
 
-But for now, the variant is static.
+In v0.1 the variant is static per page load. Templates must **not** call `fetchContentJson` for the initial render — use `initialContentJson` instead.
 
-The React or Vue side utilities should have a provider that refreshes the virtual DOM when the variant changes. So maybe we should consider creating a basic provider boilerplate that can be updated later.
-
-To support the future extension, we provided a `fetchContentJson` function that will later be extended. Please use this function in the React / Vue side utilities.
+The React or Vue side utilities should have a provider that refreshes the virtual DOM when the variant changes. The v0.1 provider reads `initialContentJson` synchronously; a later version will call `fetchContentJson` on variant change.
 
 Eventually we must also provide `@pcms/react` and `@pcms/vue` packages that will provide the React and Vue side utilities.
 
