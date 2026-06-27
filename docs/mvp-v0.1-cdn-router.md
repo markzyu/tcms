@@ -15,10 +15,10 @@ type CDNType = "localCDN" | "reversedCDN" | "packDrop";
 
 interface CDNRouter {
   /**
-   * Content JSON baked into `cdnRouter.js` at preview/export time, keyed by page short name.
+   * Content JSON baked into `cdnRouter.js` at preview/export time, containing only current page's content.
    * Templates must read this for the initial render in v0.1.
    */
-  initialContentJson: Record<string, unknown>;
+  initialContentJson: any;
   /**
    * Fetch content JSON for a page when the active variant changes.
    * Reserved for post–v0.1 variant switching — do not use for initial render.
@@ -66,7 +66,7 @@ interface CDNRouter {
 
 The `getXXXPath` APIs should not need to perform network calls. And it returns only the paths. If a mini app has no permission to access the content, the path is still returned, but it is not guaranteed to be accessible.
 
-In v0.1, mini-app templates read **`initialContentJson[pageShortName]`** synchronously on first render. The CDN embeds that object when generating `cdnRouter.js` (local CDN / reversed CDN) or when the author edits the pack-drop template.
+In v0.1, mini-app templates read **`initialContentJson`** synchronously on first render. The CDN embeds that object when generating `cdnRouter.js` (local CDN / reversed CDN) or when the author edits the pack-drop template.
 
 The only async parts of the APIs in v0.1 are `loadJsLibrary` and `loadEsModule`. `fetchContentJson` is async but **not used in v0.1** — it exists for post–v0.1 variant switching without a full page reload.
 
