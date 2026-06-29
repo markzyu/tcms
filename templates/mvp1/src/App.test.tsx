@@ -54,7 +54,7 @@ describe("App", () => {
     });
 
     await waitFor(() => {
-      expect(mockCdnBridge.fetchContentJson).toHaveBeenCalledWith("main");
+      expect(mockCdnBridge.fetchContentJson).toHaveBeenCalledWith("main", expect.any(Function));
     });
 
     expect(

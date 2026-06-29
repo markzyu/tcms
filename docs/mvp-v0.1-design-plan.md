@@ -115,6 +115,8 @@ Flat model for `content/main.{variant}.json` — no arrays in Phase 0.
 | `email`     | string |                                    |
 | `phone`     | string |                                    |
 | `heroImage` | string | filename under `assets/` (e.g. `hero.jpg`) |
+| `heroAltText` | string | optional; alt text for the hero image |
+| `heroAlignment` | `"left"` \| `"right"` | optional; hero image column alignment |
 
 ### `content/main.en.json` (v0 example)
 

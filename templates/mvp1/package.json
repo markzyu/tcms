@@ -5,7 +5,9 @@
   "scripts": {
     "build:css": "tailwindcss -i ./src/main.css -o ./dist/app.css --minify",
     "build:js": "node esbuild.config.mjs",
-    "build": "yarn build:css && yarn build:js",
+    "build:manifests": "yarn workspace @pcms/mini-app-build-utils pcms-create-manifests --template-dir \"$(pwd)\" --config ./src/content/contactCard.ts --out ./dist",
+    "build:pack": "yarn workspace @pcms/mini-app-build-utils pcms-create-template-pack --template-dir \"$(pwd)\" --dist ./dist --out ./dist/contact-card-template.zip",
+    "build": "yarn build:css && yarn build:js && yarn build:manifests && yarn build:pack",
     "dev:css": "tailwindcss -i ./src/main.css -o ./dist/app.css --watch",
     "dev:js": "node esbuild.config.mjs --watch",
     "dev": "run-p dev:css dev:js",
@@ -14,6 +16,8 @@
     "test:watch": "jest --watch"
   },
   "devDependencies": {
+    "@pcms/mini-app-build-utils": "workspace:*",
+    "@pcms/mini-app-common": "workspace:*",
     "@pcms/mini-app-react-test-utils": "workspace:*",
     "@pcms/mini-app-react-utils": "workspace:*",
     "@tailwindcss/cli": "^4.1.7",
@@ -31,6 +35,7 @@
     "react-dom": "^18.3.1",
     "tailwindcss": "^4.1.7",
     "ts-jest": "^29.2.5",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "zod": "^4.0.0"
   }
 }
