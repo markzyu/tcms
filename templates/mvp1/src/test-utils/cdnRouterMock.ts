@@ -1,3 +1,4 @@
+import type { CDNRouter, CDNType } from "@pcms/mini-app-common";
 import type { ContactCardContent } from "../content/contactCard";
 import { defaultContactCardContent } from "./fixtures/contactCardContent";
 

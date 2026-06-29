@@ -1,3 +1,4 @@
+import type { CDNRouter } from "@pcms/mini-app-common";
 import { render, type RenderOptions, type RenderResult } from "@testing-library/react";
 import type { ReactElement } from "react";
 

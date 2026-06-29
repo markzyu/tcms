@@ -1086,10 +1086,19 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@pcms/mini-app-common@workspace:*, @pcms/mini-app-common@workspace:packages/mini-app-common":
+  version: 0.0.0-use.local
+  resolution: "@pcms/mini-app-common@workspace:packages/mini-app-common"
+  dependencies:
+    typescript: "npm:~6.0.3"
+  languageName: unknown
+  linkType: soft
+
 "@pcms/template-mvp1@workspace:templates/mvp1":
   version: 0.0.0-use.local
   resolution: "@pcms/template-mvp1@workspace:templates/mvp1"
   dependencies:
+    "@pcms/mini-app-common": "workspace:*"
     "@tailwindcss/cli": "npm:^4.1.7"
     "@testing-library/dom": "npm:^10.4.0"
     "@testing-library/jest-dom": "npm:^6.6.3"

@@ -14,6 +14,14 @@ So this document covers some basic rules about versioning.
 - **`templates/` → `packages/`** can use **semver / npm** later. Templates may pin **older published helpers** while the monorepo moves on.
 - **`packages/*`** workspace is declared but was empty at first; you're about to add publishable helpers.
 
+Within packages, we adopt a naming scheme, based on the three levels of Security as mentioned in [tech-overview.md](./tech-overview.md):
+
+- `@pcms/common` is a list of public types and utilities that are shared between all three levels of Security.
+- `@pcms/mini-app-*` for mini-app packages (Harness for connecting Vue/React mini apps to Local CDN)
+- `@pcms/tool-*` for tool packages (Any common types and utilities used by tools)
+- `@pcms/admin-*` for admin shell packages (Any common types and utilities used by the admin shell)
+- `@pcms/cdn-*` for the implementation of Local CDN, Reversed CDN, and Pack Drop
+
 ### Dependency / versioning policy
 
 - **Inside the monorepo (daily dev):** workspace link — `*` (Yarn 1) or `workspace:*` (Berry). “Latest” means **whatever is on disk** in `packages/*`.
