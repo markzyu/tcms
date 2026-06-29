@@ -4,21 +4,21 @@ To get started run:
 ```bash
 cd pcms
 yarn
-yarn tauri android init
-yarn tauri ios init
+yarn workspace @pcms/app tauri android init
+yarn workspace @pcms/app tauri ios init
 ```
 
 For Desktop development, run:
 ```bash
-yarn tauri dev
+yarn workspace @pcms/app tauri dev
 ```
 
 For Android development, run:
 ```bash
-yarn tauri android dev
+yarn workspace @pcms/app tauri android dev
 ```
 
 For iOS development, run:
 ```bash
-yarn tauri ios dev
+yarn workspace @pcms/app tauri ios dev
 ```
