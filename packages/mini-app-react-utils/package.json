@@ -12,6 +12,7 @@
     "src"
   ],
   "scripts": {
+    "build": "node -e \"\"",
     "typecheck": "tsc --noEmit",
     "test": "jest"
   },

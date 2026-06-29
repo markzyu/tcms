@@ -22,6 +22,12 @@ Within packages, we adopt a naming scheme, based on the three levels of Security
 - `@pcms/admin-*` for admin shell packages (Any common types and utilities used by the admin shell)
 - `@pcms/cdn-*` for the implementation of Local CDN, Reversed CDN, and Pack Drop
 
+Build scripts: All templates and packages should have `build`, `typecheck` and `test` scripts at the least, even if they just return 0: 
+
+* `test` can return 0 for test-utils only. 
+* `build` can do nothing for everything in `packages/*`.
+* `typecheck` should always run for everything.
+
 ### Dependency / versioning policy
 
 - **Inside the monorepo (daily dev):** workspace link — `*` (Yarn 1) or `workspace:*` (Berry). “Latest” means **whatever is on disk** in `packages/*`.

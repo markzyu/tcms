@@ -12,7 +12,9 @@
     "src"
   ],
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "build": "node -e \"\"",
+    "typecheck": "tsc --noEmit",
+    "test": "node -e \"\""
   },
   "dependencies": {
     "@pcms/mini-app-common": "workspace:*",

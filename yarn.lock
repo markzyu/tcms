@@ -1090,6 +1090,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@pcms/mini-app-common@workspace:packages/mini-app-common"
   dependencies:
+    "@types/jest": "npm:^29.5.14"
+    jest: "npm:^29.7.0"
     typescript: "npm:~6.0.3"
   languageName: unknown
   linkType: soft
