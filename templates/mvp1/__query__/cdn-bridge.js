@@ -2,8 +2,8 @@
   if (!window.pcms) {
     window.pcms = {};
   }
-  if (!window.pcms.cdnRouter) {
-    window.pcms.cdnRouter = {
+  if (!window.pcms.cdnBridge) {
+    window.pcms.cdnBridge = {
       initialContentJson: {
         name: "John Doe",
         headline: "Photographer",

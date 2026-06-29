@@ -16,7 +16,7 @@ export type PageContentProviderProps = {
 
 export function PageContentProvider(props: PageContentProviderProps) {
   const { children, pageShortName = "main" } = props;
-  const initialContentJson = window.pcms.cdnRouter.initialContentJson;
+  const initialContentJson = window.pcms.cdnBridge.initialContentJson;
   const [isLoading, setIsLoading] = useState(!initialContentJson);
   const [contentJson, setContentJson] = useState(initialContentJson);
 
@@ -27,7 +27,7 @@ export function PageContentProvider(props: PageContentProviderProps) {
       }
       setIsLoading(true);
       try {
-        const contentJson = await window.pcms.cdnRouter.fetchContentJson(pageShortName);
+        const contentJson = await window.pcms.cdnBridge.fetchContentJson(pageShortName);
         setContentJson(contentJson);
       } catch (error) {
         console.error("Cannot load content for page", pageShortName, error);

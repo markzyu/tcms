@@ -1,23 +1,23 @@
-# CDN Router object design doc
+# CDN Bridge object design doc
 
-The CDN Router object is a client side JS object at `window.pcms.cdnRouter`. It is used to
+The CDN Bridge object is a client side JS object at `window.pcms.cdnBridge`. It is used to
 
 * find the path to the content JSON for any mini app instance.
 * get the root path of the mounted mini app instance, which the page can then use for page navigations.
-* route requests to the correct CDN server, depending on localCDN vs reversedCDN.
-* supply the **current page’s** content JSON via `initialContentJson` when the CDN inlines it, or via a content fetch when reversed CDN omits it (see [Multi-page mini apps](#multi-page-mini-apps) and [Content provider fallback](#content-provider-fallback)).
+* resolve paths and assets through the correct CDN backend, depending on localCDN vs reversedCDN.
+* supply the **current page's** content JSON via `initialContentJson` when the CDN inlines it, or via a content fetch when reversed CDN omits it (see [Multi-page mini apps](#multi-page-mini-apps) and [Content provider fallback](#content-provider-fallback)).
 
 ## API
 
-The CDN Router object:
+The CDN Bridge object:
 
 ```ts
 type CDNType = "localCDN" | "reversedCDN" | "packDrop";
 
-interface CDNRouter {
+interface CDNBridge {
   /**
-   * Current page content inlined by the CDN in `cdnRouter.js` when present.
-   * Contains only the active page’s JSON (see multi-page query param).
+   * Current page content inlined by the CDN in `cdn-bridge.js` when present.
+   * Contains only the active page's JSON (see multi-page query param).
    *
    * **Local CDN / pack drop / prototype:** usually set — read synchronously for initial render.
    * **Reversed CDN:** may be omitted to minimize traffic; when missing, templates must fetch
@@ -62,7 +62,7 @@ interface CDNRouter {
 
   /**
    * Use the `import` statement to load an ES module according to localCDN or reversedCDN rules.
-   * 
+   *
    * This will work for both module script context and commonjs context.
    */
   loadEsModule<T>(name: string, version?: string): Promise<T>;
@@ -71,7 +71,7 @@ interface CDNRouter {
 
 The `getXXXPath` APIs should not need to perform network calls. And it returns only the paths. If a mini app has no permission to access the content, the path is still returned, but it is not guaranteed to be accessible.
 
-In v0.1, mini-app templates load content on first render by reading **`initialContentJson` when it is present**. Local CDN (and pack-drop / prototype stubs) typically embed **only the current page’s** content object in `cdnRouter.js`. **Reversed CDN may omit `initialContentJson`** to reduce bytes on repeat visits; in that case the template must fetch the JSON (see [Content provider fallback](#content-provider-fallback)).
+In v0.1, mini-app templates load content on first render by reading **`initialContentJson` when it is present**. Local CDN (and pack-drop / prototype stubs) typically embed **only the current page's** content object in `cdn-bridge.js`. **Reversed CDN may omit `initialContentJson`** to reduce bytes on repeat visits; in that case the template must fetch the JSON (see [Content provider fallback](#content-provider-fallback)).
 
 The only async parts of the APIs in v0.1 are `loadJsLibrary`, `loadEsModule`, and **content fetches when `initialContentJson` is missing**. `fetchContentJson` is async but reserved for post–v0.1 variant switching — do not use it as the reversed-CDN fallback (use `getContentJsonPath` + `fetch` instead).
 
@@ -83,34 +83,34 @@ Multi-page templates do **not** ship one `index.html` per page. There is a **sin
    - Contact card (single page): `/cards/my-slug/` or `/cards/my-slug/?shortPageName=main`
    - Future multi-page template: `/cards/my-slug/?shortPageName=projects-0`, `/cards/my-slug/?shortPageName=about`
 2. **Client routing** — React (or Vue) reads that param on load and mounts the matching page component. In-app links between pages update the query param (and may reload, or later use client-side navigation within the same shell).
-3. **LCDN / reversed CDN** — when the browser requests `/__query__/cdnRouter.js`, the **Referer** URL includes the instance path **and** the page query param. The CDN uses both to resolve the instance. **Local CDN** embeds the matching page’s JSON in `initialContentJson`. **Reversed CDN** may omit `initialContentJson` (see [Content provider fallback](#content-provider-fallback)). Same rule as instance ID from referrer: do not open `cdnRouter.js` directly; instance HTML should use `Referrer-Policy: same-origin` so the full referrer URL (including the page param) is sent on same-origin subresource requests.
+3. **LCDN / reversed CDN** — when the browser requests `/__query__/cdn-bridge.js`, the **Referer** URL includes the instance path **and** the page query param. The CDN uses both to resolve the instance. **Local CDN** embeds the matching page's JSON in `initialContentJson`. **Reversed CDN** may omit `initialContentJson` (see [Content provider fallback](#content-provider-fallback)). Same rule as instance ID from referrer: do not open `cdn-bridge.js` directly; instance HTML should use `Referrer-Policy: same-origin` so the full referrer URL (including the page param) is sent on same-origin subresource requests.
 
-Pack-drop and prototype setups follow the same model: one `index.html`, edit the query param in links/bookmarks to reach another page, and ensure the copied `cdnRouter.js` template (or static stub) matches the page being viewed.
+Pack-drop and prototype setups follow the same model: one `index.html`, edit the query param in links/bookmarks to reach another page, and ensure the copied `cdn-bridge.js` template (or static stub) matches the page being viewed.
 
 For v0.1 contact card (single page), `shortPageName` may be omitted or defaulted to `main`.
 
-How to initialize the CDN Router object:
+How to initialize the CDN Bridge object:
 
 ```html
 <head>
-    <script type="application/javascript" src="/__query__/cdnRouter.js"></script>
+    <script type="application/javascript" src="/__query__/cdn-bridge.js"></script>
 </head>
 ```
 
-Local CDN and reversed CDN should serve `cdnRouter.js` dynamically with `cache-control: no-cache` header.
+Local CDN and reversed CDN should serve `cdn-bridge.js` dynamically with `cache-control: no-cache` header.
 
-* During MVP v0.1 prototyping, when local CDN does not exist yet, the `__query__/cdnRouter.js` and similar files should be manually created on disk, without any CDN at all. There should be a prototype version of this script to use along with a basic `python -m http.server`
+* During MVP v0.1 prototyping, when local CDN does not exist yet, the `__query__/cdn-bridge.js` and similar files should be manually created on disk, without any CDN at all. There should be a prototype version of this script to use along with a basic `python -m http.server`
 * For local CDN, the `__query__` directory doesn't actually exist on disk. For reversed CDN, it is re-created per upload.
-* **Local CDN** resolves the **instance** from the referrer URL and the **active page** from the page query param on that referrer (see [Multi-page mini apps](#multi-page-mini-apps)), then generates `cdnRouter.js` with the matching **`initialContentJson`** inlined.
+* **Local CDN** resolves the **instance** from the referrer URL and the **active page** from the page query param on that referrer (see [Multi-page mini apps](#multi-page-mini-apps)), then generates `cdn-bridge.js` with the matching **`initialContentJson`** inlined.
 * **Reversed CDN** uses the same referrer parsing but **may omit `initialContentJson`** in the generated script to minimize traffic.
-  
-  (Note: This means you should never visit `__query__/cdnRouter.js` directly. And, the localCDN should serve all HTMLs with `Referrer-Policy: same-origin` header. And this works separately from the admin shell's iframe sandboxing policy)
 
-Exported pack drops should not need a special server. Instead, it asks users to copy the cdnRouter template to that `__query__` directory.
+  (Note: This means you should never visit `__query__/cdn-bridge.js` directly. And, the localCDN should serve all HTMLs with `Referrer-Policy: same-origin` header. And this works separately from the admin shell's iframe sandboxing policy)
+
+Exported pack drops should not need a special server. Instead, it asks users to copy the cdn-bridge template to that `__query__` directory.
 
 ## Other prep-work needed upfront, to prepare for future extensions
 
-One major extension is to support switching the variant without reloading the page. This can likely be done by registering a listener through `CDNRouter.addOnVariantChangedListener()` and calling **`fetchContentJson(pageShortName)`** to refresh content when the variant changes.
+One major extension is to support switching the variant without reloading the page. This can likely be done by registering a listener through `CDNBridge.addOnVariantChangedListener()` and calling **`fetchContentJson(pageShortName)`** to refresh content when the variant changes.
 
 In v0.1 the variant is static per page load. Templates must **not** call `fetchContentJson` for the initial render or for the reversed-CDN fallback.
 
@@ -120,14 +120,14 @@ Eventually we must also provide `@pcms/react` and `@pcms/vue` packages that will
 
 ## Implementation
 
-Either local CDN, or reversed CDN, or pack drop, should generate the `window.pcms.cdnRouter` object to implement the API. It should just be a simple js script that is loaded into the mini app HTML in `<head>`.
+Either local CDN, or reversed CDN, or pack drop, should generate the `window.pcms.cdnBridge` object to implement the API. It should just be a simple js script that is loaded into the mini app HTML in `<head>`.
 
-For **local CDN**, the cdnRouter script is generated upon previewing (or on each request to `/__query__/cdnRouter.js`). The generator reads the referrer’s instance mount path and page query param, then embeds that page’s content in `initialContentJson`. Reload the page (or change the query param) to switch page or pick up variant/instance changes — the mount path does not change without a reload.
+For **local CDN**, the cdn-bridge script is generated upon previewing (or on each request to `/__query__/cdn-bridge.js`). The generator reads the referrer's instance mount path and page query param, then embeds that page's content in `initialContentJson`. Reload the page (or change the query param) to switch page or pick up variant/instance changes — the mount path does not change without a reload.
 
-Example (local CDN): a request for `cdnRouter.js` whose Referer is `http://127.0.0.1:3000/cards/my-slug/?shortPageName=main` yields:
+Example (local CDN): a request for `cdn-bridge.js` whose Referer is `http://127.0.0.1:3000/cards/my-slug/?shortPageName=main` yields:
 
 ```js
-window.pcms.cdnRouter = {
+window.pcms.cdnBridge = {
   initialContentJson: { name: "John Doe", headline: "Photographer", /* … */ },
   getInitialPreviewVariant: () => "en",
   // …
@@ -137,7 +137,7 @@ window.pcms.cdnRouter = {
 Example (reversed CDN, minimized): the same Referer may yield a script **without** `initialContentJson`; path helpers still work:
 
 ```js
-window.pcms.cdnRouter = {
+window.pcms.cdnBridge = {
   getCDNType: () => "reversedCDN",
   getContentJsonPath: (page, variant) => `/cards/my-slug/content/${page}.${variant}.json`,
   getInitialPreviewVariant: () => "en",
@@ -151,7 +151,7 @@ A Referer of `…/cards/my-slug/?shortPageName=projects-0` selects `projects-0` 
 
 Template React/Vue providers (and future `@pcms/react` / `@pcms/vue` packages) **must implement a fallback** for missing `initialContentJson`:
 
-1. **If `window.pcms.cdnRouter.initialContentJson` is defined** — use it synchronously for the first render (local CDN, pack drop, prototype).
+1. **If `window.pcms.cdnBridge.initialContentJson` is defined** — use it synchronously for the first render (local CDN, pack drop, prototype).
 2. **If it is missing** (typical reversed CDN) — fetch the content JSON asynchronously:
    - Resolve `pageShortName` from the URL query param (`shortPageName`, defaulting to `main` for single-page templates).
    - Build the URL with `getContentJsonPath(pageShortName, getInitialPreviewVariant())`.
@@ -161,17 +161,17 @@ Template React/Vue providers (and future `@pcms/react` / `@pcms/vue` packages) *
 
 Do not assume `initialContentJson` is always present. Providers that only read `initialContentJson` will fail on reversed CDN when traffic minimization omits inlined JSON.
 
-For pack drop, the cdnRouter script is not generated upon export. Instead, a template is provided, along with instructions. And it must be edited for public hosting, or for usage without PCMS app.
+For pack drop, the cdn-bridge script is not generated upon export. Instead, a template is provided, along with instructions. And it must be edited for public hosting, or for usage without PCMS app.
 
 ## Dev mode
 
 Dev mode users are serving custom HTML and js content from a random localhost port which is then incoporated into local CDN.
 
-There are two options here: Either localCDN modifies the dev's HTML to include the cdnRouter script, or the dev needs to include the cdnRouter script in their own HTML.
+There are two options here: Either localCDN modifies the dev's HTML to include the cdn-bridge script, or the dev needs to include the cdn-bridge script in their own HTML.
 
 I'm leaning towards the latter. We just need to provide a simple starter HTML template.
 
-One special consideration here is that the `cdnRouter` script should not be cached. So that the dev can always reload the preview page to get the latest version of the script.
+One special consideration here is that the `cdn-bridge` script should not be cached. So that the dev can always reload the preview page to get the latest version of the script.
 
 ## Side notes about ESM modules
 

@@ -1,11 +1,11 @@
-export type { CDNRouter, CDNType } from "./cdn-router";
+export type { CDNBridge, CDNType } from "./cdn-bridge";
 
-import type { CDNRouter } from "./cdn-router";
+import type { CDNBridge } from "./cdn-bridge";
 
 declare global {
   interface Window {
     pcms: {
-      cdnRouter: CDNRouter;
+      cdnBridge: CDNBridge;
     };
   }
 }

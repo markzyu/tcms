@@ -2,14 +2,14 @@ import { screen, waitFor } from "@testing-library/react";
 
 import { App } from "./App";
 import { defaultContactCardContent } from "./test-utils/fixtures/contactCardContent";
-import { renderWithCdnRouter } from "./test-utils/renderWithCdnRouter";
+import { renderWithCdnBridge } from "./test-utils/renderWithCdnBridge";
 import {
   CONTACT_CARD_TEST_IDS,
 } from "./constants";
 
 describe("App", () => {
-  it("reads initialContentJson from cdnRouter and shows every contact field", () => {
-    const { mockCdnRouter } = renderWithCdnRouter(<App />, {
+  it("reads initialContentJson from cdnBridge and shows every contact field", () => {
+    const { mockCdnBridge } = renderWithCdnBridge(<App />, {
       content: defaultContactCardContent,
     });
 
@@ -39,19 +39,19 @@ describe("App", () => {
       expect.stringContaining(defaultContactCardContent.heroImage),
     );
 
-    expect(mockCdnRouter.fetchContentJson).not.toHaveBeenCalled();
+    expect(mockCdnBridge.fetchContentJson).not.toHaveBeenCalled();
   });
 
   it("fetches content when initialContentJson is missing", async () => {
-    const { mockCdnRouter } = renderWithCdnRouter(<App />, {
+    const { mockCdnBridge } = renderWithCdnBridge(<App />, {
       content: defaultContactCardContent,
-      overrideCdnRouter: {
+      overrideCdnBridge: {
         initialContentJson: undefined,
       },
     });
 
     await waitFor(() => {
-      expect(mockCdnRouter.fetchContentJson).toHaveBeenCalledWith("main");
+      expect(mockCdnBridge.fetchContentJson).toHaveBeenCalledWith("main");
     });
 
     expect(

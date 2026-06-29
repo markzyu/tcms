@@ -16,7 +16,7 @@ yarn install
 yarn build       # tailwindcss CLI → dist/app.css, then esbuild → dist/app.js
 yarn dev         # tailwindcss --watch + esbuild --watch + dev server :3000
 yarn typecheck   # run tsc without emitting
-yarn test        # jest + jsdom (mocks window.pcms.cdnRouter)
+yarn test        # jest + jsdom (mocks window.pcms.cdnBridge)
 yarn test:watch  # jest in watch mode
 ```
 
@@ -26,14 +26,14 @@ CSS is built separately with the [Tailwind CLI](https://tailwindcss.com/docs/ins
 
 Component tests use Jest + jsdom + React Testing Library. They do **not** run esbuild or hit the network.
 
-Use `renderWithCdnRouter()` to install a mocked `window.pcms.cdnRouter`. Content is supplied via **`initialContentJson`** (v0.1 does not call `fetchContentJson`):
+Use `renderWithCdnBridge()` to install a mocked `window.pcms.cdnBridge`. Content is supplied via **`initialContentJson`** (v0.1 does not call `fetchContentJson`):
 
 ```tsx
 import { screen } from "@testing-library/react";
-import { renderWithCdnRouter } from "./test-utils/renderWithCdnRouter";
+import { renderWithCdnBridge } from "./test-utils/renderWithCdnBridge";
 import { defaultContactCardContent } from "./test-utils/fixtures/contactCardContent";
 
-renderWithCdnRouter(<ContactCard />, {
+renderWithCdnBridge(<ContactCard />, {
   content: { ...defaultContactCardContent, name: "Jane Doe" },
 });
 

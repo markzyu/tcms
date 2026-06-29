@@ -1,8 +1,8 @@
 import "@testing-library/jest-dom";
 
-import { uninstallMockCdnRouter } from "./cdnRouterMock";
+import { uninstallMockCdnBridge } from "./cdnBridgeMock";
 
 afterEach(() => {
   jest.clearAllMocks();
-  uninstallMockCdnRouter();
+  uninstallMockCdnBridge();
 });

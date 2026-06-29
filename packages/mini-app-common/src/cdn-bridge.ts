@@ -1,8 +1,8 @@
 export type CDNType = "localCDN" | "reversedCDN" | "packDrop";
 
-export interface CDNRouter {
+export interface CDNBridge {
   /**
-   * Current page content inlined in `cdnRouter.js` when the CDN embeds it.
+   * Current page content inlined in `cdn-bridge.js` when the CDN embeds it.
    * Only the active page's JSON (see `shortPageName` query param).
    *
    * Present for local CDN, pack drop, and prototype stubs — read synchronously.
