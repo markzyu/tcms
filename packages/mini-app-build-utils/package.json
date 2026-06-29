@@ -16,7 +16,7 @@
     "pcms-create-template-pack": "tsx ./src/bin/createTemplatePack.ts",
     "build": "node -e \"\"",
     "typecheck": "tsc --noEmit",
-    "test": "node -e \"\""
+    "test": "tsx ./src/bin/testBasics.ts"
   },
   "dependencies": {
     "@pcms/mini-app-common": "workspace:*",
