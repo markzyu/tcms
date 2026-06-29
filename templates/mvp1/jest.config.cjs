@@ -1,7 +1,10 @@
 /** @type {import('jest').Config} */
 module.exports = {
   testEnvironment: "jsdom",
-  setupFilesAfterEnv: ["<rootDir>/src/test-utils/setup.ts"],
+  setupFilesAfterEnv: [
+    // This should not be needed as long as your tests import @pcms/mini-app-test-utils
+    // If you need to store a project-wide afterEach hook, put a file here
+  ],
   testMatch: ["<rootDir>/src/**/*.test.{ts,tsx}"],
   transform: {
     "^.+\\.tsx?$": [

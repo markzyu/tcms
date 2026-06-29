@@ -1,15 +1,18 @@
 import { screen, waitFor } from "@testing-library/react";
+import { renderWithCdnBridge } from "@pcms/mini-app-test-utils";
 
 import { App } from "./App";
-import { defaultContactCardContent } from "./test-utils/fixtures/contactCardContent";
-import { renderWithCdnBridge } from "./test-utils/renderWithCdnBridge";
+import type { ContactCardContent } from "./content/contactCard";
+import { defaultContactCardContent } from "./content/contactCard.mock";
 import {
   CONTACT_CARD_TEST_IDS,
 } from "./constants";
 
+const render = renderWithCdnBridge<ContactCardContent>;
+
 describe("App", () => {
   it("reads initialContentJson from cdnBridge and shows every contact field", () => {
-    const { mockCdnBridge } = renderWithCdnBridge(<App />, {
+    const { mockCdnBridge } = render(<App />, {
       content: defaultContactCardContent,
     });
 
@@ -43,7 +46,7 @@ describe("App", () => {
   });
 
   it("fetches content when initialContentJson is missing", async () => {
-    const { mockCdnBridge } = renderWithCdnBridge(<App />, {
+    const { mockCdnBridge } = render(<App />, {
       content: defaultContactCardContent,
       overrideCdnBridge: {
         initialContentJson: undefined,

@@ -1094,11 +1094,32 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@pcms/mini-app-test-utils@workspace:*, @pcms/mini-app-test-utils@workspace:packages/mini-app-test-utils":
+  version: 0.0.0-use.local
+  resolution: "@pcms/mini-app-test-utils@workspace:packages/mini-app-test-utils"
+  dependencies:
+    "@pcms/mini-app-common": "workspace:*"
+    "@testing-library/dom": "npm:^10.4.0"
+    "@testing-library/react": "npm:^16.1.0"
+    "@types/jest": "npm:^29.5.14"
+    "@types/react": "npm:^18.3.12"
+    jest: "npm:^29.7.0"
+    react: "npm:^18.3.1"
+    react-dom: "npm:^18.3.1"
+    typescript: "npm:~6.0.3"
+  peerDependencies:
+    "@testing-library/react": ^16.0.0
+    react: ^18.0.0
+    react-dom: ^18.0.0
+  languageName: unknown
+  linkType: soft
+
 "@pcms/template-mvp1@workspace:templates/mvp1":
   version: 0.0.0-use.local
   resolution: "@pcms/template-mvp1@workspace:templates/mvp1"
   dependencies:
     "@pcms/mini-app-common": "workspace:*"
+    "@pcms/mini-app-test-utils": "workspace:*"
     "@tailwindcss/cli": "npm:^4.1.7"
     "@testing-library/dom": "npm:^10.4.0"
     "@testing-library/jest-dom": "npm:^6.6.3"

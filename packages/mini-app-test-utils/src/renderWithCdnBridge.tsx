@@ -8,7 +8,8 @@ import {
   installMockCdnBridge,
 } from "./cdnBridgeMock";
 
-export interface RenderWithCdnBridgeOptions extends CdnBridgeMockOptions {
+export interface RenderWithCdnBridgeOptions<TContent = unknown>
+  extends CdnBridgeMockOptions<TContent> {
   renderOptions?: Omit<RenderOptions, "wrapper">;
   overrideCdnBridge?: Partial<CDNBridge>;
 }
@@ -20,10 +21,13 @@ export interface RenderWithCdnBridgeResult extends RenderResult {
 /**
  * Render a component with window.pcms.cdnBridge mocked.
  * Content is provided via initialContentJson; no bundle or network involved.
+ *
+ * Bind a template content type once per test file:
+ * `const render = renderWithCdnBridge<MyContent>;`
  */
-export function renderWithCdnBridge(
+export function renderWithCdnBridge<TContent = unknown>(
   ui: ReactElement,
-  options: RenderWithCdnBridgeOptions = {},
+  options: RenderWithCdnBridgeOptions<TContent> = {},
 ): RenderWithCdnBridgeResult {
   const { renderOptions, ...cdnBridgeOptions } = options;
   const mockCdnBridge = installMockCdnBridge(cdnBridgeOptions);

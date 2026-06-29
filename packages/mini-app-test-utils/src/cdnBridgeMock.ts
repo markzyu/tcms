@@ -1,23 +1,23 @@
 import type { CDNBridge, CDNType } from "@pcms/mini-app-common";
-import type { ContactCardContent } from "../content/contactCard";
-import { defaultContactCardContent } from "./fixtures/contactCardContent";
 
-export interface CdnBridgeMockOptions {
+export const DEFAULT_MOCK_INSTANCE_ROOT_PATH = "/test-template/test-instance";
+
+export interface CdnBridgeMockOptions<TContent = unknown> {
   /** Active preview variant returned by getInitialPreviewVariant(). */
   variant?: string;
-  /** Default content for the main page in initialContentJson. */
-  content?: ContactCardContent;
+  /** Content for the main page in initialContentJson. */
+  content?: TContent;
   /** Partial overrides merged onto the generated mock. */
   overrides?: Partial<CDNBridge>;
 }
 
 export type MockCdnBridge = jest.Mocked<CDNBridge>;
 
-export function createMockCdnBridge(
-  options: CdnBridgeMockOptions = {},
+export function createMockCdnBridge<TContent = unknown>(
+  options: CdnBridgeMockOptions<TContent> = {},
 ): MockCdnBridge {
   const variant = options.variant ?? "en";
-  const initialContentJson = options.content ?? defaultContactCardContent;
+  const initialContentJson = options.content;
 
   const mock = {
     initialContentJson,
@@ -28,7 +28,7 @@ export function createMockCdnBridge(
         `content/${pageShortName}.${pageVariant}.json`,
     ),
     getInitialPreviewVariant: jest.fn(() => variant),
-    getInstanceRootPath: jest.fn(() => "/cards/test-instance/"),
+    getInstanceRootPath: jest.fn(() => DEFAULT_MOCK_INSTANCE_ROOT_PATH),
     getOriginUrl: jest.fn(() => new URL("http://mock_host_name:3000")),
     loadJsLibrary: jest.fn().mockRejectedValue(undefined),
     loadEsModule: jest.fn().mockResolvedValue(undefined),
@@ -38,8 +38,8 @@ export function createMockCdnBridge(
   return mock as MockCdnBridge;
 }
 
-export function installMockCdnBridge(
-  options: CdnBridgeMockOptions = {},
+export function installMockCdnBridge<TContent = unknown>(
+  options: CdnBridgeMockOptions<TContent> = {},
 ): MockCdnBridge {
   const mock = createMockCdnBridge(options);
   window.pcms = { cdnBridge: mock };
@@ -49,3 +49,7 @@ export function installMockCdnBridge(
 export function uninstallMockCdnBridge(): void {
   Reflect.deleteProperty(window, "pcms");
 }
+
+afterEach(() => {
+  uninstallMockCdnBridge();
+});

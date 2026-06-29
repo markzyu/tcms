@@ -26,14 +26,17 @@ CSS is built separately with the [Tailwind CLI](https://tailwindcss.com/docs/ins
 
 Component tests use Jest + jsdom + React Testing Library. They do **not** run esbuild or hit the network.
 
-Use `renderWithCdnBridge()` to install a mocked `window.pcms.cdnBridge`. Content is supplied via **`initialContentJson`** (v0.1 does not call `fetchContentJson`):
+Use `@pcms/mini-app-test-utils` to install a mocked `window.pcms.cdnBridge`. Bind your template content type once per test file; content is supplied via **`initialContentJson`** (v0.1 does not call `fetchContentJson`):
 
 ```tsx
 import { screen } from "@testing-library/react";
-import { renderWithCdnBridge } from "./test-utils/renderWithCdnBridge";
+import { renderWithCdnBridge } from "@pcms/mini-app-test-utils";
+import type { ContactCardContent } from "./content/contactCard";
 import { defaultContactCardContent } from "./test-utils/fixtures/contactCardContent";
 
-renderWithCdnBridge(<ContactCard />, {
+const render = renderWithCdnBridge<ContactCardContent>;
+
+render(<ContactCard />, {
   content: { ...defaultContactCardContent, name: "Jane Doe" },
 });
 

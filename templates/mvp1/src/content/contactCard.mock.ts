@@ -1,4 +1,4 @@
-import type { ContactCardContent } from "../../content/contactCard";
+import type { ContactCardContent } from "./contactCard";
 
 export const defaultContactCardContent: ContactCardContent = {
   name: "John Doe",
