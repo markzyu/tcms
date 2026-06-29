@@ -315,20 +315,26 @@ Also: asset picker for hero image, HTML cache on save, persist backend port in `
 
 ---
 
-## Suggested repo structure (implementation)
+## Repo structure
 
 ```
 pcms/
   docs/
-  lcdn/                    # P2: custom server
-  templates/contact-card/  # P4: manifest, schema, React app, backend
-  src/                     # P1/P5: Tauri + Vue Admin + Tools
-    admin/
-    tools/
-      _shared/ToolShell.vue, ToolNav.vue
-      template-editor/
-    router/
-  schemas/                 # P3: shared JSON Schema defs (optional)
+  app/             # P1/P5: Tauri + Vue Admin + Tools
+    src/
+      admin/
+      tools/
+        common/ToolShell.vue, ToolNav.vue
+        template-editor/
+  packages/
+    mini-app-*/    # See naming scheme in ops-pkg-and-versions.md
+    tool-*/
+    admin-*/
+    cdn-*/
+    cdn-local/     # P2: custom server
+  templates/
+    contact-card/  # P4: manifest, schema, React app, backend
+    schemas/       # P3: shared JSON Schema defs (optional)
 ```
 
 ---

@@ -14,7 +14,7 @@ import { join } from "node:path";
 
 const PACKAGES_DIR = "packages";
 const VERSION_BUMP_PENDING_FLAG = ".git/pcms-version-bump-pending";
-const SKIP_TYPES = new Set(["chore", "refactor", "test"]);
+const SKIP_TYPES = new Set(["chore", "refactor", "test", "docs"]);
 const BUMP_TYPES = new Set(["feat!", "feat", "fix"]);
 const ALLOWED_TYPES = new Set([...SKIP_TYPES, ...BUMP_TYPES]);
 
@@ -143,8 +143,9 @@ if (!commitType) {
 }
 
 if (!ALLOWED_TYPES.has(commitType)) {
+  const types = Array.from(ALLOWED_TYPES).join(", ");
   fail(
-    `unknown commit type "${commitType}" — allowed types: feat!, feat, fix, chore, refactor, test`,
+    `unknown commit type "${commitType}" — allowed types: ${types}`,
   );
 }
 

@@ -176,11 +176,11 @@ try {
     assert(readVersion("demo-a") === "1.0.0", `version is ${readVersion("demo-a")}`);
   });
 
-  test("unknown type docs fails", () => {
+  test("unknown type blah fails", () => {
     resetVersions();
     unstageAll();
     stage(["packages/demo-a/src/index.ts"]);
-    const result = runBump("docs: readme");
+    const result = runBump("blah: readme");
     assert(result.code !== 0, "expected non-zero exit");
     assert(result.output.includes("unknown commit type"), result.output);
     assert(readVersion("demo-a") === "1.0.0", `version is ${readVersion("demo-a")}`);
