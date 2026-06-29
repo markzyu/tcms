@@ -1,3 +1,4 @@
+import "@pcms/mini-app-common";
 import { createContext, useContext, useEffect, useState } from "react";
 
 type PageContentContextType<T = unknown> = {

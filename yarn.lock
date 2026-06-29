@@ -1094,12 +1094,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@pcms/mini-app-test-utils@workspace:*, @pcms/mini-app-test-utils@workspace:packages/mini-app-test-utils":
+"@pcms/mini-app-react-test-utils@workspace:*, @pcms/mini-app-react-test-utils@workspace:packages/mini-app-react-test-utils":
   version: 0.0.0-use.local
-  resolution: "@pcms/mini-app-test-utils@workspace:packages/mini-app-test-utils"
+  resolution: "@pcms/mini-app-react-test-utils@workspace:packages/mini-app-react-test-utils"
   dependencies:
     "@pcms/mini-app-common": "workspace:*"
     "@testing-library/dom": "npm:^10.4.0"
+    "@testing-library/jest-dom": "npm:^6.6.3"
     "@testing-library/react": "npm:^16.1.0"
     "@types/jest": "npm:^29.5.14"
     "@types/react": "npm:^18.3.12"
@@ -1114,12 +1115,36 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@pcms/mini-app-react-utils@workspace:*, @pcms/mini-app-react-utils@workspace:packages/mini-app-react-utils":
+  version: 0.0.0-use.local
+  resolution: "@pcms/mini-app-react-utils@workspace:packages/mini-app-react-utils"
+  dependencies:
+    "@pcms/mini-app-common": "workspace:*"
+    "@pcms/mini-app-react-test-utils": "workspace:*"
+    "@testing-library/dom": "npm:^10.4.0"
+    "@testing-library/jest-dom": "npm:^6.6.3"
+    "@testing-library/react": "npm:^16.1.0"
+    "@types/jest": "npm:^29.5.14"
+    "@types/react": "npm:^18.3.12"
+    "@types/react-dom": "npm:^18.3.1"
+    jest: "npm:^29.7.0"
+    jest-environment-jsdom: "npm:^29.7.0"
+    react: "npm:^18.3.1"
+    react-dom: "npm:^18.3.1"
+    ts-jest: "npm:^29.2.5"
+    typescript: "npm:~6.0.3"
+  peerDependencies:
+    react: ^18.0.0
+    react-dom: ^18.0.0
+  languageName: unknown
+  linkType: soft
+
 "@pcms/template-mvp1@workspace:templates/mvp1":
   version: 0.0.0-use.local
   resolution: "@pcms/template-mvp1@workspace:templates/mvp1"
   dependencies:
-    "@pcms/mini-app-common": "workspace:*"
-    "@pcms/mini-app-test-utils": "workspace:*"
+    "@pcms/mini-app-react-test-utils": "workspace:*"
+    "@pcms/mini-app-react-utils": "workspace:*"
     "@tailwindcss/cli": "npm:^4.1.7"
     "@testing-library/dom": "npm:^10.4.0"
     "@testing-library/jest-dom": "npm:^6.6.3"

@@ -1,5 +1,5 @@
 import { screen, waitFor } from "@testing-library/react";
-import { renderWithCdnBridge } from "@pcms/mini-app-test-utils";
+import { renderWithCdnBridge } from "@pcms/mini-app-react-test-utils";
 
 import { App } from "./App";
 import type { ContactCardContent } from "./content/contactCard";

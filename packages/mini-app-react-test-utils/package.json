@@ -1,5 +1,5 @@
 {
-  "name": "@pcms/mini-app-test-utils",
+  "name": "@pcms/mini-app-react-test-utils",
   "version": "0.0.1",
   "type": "module",
   "exports": {
@@ -15,7 +15,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@pcms/mini-app-common": "workspace:*"
+    "@pcms/mini-app-common": "workspace:*",
+    "@testing-library/jest-dom": "^6.6.3"
   },
   "peerDependencies": {
     "@testing-library/react": "^16.0.0",
