@@ -1,6 +1,8 @@
 import type { ContactCardContent } from "./contactCard";
 
-export const defaultContactCardContent: ContactCardContent = {
+// Note: "Required" type is used to inform testcases that all fields have a value,
+//       so that helper functions like `toHaveTextContent()` can be used without type assertions.
+export const defaultContactCardContent: Required<ContactCardContent> = {
   name: "John Doe",
   headline: "Photographer",
   bio: "John is a photographer based in New York City. He is known for his street photography and his use of color. He has been photographing for 10 years. His favorite camera is the Leica M10.",

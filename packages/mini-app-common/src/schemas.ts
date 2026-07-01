@@ -1,6 +1,10 @@
 import type { ZodObject } from "zod";
 
-const isNode = typeof process !== "undefined" && Boolean(process?.versions?.node);
+// @ts-ignore: Node.js types are not available in the browser.
+const IS_NODE = typeof process !== "undefined" && Boolean(process?.versions?.node);
+
+// @ts-ignore: Node.js types are not available in the browser.
+const WORKDIR = IS_NODE ? process.cwd() : "";
 
 export type EditorUiFieldGroup = {
   name?: string;
@@ -38,14 +42,16 @@ export type DefineRootManifestProps = {
  */
 export const definePageContentSchema = async (props: DefinePageContentSchemaProps) => {
   const { schema, schemaName, schemaVersion, editorUiSchema } = props;
-  if (!isNode) {
+  if (!IS_NODE) {
     return;
   }
 
+  // @ts-ignore: Node.js types are not available in the browser.
   const path = await import("path");
+  // @ts-ignore: Node.js types are not available in the browser.
   const { mkdir, writeFile } = await import("fs/promises");
   const { z } = await import("zod");
-  const outputDir = path.join(process.cwd(), "dist", "schema");
+  const outputDir = path.join(WORKDIR, "dist", "schema");
 
   await mkdir(outputDir, { recursive: true });
 
@@ -69,17 +75,19 @@ export const definePageContentSchema = async (props: DefinePageContentSchemaProp
  */
 export const defineRootManifest = async (props: DefineRootManifestProps) => {
   const { id, title, version, pages } = props;
-  if (!isNode) {
+  if (!IS_NODE) {
     return;
   }
 
+  // @ts-ignore: Node.js types are not available in the browser.
   const path = await import("path");
+  // @ts-ignore: Node.js types are not available in the browser.
   const { mkdir, writeFile } = await import("fs/promises");
-  const outputDir = path.join(process.cwd(), "dist");
+  const outputDir = path.join(WORKDIR, "dist");
 
   await mkdir(outputDir, { recursive: true });
 
-  const packageJson = await import(path.join(process.cwd(), "package.json"));
+  const packageJson = await import(path.join(WORKDIR, "package.json"));
   const packageDependencies = packageJson.dependencies || {};
   const dependencies = Object.entries(packageDependencies)
     .filter(([name]) => !name.startsWith("@pcms/"))
@@ -102,9 +110,11 @@ export const defineRootManifest = async (props: DefineRootManifestProps) => {
 };
 
 export const cleanUpSchemaDirectory = async () => {
+  // @ts-ignore: Node.js types are not available in the browser.
   const path = await import("path");
+  // @ts-ignore: Node.js types are not available in the browser.
   const { rm } = await import("fs/promises");
-  const outputDir = path.join(process.cwd(), "dist", "schema");
+  const outputDir = path.join(WORKDIR, "dist", "schema");
   console.log("Cleaning up schema directory at", outputDir);
   await rm(outputDir, { recursive: true, force: true });
   console.log("Cleaned up schema directory.");
