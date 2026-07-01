@@ -1,6 +1,6 @@
 # PCMS — Requirements Overview
 
-**PCMS** (Phone-hosted self-contained CMS) is a mobile toolkit that hosts, configures, and serves small web apps from the phone itself. It is aimed at (1) regular users who pick templates and paste tokens to spin up simple websites, (2) power users who make use of built-in tools for their own usefulness, editing JSONs, calling popular web services, etc. (3) and power users who make use of pre-bundled backend server binaries, and offline caches of JS frameworks, to create custom local webapps.
+**PCMS** (Phone-hosted self-contained CMS) is a mobile toolkit that hosts, configures, and serves small web apps from the phone itself. It is aimed at (1) regular users who pick templates and paste tokens to spin up simple websites, (2) power users who make use of built-in tools for their own usefulness, editing JSONs, cropping images to fit divs, calling popular web services, etc. (3) and power users who make use of pre-bundled backend server binaries, and offline caches of JS frameworks, to create custom local webapps.
 
 ## Overall Goals
 
