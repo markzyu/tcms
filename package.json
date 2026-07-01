@@ -10,7 +10,8 @@
   "packageManager": "yarn@4.17.0",
   "scripts": {
     "prepare": "husky",
-    "build": "mkdir -p $PROJECT_CWD/app/public/templates/@pcms && yarn workspaces foreach -Ap --include 'packages/*' run build && yarn workspaces foreach -Ap --include 'templates/*' run build",
+    "build:examples": "echo Building example instances... && mkdir -p $PROJECT_CWD/app/public/instances && mkdir -p $PROJECT_CWD/app/public/instances/@pcms && cd $PROJECT_CWD/app/public/instances/my-contact-card && zip -r ../my-contact-card.zip . && echo Done with example instances.",
+    "build": "yarn build:examples && yarn workspaces foreach -Ap --include 'packages/*' run build && yarn workspaces foreach -Ap --include 'templates/*' run build",
     "typecheck": "yarn workspaces foreach -Ap --include 'packages/*' run typecheck && yarn workspaces foreach -Ap --include 'templates/*' run typecheck",
     "test": "yarn workspaces foreach -Ap --include 'packages/*' run test && yarn workspaces foreach -Ap --include 'templates/*' run test"
   },
