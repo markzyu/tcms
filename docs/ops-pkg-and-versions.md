@@ -20,7 +20,6 @@ Within packages, we adopt a naming scheme, based on the three levels of Security
 - `@pcms/mini-app-*` for mini-app packages (Harness for connecting Vue/React mini apps to Local CDN)
 - `@pcms/tool-*` for tool packages (Any common types and utilities used by tools)
 - `@pcms/admin-*` for admin shell packages (Any common types and utilities used by the admin shell)
-- `@pcms/cdn-*` for the implementation of Local CDN, Reversed CDN, and Pack Drop
 
 Build scripts: All templates and packages should have `build`, `typecheck` and `test` scripts at the least, even if they just return 0: 
 

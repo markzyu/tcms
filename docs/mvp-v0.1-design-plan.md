@@ -1,6 +1,6 @@
 # PCMS — MVP v0.1 Design Plan
 
-# STATUS: PARTIAL DRAFT (Phase 0 is reviewed)
+# STATUS: PARTIAL DRAFT (Phases 0-1 are reviewed)
 
 High-level project map and phased delivery plan for the first vertical slice: **contact card** template proving the PCMS spine.
 
@@ -10,7 +10,7 @@ Complements [requirements.md](./requirements.md), [tech-overview.md](./tech-over
 
 > **Create a contact card on phone, edit in a Tool, preview through Local CDN, show on same device.**
 
-> **Mini-app templates use **React** (CSR) in v0.1. The Admin shell and Tools use **Vue** (Tauri). Vue as a mini-app framework is deferred.**
+> **Mini-app templates use React (CSR) in v0.1. The Admin shell and Tools use Vue (Tauri). Vue as a mini-app framework is deferred.**
 
 Everything else in motivation (pack drops, today's board, field kit, reversed CDN) hangs off this spine once instance schema + LCDN + editor tool exist.
 
@@ -19,25 +19,25 @@ Everything else in motivation (pack drops, today's board, field kit, reversed CD
 PCMS is **6 projects** that can ship independently but share contracts:
 
 
-| #      | Project                      | Owns                                                                                 | Defers                                    |
-| ------ | ---------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------- |
-| **P1** | **Runtime shell**            | Tauri app, routing, Admin ↔ Tool navigation, Tauri commands for lifecycle            | Multiple templates, pack drop             |
-| **P2** | **Local CDN (LCDN)**         | Single entry point, static layer, instance routes, `proxy_pass` to mini-app backends | Reversed CDN, framework cache, CSP polish |
-| **P3** | **Instance & config schema** | Mini-app instance model, on-disk layout, template manifest contract                  | CAS, signed packs, merge                  |
-| **P4** | **Template: contact-card**   | React CSR mini-app + content model                                                   | SSR, iframes, arrays, Vue mini-apps       |
-| **P5** | **Tool: template editor**    | Reusable Edit/Preview chrome, schema-driven form, preview iframe                     | AI assist, version history UI             |
-| **P6** | **Publish & ops** (later)    | Pack drop zip, reversed CDN sync, hosting options, backup                            | v1                                        |
+| #      | Project                      | Owns                                                                      | Defers                                                                     |
+| ------ | ---------------------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| **P1** | **Runtime shell**            | Tauri app, routing, Admin ↔ Tool navigation, Tauri commands for lifecycle | Multiple templates, pack drop                                              |
+| **P2** | **Local CDN (LCDN)**         | Single entry point, serves static files, routes instances                 | Reversed CDN, framework cache, CSP polish, non-static backends, proxy_pass |
+| **P3** | **Instance & config schema** | Mini-app instance model, on-disk layout, template manifest contract       | CAS, signed packs, merge                                                   |
+| **P4** | **Template: contact-card**   | React CSR mini-app + content model                                        | SSR, iframes, arrays, Vue mini-apps                                        |
+| **P5** | **Tool: template editor**    | Reusable Edit/Preview chrome, schema-driven form, preview iframe          | AI assist, version history UI                                              |
+| **P6** | **Publish & ops** (later)    | Pack drop zip, reversed CDN sync, hosting options, backup                 | v1                                                                         |
 
 
 ### UI areas mapped
 
 ```
-Admin shell (P1)          Tools (P5)                 Mini apps (P4)
+Admin shell (P1)          Tools (P5)                   Mini apps (P4)
 ─────────────────         ─────────────────            ─────────────────
-• instance list      →    • TemplateEditor tool   →   • localhost HTTP
+• instance list      →    • TemplateEditor tool   →    • is a CSR mini-app
 • "New contact card"      • Edit tab (schema form)     • serves template
 • "Edit" / "Preview"      • Preview tab (iframe)       • bound 127.0.0.1
-• start/stop LCDN         • reusable ToolNav           • rendered via LCDN
+• start/stop LCDN         • reusable ToolNav           • served via LCDN
 ```
 
 Mini apps are **never** opened as Tauri routes. Preview tab loads **LCDN URL in sandboxed iframe**.
@@ -50,8 +50,8 @@ Forward-looking shapes (CAS, multi-page manifest, rich editor UI, LCDN/rcdn ops 
 
 ### Deliverables
 
-1. **`template.manifest.json`** (per template, bundled with app)
-2. **`instance.json`** (per mini-app instance, user data)
+1. `**template.manifest.json`** (per template, bundled with app)
+2. `**instance.json**` (per mini-app instance, user data)
 3. **Variant content files** — `content/{pageShortName}.{variant}.json` (contact card: `main.en.json`, etc.)
 4. Directory layout under app sandbox (see below)
 5. **Standalone contact-card site** — React CSR reading the active variant content file; runnable without PCMS shell for dev/demo
@@ -76,11 +76,11 @@ templates/
 
 ### Content file naming
 
-Content files use **`{pageShortName}.{variant}.json`**.
+Content files use `**{pageShortName}.{variant}.json**`.
 
-* **Page short name** — key from `template.manifest.json` → `pages` (contact card: `main`).
-* **Variant** — locale or edition tag (e.g. `en`, `es`). One variant is **active** at a time via `instance.json` → `currentVariant`.
-* Phase 0 contact card is **single-page, flat fields, no arrays**. Multiple variants are supported; only the active variant is served in preview/publish until the user switches.
+- **Page short name** — key from `template.manifest.json` → `pages` (contact card: `main`).
+- **Variant** — locale or edition tag (e.g. `en`, `es`). One variant is **active** at a time via `instance.json` → `currentVariant`.
+- Phase 0 contact card is **single-page, flat fields, no arrays**. Multiple variants are supported; only the active variant is served in preview/publish until the user switches.
 
 ### `instance.json` (v0)
 
@@ -99,22 +99,24 @@ Source of truth for instance metadata and which content variant is active.
 }
 ```
 
-* **`slug`** — the URL slug for this instance. This will later by replaced by the "Page Short Name" in [futures-looking.md](./futures-looking.md).
-* **`currentVariant`** — which `{pageShortName}.{variant}.json` files are live for preview/publish.
-* **`variants`** — declared locale/edition tags for this instance. Phase 0 may ship with one variant seeded; the field exists so multi-lingual config does not require a schema migration later.
+- `**slug**` — the URL slug for this instance. This will later by replaced by the "Page Short Name" in [futures-looking.md](./futures-looking.md).
+- `**currentVariant**` — which `{pageShortName}.{variant}.json` files are live for preview/publish.
+- `**variants**` — declared locale/edition tags for this instance. Phase 0 may ship with one variant seeded; the field exists so multi-lingual config does not require a schema migration later.
 
 ### Contact-card content model
 
 Flat model for `content/main.{variant}.json` — no arrays in Phase 0.
 
-| Field       | Type   | Notes                              |
-| ----------- | ------ | ---------------------------------- |
-| `name`      | string | e.g. “John Doe”                    |
-| `headline`  | string | e.g. “Photographer”                |
-| `bio`       | string | multiline                          |
-| `email`     | string |                                    |
-| `phone`     | string |                                    |
+
+| Field       | Type   | Notes                                      |
+| ----------- | ------ | ------------------------------------------ |
+| `name`      | string | e.g. “John Doe”                            |
+| `headline`  | string | e.g. “Photographer”                        |
+| `bio`       | string | multiline                                  |
+| `email`     | string |                                            |
+| `phone`     | string |                                            |
 | `heroImage` | string | filename under `assets/` (e.g. `hero.jpg`) |
+
 
 ### `content/main.en.json` (v0 example)
 
@@ -205,38 +207,40 @@ Contact-card only — single page, CSR default. LCDN mount paths and backend con
 }
 ```
 
----
-
----
-
-# STATUS: DRAFT (Phase 1 and beyond, NEED FULL, HUMAN REVIEW. ALSO NEED REVIEW ON SCRUM BOARD)
-
----
-
 ## Phase 1 — Basic Local CDN
 
 **Goal:** LCDN v0 — one instance, one route, static + proxy. No reversed CDN, no framework cache.
 
 ### LCDN v0 capabilities
 
-- Read **`lcdn.config.json`** (or equivalent) listing registered instances
+- Read `**lcdn.config.json`** (or equivalent) listing registered instances
 - Bind **localhost + optional LAN** (private networks per tech doc)
 - For each instance at `/cards/{slug}/`:
-  - Serve active variant content (`content/main.{currentVariant}.json`), other variant files on request, and `assets/*` from instance dir
+  - Serve active variant content (`content/main.{currentVariant}.json`), other variant files on request, and `assets/`* from instance dir
   - Serve cached/bundled HTML entry (CSR shell)
-  - `proxy_pass` API/dynamic paths to mini-app backend port if needed
 - Expose preview URL to Tauri: `http://127.0.0.1:{lcdnPort}/cards/{slug}/`
 
-### Mini-app backend v0 (contact-card)
+Additionally, we will have a basic debug UI in Tauri:
+- A start/stop button 
+- An iframe to preview the instance
+- A text area to edit content json
+- A textbox to edit the slug
 
-- Sidecar / in-process server on **random localhost port**
-- Serves template `app/` static files (React bundle)
-- For CSR v0, dynamic work is minimal: optionally regenerate HTML cache on content change, or shell fetches active variant content from LCDN path
+### LCDN v0 implementation
+
+- LCDN is an in-process server on **random localhost port**
+- LCDN starts via Tauri command. Tauri passes in LCDN config object, along with paths to templates, and instances.
+- LCDN handles "static" server mode directly, without the need for a separate static server crate.
+- Tauri can also control LCDN via IPC/Rust states. Here is a preview of possible features:
+  - Tauri can shutdown LCDN. Think `axum::serve().with_graceful_shutdown()`
+  - Tauri can update the LCDN config, through `arc_swap`. 
+  - Tauri can add/remove instances visible to LCDN. LCDN uses Dynamic Routing and reads the config to know which instances to serve.
+- But, for CSR v0, dynamic work is minimal: starting, stopping, and, hotswapping the LCDN config (renaming instance slug, not adding/removing instances)
 
 ### Tauri commands (minimal)
 
 - `lcdn_start()` / `lcdn_stop()` / `lcdn_status()`
-- `instance_register(instanceId)` → updates LCDN config + starts backend
+- `instance_register(instanceId)` → updates LCDN config
 - `instance_get_preview_url(instanceId)` → for Preview tab
 
 ### Out of scope for LCDN v0
@@ -246,10 +250,17 @@ Contact-card only — single page, CSR default. LCDN mount paths and backend con
 - CSP enforcement (stub only)
 - Reversed CDN upload
 - Screensaver (stub “serving” state in UI only)
+- Simulation of nginx `proxy_pass` to other backend types
 
 ### Success criteria
 
 Edit `content/main.{variant}.json` on disk → refresh iframe → contact card updates via LCDN URL.
+
+---
+
+---
+
+# STATUS: DRAFT (Phase 2 and beyond, NEED FULL, HUMAN REVIEW. ALSO NEED REVIEW ON SCRUM BOARD)
 
 ---
 
@@ -282,10 +293,10 @@ Edit `content/main.{variant}.json` on disk → refresh iframe → contact card u
 </ToolShell>
 ```
 
-- **`ToolShell`** — header, back to Admin, optional save indicator
-- **`ToolNav`** — two-tab bar; reusable by future tools
-- **`EditView`** — schema-driven form from `content.schema.json` for the active variant
-- **`PreviewView`** — sandboxed iframe → `instance_get_preview_url()`
+- `**ToolShell**` — header, back to Admin, optional save indicator
+- `**ToolNav**` — two-tab bar; reusable by future tools
+- `**EditView**` — schema-driven form from `content.schema.json` for the active variant
+- `**PreviewView**` — sandboxed iframe → `instance_get_preview_url()`
 
 ### Save path
 
@@ -293,7 +304,7 @@ Edit `content/main.{variant}.json` on disk → refresh iframe → contact card u
 2. Save → Tauri writes `content/main.{variant}.json` + triggers LCDN cache refresh (when HTML snapshot enabled)
 3. Preview tab reloads iframe (or listens for save event)
 
-Future tools (Hosting options, CDN ops, backup) reuse **`ToolShell` + `ToolNav`**; Admin never embeds editor UI inline.
+Future tools (Hosting options, CDN ops, backup) reuse `**ToolShell` + `ToolNav**`; Admin never embeds editor UI inline.
 
 ---
 
@@ -321,8 +332,7 @@ Also: asset picker for hero image, HTML cache on save, persist backend port in `
 2. **Tool invocation contract:** Admin passes `instanceId` + `toolId`; tool loads schema from template bundle.
 3. **Preview always via LCDN:** Preview tab never points iframe at mini-app port directly.
 4. **CSR default:** Contact card needs no SSR for v0; SSR toggle deferred until template 2 (see [futures-looking.md](./futures-looking.md)).
-5. **Port strategy:** Random port per session OK for v0; persist backend port in `instance.json` for board mode (Phase 3).
-
+5. **Port strategy:** Serving on a hardcoded static port for now. This can be configurable later.
 ---
 
 ## Repo structure
@@ -330,8 +340,12 @@ Also: asset picker for hero image, HTML cache on save, persist backend port in `
 ```
 pcms/
   docs/
-  app/             # P1/P5: Tauri + Vue Admin + Tools
-    src/
+  app/
+    crates/        # Local CDN + any template backend
+      common/      # Common types such as the schema for Instance, LCDN config, etc.
+      lcdn-server/
+    src-tauri/     # Tauri commands. Consumes LCDN types.
+    src/           # Tauri + Vue Admin + Tools
       admin/
       tools/
         common/ToolShell.vue, ToolNav.vue
@@ -340,11 +354,9 @@ pcms/
     mini-app-*/    # See naming scheme in ops-pkg-and-versions.md
     tool-*/
     admin-*/
-    cdn-*/
-    cdn-local/     # P2: custom server
   templates/
-    contact-card/  # P4: manifest, schema, React app, backend
-    schemas/       # P3: shared JSON Schema defs (optional)
+    contact-card/  # Manifest, schema, React app
+    schemas/       # Shared JSON Schema defs (optional)
 ```
 
 ---
