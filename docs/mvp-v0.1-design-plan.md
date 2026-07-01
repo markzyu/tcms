@@ -209,12 +209,12 @@ example-info-card1 only — single page, CSR default. LCDN mount paths and backe
 
 ## Phase 1 — Basic Local CDN
 
-**Goal:** LCDN v0 — one instance, one route, static + proxy. No reversed CDN, no framework cache.
+**Goal:** LCDN v0 — one instance, one route, serving html and JS statically. No reversed CDN, no framework cache.
 
 ### LCDN v0 capabilities
 
 - Read `**lcdn.config.json`** (or equivalent) listing registered instances
-- Bind **localhost + optional LAN** (private networks per tech doc)
+- Bind **127.0.0.1:8088**
 - For each instance at `/cards/{slug}/`:
   - Serve active variant content (`content/main.{currentVariant}.json`), other variant files on request, and `assets/`* from instance dir
   - Serve cached/bundled HTML entry (CSR shell)
@@ -228,7 +228,7 @@ Additionally, we will have a basic debug UI in Tauri:
 
 ### LCDN v0 implementation
 
-- LCDN is an in-process server on **random localhost port**
+- LCDN is an in-process server on **hardcoded static port 8088**
 - LCDN starts via Tauri command. Tauri passes in LCDN config object, along with paths to templates, and instances.
 - LCDN handles "static" server mode directly, without the need for a separate static server crate.
 - Tauri can also control LCDN via IPC/Rust states. Here is a preview of possible features:
@@ -240,8 +240,8 @@ Additionally, we will have a basic debug UI in Tauri:
 ### Tauri commands (minimal)
 
 - `lcdn_start()` / `lcdn_stop()` / `lcdn_status()`
-- `instance_register(instanceId)` → updates LCDN config
-- `instance_get_preview_url(instanceId)` → for Preview tab
+- `lcdn_rescan_instances()` → renames instance if needed
+- `lcdn_get_preview_url(instanceId)` → for Preview tab
 
 ### Out of scope for LCDN v0
 
@@ -254,7 +254,15 @@ Additionally, we will have a basic debug UI in Tauri:
 
 ### Success criteria
 
-Edit `content/main.{variant}.json` on disk → refresh iframe → contact card updates via LCDN URL.
+- lcdn_start() binds 127.0.0.1
+- Seeded instance `my-contact-card` is registered from config/paths passed by Tauri.
+- Solidify Rust struct / serde definitions for `instance.json`, without the JSON Schema for now.
+- GET http://127.0.0.1:{port}/cards/my-contact-card/ renders contact card with content from disk. Verify `Referrer-Policy` header.
+- GET http://127.0.0.1:{port}/cards/my-contact-card/assets/xxx for assets in `content/main.en.json`, where it is specified as `/assets/xxx`
+- GET `/__query__/cdn-bridge.js` (Referer = instance URL) inlines current main.{currentVariant}.json. Verify `cache-control` header.
+- Edit `instances/.../content/main.en.json` → iframe refresh shows new text (no app restart).
+- Slug change updates mount path and preview URL (via config hotswap).
+- Debug UI: start/stop, iframe to preview URL, optional JSON/slug editors wired to disk + config refresh.
 
 ---
 
@@ -296,7 +304,7 @@ Edit `content/main.{variant}.json` on disk → refresh iframe → contact card u
 - `**ToolShell**` — header, back to Admin, optional save indicator
 - `**ToolNav**` — two-tab bar; reusable by future tools
 - `**EditView**` — schema-driven form from `content.schema.json` for the active variant
-- `**PreviewView**` — sandboxed iframe → `instance_get_preview_url()`
+- `**PreviewView**` — sandboxed iframe → `lcdn_get_preview_url()`
 
 ### Save path
 
