@@ -5,6 +5,7 @@ import { NODE_MODULES_USED_BY_BUILD_SCHEMA_STEP } from "@pcms/mini-app-common";
 const DEPENDENCIES_FROM_LOCAL_CDN = Object.keys(packageJson.dependencies || {})
   .filter((name) => !name.startsWith("@pcms/"));
 
+// @ts-ignore: Some linters complain about browser env. But this will be run in Node.
 const isWatch = process.argv.includes("--watch");
 
 const buildOptions: esbuild.BuildOptions = {
