@@ -1,7 +1,7 @@
 {
   "slug": "my-contact-card",
   "name": "My contact card",
-  "templateId": "contact-card",
+  "templateId": "example-info-card1",
   "templateVersion": "1.0.0",
   "createdAt": 1782051137000,
   "updatedAt": 1782051137000,

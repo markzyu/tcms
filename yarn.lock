@@ -1322,9 +1322,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@pcms/template-mvp1@workspace:templates/mvp1":
+"@pcms/template-example-info-card1@workspace:templates/example-info-card1":
   version: 0.0.0-use.local
-  resolution: "@pcms/template-mvp1@workspace:templates/mvp1"
+  resolution: "@pcms/template-example-info-card1@workspace:templates/example-info-card1"
   dependencies:
     "@pcms/mini-app-react-test-utils": "workspace:*"
     "@pcms/mini-app-react-utils": "workspace:*"

@@ -17,7 +17,7 @@ instances/
       b9/
         b94d27b9934d3e08a8e1d8227fd2ce510004fd5e1b17e23c52c3c0f0b0e0c0d.json
 templates/
-  contact-card/
+  example-info-card1/
     manifest.json
     schema/content.schema.json
     schema/xxx.schema.json  # any other schema referenced by content
@@ -41,7 +41,7 @@ This json is the source of truth for the current Ops configs of the mini app ins
 {
   "name": "My contact card",
   "slug": "my-contact-card",
-  "templateId": "contact-card",
+  "templateId": "example-info-card1",
   "templateVersion": "1.0.0",
   "createdAt": 1782051137000,
   "updatedAt": 1782051137000,
@@ -104,7 +104,7 @@ When CAS is enabled, string fields that reference assets hold the CAS ID (SHA-25
 
 ## `content.schema.json`
 
-Example of how schemas and editor UI may work for multi-page templates with both flat objects, and nested arrays. Intentionally richer than contact-card Phase 0 content.
+Example of how schemas and editor UI may work for multi-page templates with both flat objects, and nested arrays. Intentionally richer than example-info-card1 Phase 0 content.
 
 ```json
 {
@@ -232,7 +232,7 @@ Note: `richTextList` is an example of a rich text schema. In reality it would be
 
 ```json
 {
-  "id": "contact-card",
+  "id": "example-info-card1",
   "version": "1.0.0",
   "title": "Contact Card",
   "pages": {

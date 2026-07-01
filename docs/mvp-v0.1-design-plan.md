@@ -24,7 +24,7 @@ PCMS is **6 projects** that can ship independently but share contracts:
 | **P1** | **Runtime shell**            | Tauri app, routing, Admin ↔ Tool navigation, Tauri commands for lifecycle | Multiple templates, pack drop                                              |
 | **P2** | **Local CDN (LCDN)**         | Single entry point, serves static files, routes instances                 | Reversed CDN, framework cache, CSP polish, non-static backends, proxy_pass |
 | **P3** | **Instance & config schema** | Mini-app instance model, on-disk layout, template manifest contract       | CAS, signed packs, merge                                                   |
-| **P4** | **Template: contact-card**   | React CSR mini-app + content model                                        | SSR, iframes, arrays, Vue mini-apps                                        |
+| **P4** | **Template: example-info-card1**   | React CSR mini-app + content model                                        | SSR, iframes, arrays, Vue mini-apps                                        |
 | **P5** | **Tool: template editor**    | Reusable Edit/Preview chrome, schema-driven form, preview iframe          | AI assist, version history UI                                              |
 | **P6** | **Publish & ops** (later)    | Pack drop zip, reversed CDN sync, hosting options, backup                 | v1                                                                         |
 
@@ -44,7 +44,7 @@ Mini apps are **never** opened as Tauri routes. Preview tab loads **LCDN URL in 
 
 ## Phase 0 — Contracts + standalone template
 
-**Goal:** Freeze the **minimal** internal configuration schema and ship the contact-card as a **standalone site** (CMS schema + React CSR) before LCDN integration.
+**Goal:** Freeze the **minimal** internal configuration schema and ship the example-info-card1 as a **standalone site** (CMS schema + React CSR) before LCDN integration.
 
 Forward-looking shapes (CAS, multi-page manifest, rich editor UI, LCDN/rcdn ops blocks) are in [futures-looking.md](./futures-looking.md) — not Phase 0 scope.
 
@@ -54,7 +54,7 @@ Forward-looking shapes (CAS, multi-page manifest, rich editor UI, LCDN/rcdn ops 
 2. `**instance.json**` (per mini-app instance, user data)
 3. **Variant content files** — `content/{pageShortName}.{variant}.json` (contact card: `main.en.json`, etc.)
 4. Directory layout under app sandbox (see below)
-5. **Standalone contact-card site** — React CSR reading the active variant content file; runnable without PCMS shell for dev/demo
+5. **Standalone example-info-card1 site** — React CSR reading the active variant content file; runnable without PCMS shell for dev/demo
 
 ### Directory layout
 
@@ -68,7 +68,7 @@ instances/
     assets/
       hero.jpg
 templates/
-  contact-card/
+  example-info-card1/
     manifest.json
     schema/content.schema.json
     app/                    # mini-app static bundle (React CSR)
@@ -90,7 +90,7 @@ Source of truth for instance metadata and which content variant is active.
 {
   "slug": "my-contact-card",
   "name": "My contact card",
-  "templateId": "contact-card",
+  "templateId": "example-info-card1",
   "templateVersion": "1.0.0",
   "createdAt": 1782051137000,
   "updatedAt": 1782051137000,
@@ -103,7 +103,7 @@ Source of truth for instance metadata and which content variant is active.
 - `**currentVariant**` — which `{pageShortName}.{variant}.json` files are live for preview/publish.
 - `**variants**` — declared locale/edition tags for this instance. Phase 0 may ship with one variant seeded; the field exists so multi-lingual config does not require a schema migration later.
 
-### Contact-card content model
+### example-info-card1 content model
 
 Flat model for `content/main.{variant}.json` — no arrays in Phase 0.
 
@@ -133,7 +133,7 @@ Flat model for `content/main.{variant}.json` — no arrays in Phase 0.
 
 ### `content.schema.json` (v0)
 
-Aligned with contact-card Phase 0 — flat fields only, minimal editor UI groups.
+Aligned with example-info-card1 Phase 0 — flat fields only, minimal editor UI groups.
 
 ```json
 {
@@ -188,11 +188,11 @@ Aligned with contact-card Phase 0 — flat fields only, minimal editor UI groups
 
 ### `template/manifest.json` (v0)
 
-Contact-card only — single page, CSR default. LCDN mount paths and backend config come in Phase 1; see [futures-looking.md](./futures-looking.md) for the expanded manifest shape.
+example-info-card1 only — single page, CSR default. LCDN mount paths and backend config come in Phase 1; see [futures-looking.md](./futures-looking.md) for the expanded manifest shape.
 
 ```json
 {
-  "id": "contact-card",
+  "id": "example-info-card1",
   "version": "1.0.0",
   "title": "Contact Card",
   "dependencies": {
@@ -355,7 +355,7 @@ pcms/
     tool-*/
     admin-*/
   templates/
-    contact-card/  # Manifest, schema, React app
+    example-info-card1/  # Manifest, schema, React app
     schemas/       # Shared JSON Schema defs (optional)
 ```
 
@@ -391,7 +391,7 @@ Ordered list of work **after** the four epics; not all are v0.1 scope.
 
 1. `instance.json` + `content/main.en.json` + JSON Schema (contact card)
 2. LCDN serves active variant content + assets + index.html at `/cards/{slug}/`
-3. contact-card React CSR reads active variant content from LCDN path
+3. example-info-card1 React CSR reads active variant content from LCDN path
 4. Tool: Edit | Preview (iframe)
 5. Admin: one button → open editor for default instance
 
