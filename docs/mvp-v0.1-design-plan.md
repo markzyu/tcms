@@ -167,14 +167,24 @@ Aligned with contact-card Phase 0 — flat fields only, minimal editor UI groups
         "title": "Hero Image",
         "description": "Filename under assets/ for this instance.",
         "type": "string"
+      },
+      "heroAltText": {
+        "title": "Hero Image Alt Text",
+        "type": "string"
+      },
+      "heroAlignment": {
+        "title": "Hero Image Alignment",
+        "type": "enum",
+        "enum": ["left", "right"],
+        "default": "left"
       }
     },
-    "required": ["name"]
+    "required": ["name", "heroImage"]
   }
 }
 ```
 
-### `template.manifest.json` (v0)
+### `template/manifest.json` (v0)
 
 Contact-card only — single page, CSR default. LCDN mount paths and backend config come in Phase 1; see [futures-looking.md](./futures-looking.md) for the expanded manifest shape.
 

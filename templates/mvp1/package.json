@@ -5,6 +5,7 @@
   "scripts": {
     "build:css": "tailwindcss -i ./src/main.css -o ./dist/app.css --minify",
     "build:js": "node esbuild.config.mjs",
+    "build:schemas": "tsx src/content/rootManifest.mts",
     "build": "yarn build:css && yarn build:js",
     "dev:css": "tailwindcss -i ./src/main.css -o ./dist/app.css --watch",
     "dev:js": "node esbuild.config.mjs --watch",
@@ -16,7 +17,8 @@
   "dependencies": {
     "@pcms/mini-app-react-utils": "workspace:*",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@pcms/mini-app-react-test-utils": "workspace:*",
@@ -30,6 +32,7 @@
     "npm-run-all": "^4.1.5",
     "tailwindcss": "^4.1.7",
     "ts-jest": "^29.2.5",
+    "tsx": "^4.22.4",
     "typescript": "~6.0.3"
   }
 }
