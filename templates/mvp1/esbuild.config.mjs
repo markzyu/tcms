@@ -10,7 +10,7 @@ const buildOptions = {
   jsx: "automatic",
   sourcemap: true,
   minify: !isWatch,
-  external: ["react", "react-dom", "react-dom/client", "react/jsx-runtime", "zod"],
+  external: ["react", "react-dom", "react-dom/client", "react/jsx-runtime"],
 };
 
 if (isWatch) {

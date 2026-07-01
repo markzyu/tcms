@@ -1,14 +1,11 @@
 import { screen, waitFor } from "@testing-library/react";
 import { renderWithCdnBridge } from "@pcms/mini-app-react-test-utils";
-import { z } from "zod";
 
 import { PageContentProvider, usePageContentContext } from "./PageContentProvider";
 
-const basicContentSchema = z.object({
-  title: z.string(),
-});
-
-type BasicContent = z.infer<typeof basicContentSchema>;
+type BasicContent = {
+  title: string;
+};
 
 const basicContent: BasicContent = {
   title: "Hello world",
@@ -29,7 +26,7 @@ const render = renderWithCdnBridge<BasicContent>;
 describe("PageContentProvider", () => {
   it("exposes contentJson synchronously when initialContentJson exists", () => {
     render(
-      <PageContentProvider contentSchema={basicContentSchema}>
+      <PageContentProvider>
         <BasicContentView />
       </PageContentProvider>,
       { content: basicContent },
@@ -41,7 +38,7 @@ describe("PageContentProvider", () => {
 
   it("sets isLoading until fetchContentJson resolves when initialContentJson is missing", async () => {
     const { mockCdnBridge } = render(
-      <PageContentProvider contentSchema={basicContentSchema}>
+      <PageContentProvider>
         <BasicContentView />
       </PageContentProvider>,
       {
@@ -59,6 +56,6 @@ describe("PageContentProvider", () => {
     });
 
     expect(screen.queryByTestId("loading")).not.toBeInTheDocument();
-    expect(mockCdnBridge.fetchContentJson).toHaveBeenCalledWith("main", expect.any(Function));
+    expect(mockCdnBridge.fetchContentJson).toHaveBeenCalledWith("main");
   });
 });

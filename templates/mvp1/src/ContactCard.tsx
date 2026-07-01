@@ -1,5 +1,5 @@
 import { CONTACT_CARD_TEST_IDS } from "./constants";
-import type { ContactCardContent } from "./content/contactCard";
+import { ContactCardContent } from "./content/contactCard";
 import { usePageContentContext } from "@pcms/mini-app-react-utils";
 
 export const ContactCard = () => {
