@@ -59,6 +59,8 @@ export const definePageContentSchema = async (props: DefinePageContentSchemaProp
     path.join(outputDir, `${schemaName}.schema.json`),
     JSON.stringify(schemaDefinition, null, 2)
   );
+  console.log("Generated schema for", schemaName);
+
   return `schema/${schemaName}.schema.json`;
 };
 
@@ -96,6 +98,16 @@ export const defineRootManifest = async (props: DefineRootManifestProps) => {
     path.join(outputDir, "manifest.json"),
     JSON.stringify(manifestDefinition, null, 2)
   );
+  console.log("Generated manifest at", path.join(outputDir, "manifest.json"));
+};
+
+export const cleanUpSchemaDirectory = async () => {
+  const path = await import("path");
+  const { rm } = await import("fs/promises");
+  const outputDir = path.join(process.cwd(), "dist", "schema");
+  console.log("Cleaning up schema directory at", outputDir);
+  await rm(outputDir, { recursive: true, force: true });
+  console.log("Cleaned up schema directory.");
 };
 
 /**

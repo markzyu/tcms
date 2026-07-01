@@ -1,6 +1,8 @@
-import { contactCardSchemaName, contactCardSchemaPathPromise } from "./contactCard";
-import { defineRootManifest } from "@pcms/mini-app-common";
+import { cleanUpSchemaDirectory, defineRootManifest } from "@pcms/mini-app-common";
+await cleanUpSchemaDirectory();
 
+// Do not import any schema until cleanup is done.
+import { contactCardSchemaName, contactCardSchemaPathPromise } from "./contactCard";
 defineRootManifest({
   id: "contact-card",
   title: "Contact Card",
