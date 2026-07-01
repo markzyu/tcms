@@ -24,7 +24,7 @@ CSS is built separately with the [Tailwind CLI](https://tailwindcss.com/docs/ins
 
 ## Scripts and Ops
 
-Every template comes with a few `.mts` scripts to actually stitch together the build process.
+Every template comes with a few scripts to actually stitch together the build process.
 
 - `src/content/rootManifest.mts`: Defines the root manifest for the template.
 - `src/content/contactCard.ts`: Defines the contact card schema.
