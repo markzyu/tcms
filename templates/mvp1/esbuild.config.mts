@@ -1,8 +1,13 @@
 import * as esbuild from "esbuild";
+import * as packageJson from "./package.json" with { type: "json" };
+import { NODE_MODULES_USED_BY_BUILD_SCHEMA_STEP } from "@pcms/mini-app-common";
+
+const DEPENDENCIES_FROM_LOCAL_CDN = Object.keys(packageJson.dependencies || {})
+  .filter((name) => !name.startsWith("@pcms/"));
 
 const isWatch = process.argv.includes("--watch");
 
-const buildOptions = {
+const buildOptions: esbuild.BuildOptions = {
   entryPoints: ["src/main.tsx"],
   bundle: true,
   format: "esm",
@@ -10,7 +15,10 @@ const buildOptions = {
   jsx: "automatic",
   sourcemap: true,
   minify: !isWatch,
-  external: ["path", "fs/promises", "react", "react-dom", "react-dom/client", "react/jsx-runtime", "zod"],
+  external: [
+    ...NODE_MODULES_USED_BY_BUILD_SCHEMA_STEP,
+    ...DEPENDENCIES_FROM_LOCAL_CDN,
+  ],
 };
 
 if (isWatch) {

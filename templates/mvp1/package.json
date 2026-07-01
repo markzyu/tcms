@@ -4,11 +4,11 @@
   "private": true,
   "scripts": {
     "build:css": "tailwindcss -i ./src/main.css -o ./dist/app.css --minify",
-    "build:js": "node esbuild.config.mjs",
+    "build:js": "tsx esbuild.config.mts",
     "build:schemas": "tsx src/content/rootManifest.mts",
     "build": "yarn build:css && yarn build:js",
     "dev:css": "tailwindcss -i ./src/main.css -o ./dist/app.css --watch",
-    "dev:js": "node esbuild.config.mjs --watch",
+    "dev:js": "tsx esbuild.config.mts --watch",
     "dev": "run-p dev:css dev:js",
     "typecheck": "tsc --noEmit",
     "test": "jest",

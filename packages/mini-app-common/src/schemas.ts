@@ -97,3 +97,11 @@ export const defineRootManifest = async (props: DefineRootManifestProps) => {
     JSON.stringify(manifestDefinition, null, 2)
   );
 };
+
+/**
+ * These modules must be excluded during esbuild.
+ */
+export const NODE_MODULES_USED_BY_BUILD_SCHEMA_STEP = [
+  "path",
+  "fs/promises",
+];
