@@ -22,6 +22,16 @@ yarn test:watch  # jest in watch mode
 
 CSS is built separately with the [Tailwind CLI](https://tailwindcss.com/docs/installation/tailwind-cli) (`src/main.css` → `dist/app.css`), not through esbuild.
 
+## Scripts and Ops
+
+Every template comes with a few `.mts` scripts to actually stitch together the build process.
+
+- `src/content/rootManifest.mts`: Defines the root manifest for the template.
+- `src/content/contactCard.ts`: Defines the contact card schema.
+- `esbuild.config.mts`: The esbuild script that transpiles and bundles the final javascript code.
+
+All three files contain calls to Node.js modules. But `src/content` files rely on helper functions to do so. If you need custom Node.js logic, please add those to `esbuild.config.mts` or add a new, configurable build behavior in `@pcms/mini-app-common`.
+
 ## Testing (TDD)
 
 Component tests use Jest + jsdom + React Testing Library. They do **not** run esbuild or hit the network.
