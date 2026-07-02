@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+.is-desktop-os .toolbar-container {
+  padding: 0 16px;
+}
+
 .is-desktop-os .page-title {
-  margin-left: 16px;
+  text-align: center;
 }
