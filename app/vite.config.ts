@@ -1,4 +1,5 @@
 import { defineConfig } from "vite";
+import { visualizer } from 'rollup-plugin-visualizer';
 import process from "node:process";
 import tailwindcss from "@tailwindcss/vite";
 import vue from "@vitejs/plugin-vue";
@@ -9,6 +10,11 @@ export default defineConfig(() => ({
   plugins: [
     tailwindcss(),
     vue(),
+    visualizer({ 
+      open: false, 
+      filename: 'dist/bundle-size-analysis.html',
+      gzipSize: true 
+    })
   ],
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
