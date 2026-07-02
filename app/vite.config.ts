@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from "vite";
 import { visualizer } from 'rollup-plugin-visualizer';
 import process from "node:process";
@@ -27,6 +28,12 @@ export default defineConfig(() => ({
   // 1. prevent Vite from obscuring rust errors
   clearScreen: false,
   // 2. tauri expects a fixed port, fail if that port is not available
+  test: {
+    environment: "jsdom",
+    setupFiles: ["./src/vitest.setup.ts"],
+    globals: true,
+  },
+
   server: {
     port: 1420,
     strictPort: true,
