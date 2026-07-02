@@ -1343,6 +1343,7 @@ __metadata:
     "@tauri-apps/api": "npm:^2.11.1"
     "@tauri-apps/cli": "npm:^2.11.4"
     "@tauri-apps/plugin-opener": "npm:^2.5.4"
+    "@tauri-apps/plugin-os": "npm:~2"
     "@vitejs/plugin-vue": "npm:^6.0.7"
     tailwindcss: "npm:^4.3.2"
     typescript: "npm:~6.0.3"
@@ -1862,7 +1863,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tauri-apps/api@npm:^2.11.0, @tauri-apps/api@npm:^2.11.1":
+"@tauri-apps/api@npm:^2.11.0, @tauri-apps/api@npm:^2.11.1, @tauri-apps/api@npm:^2.8.0":
   version: 2.11.1
   resolution: "@tauri-apps/api@npm:2.11.1"
   checksum: 10c0/78a08a64ee7eab9d34bd4ba1bdc3a2440c7e9cc5737b3f1d77bd80fa38b0cb5e9601efe04da40c947c5da2ca38dc702bec21b4ae96b18ee5f3e82980d1f0b325
@@ -1996,6 +1997,15 @@ __metadata:
   dependencies:
     "@tauri-apps/api": "npm:^2.11.0"
   checksum: 10c0/9d5b8893680e776d4ae91f2be8ba9a49c56a3163307b4ad10ff71ffdaf67d07f7a7d4335c465cf32f499582d4589a04d9a66064de117e761b2588254b5202d53
+  languageName: node
+  linkType: hard
+
+"@tauri-apps/plugin-os@npm:~2":
+  version: 2.3.2
+  resolution: "@tauri-apps/plugin-os@npm:2.3.2"
+  dependencies:
+    "@tauri-apps/api": "npm:^2.8.0"
+  checksum: 10c0/cd8529de1e920d5689f2ce1e27da1f7eede40211df897b5460bba28d6bb80eed39ecac3584492e4e03035790f40cd31fdd9171678d7846db0bce089e8c86aab5
   languageName: node
   linkType: hard
 
