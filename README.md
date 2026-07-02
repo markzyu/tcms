@@ -9,7 +9,7 @@ yarn workspace @pcms/app tauri android init
 yarn workspace @pcms/app tauri ios init
 ```
 
-Then you must build the util packages and website templates:
+Then you must build the `packages/` and website `templates/`:
 ```bash
 yarn build
 yarn test
@@ -30,4 +30,9 @@ yarn workspace @pcms/app tauri android dev
 For iOS development, run:
 ```bash
 yarn workspace @pcms/app tauri ios dev
+```
+
+To build the app bundle and estimate bundle size, run this and then open the `app/dist/bundle-size-analysis.html` file:
+```bash
+yarn workspace @pcms/app build
 ```
