@@ -13,4 +13,7 @@ import '@ionic/vue/css/normalize.css';
 import '@ionic/vue/css/structure.css';
 import '@ionic/vue/css/typography.css';
 
+/* For now, default to show system theme for dark/light mode */
+import '@ionic/vue/css/palettes/dark.system.css';
+
 createApp(App).use(IonicVue).mount("#app");
