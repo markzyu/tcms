@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
+import { IonButton, IonLoading } from '@ionic/vue';
 
 const greetMsg = ref("");
 const name = ref("");
@@ -13,7 +14,7 @@ async function greet() {
 
 <template>
   <main class="container">
-    <h1>Welcome to Tauri + Vue</h1>
+    <h1 class="text-red-500">Hi, Welcome to Tauri + Vue</h1>
 
     <div class="row">
       <a href="https://vite.dev" target="_blank">
@@ -26,6 +27,10 @@ async function greet() {
         <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
       </a>
     </div>
+
+    <ion-button id="open-loading">Show Loading</ion-button>
+    <ion-loading trigger="open-loading" :duration="3000" message="Dismissing after 3 seconds..."></ion-loading>
+
     <p>Click on the Tauri, Vite, and Vue logos to learn more.</p>
 
     <form class="row" @submit.prevent="greet">
