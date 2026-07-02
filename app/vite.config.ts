@@ -17,6 +17,11 @@ export default defineConfig(() => ({
     })
   ],
 
+  build: {
+    // Ionic takes up 1MB. For now, we don't expect anything else to take 1MB.
+    chunkSizeWarningLimit: 2048
+  },
+
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
   // 1. prevent Vite from obscuring rust errors
