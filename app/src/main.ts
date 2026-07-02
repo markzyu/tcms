@@ -1,6 +1,7 @@
 import { createApp } from "vue";
 import { IonicVue } from '@ionic/vue';
 import App from "./App.vue";
+import router from "./router";
 import "./main.css";
 
 // For additional CSS: https://ionicframework.com/docs/vue/add-to-existing
@@ -16,4 +17,4 @@ import '@ionic/vue/css/typography.css';
 /* For now, default to show system theme for dark/light mode */
 import '@ionic/vue/css/palettes/dark.system.css';
 
-createApp(App).use(IonicVue).mount("#app");
+createApp(App).use(IonicVue).use(router).mount("#app");
