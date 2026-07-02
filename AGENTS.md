@@ -11,10 +11,9 @@ Before `yarn`, `npm`, or other Node tooling, activate the repo Node version:
 ```bash
 cd pcms   # repo root (where .nvmrc lives)
 
-export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
-# shellcheck source=/dev/null
-. "$NVM_DIR/nvm.sh"
-nvm use
+export NVM_DIR="${HOME}/.nvm"
+source "$NVM_DIR/nvm.sh"
+nvm use 22
 node -v   # should report v22.x
 ```
 
