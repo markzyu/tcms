@@ -11,9 +11,9 @@
   "scripts": {
     "prepare": "husky",
     "build:examples": "echo Building example instances... && mkdir -p $PROJECT_CWD/app/public/instances && mkdir -p $PROJECT_CWD/app/public/templates/@pcms && cd $PROJECT_CWD/app/public/instances/my-contact-card && zip -r ../my-contact-card.zip . && echo Done with example instances.",
-    "build": "yarn build:examples && yarn workspaces foreach -Ap --include 'packages/*' run build && yarn workspaces foreach -Ap --include 'templates/*' run build",
-    "typecheck": "yarn workspaces foreach -Ap --include 'packages/*' run typecheck && yarn workspaces foreach -Ap --include 'templates/*' run typecheck",
-    "test": "yarn workspaces foreach -Ap --include 'packages/*' run test && yarn workspaces foreach -Ap --include 'templates/*' run test"
+    "build": "yarn build:examples && yarn workspaces foreach -Ap --include 'packages/*' run build && yarn workspaces foreach -Ap --include 'templates/*' run build && yarn workspace @pcms/app run build",
+    "typecheck": "yarn workspaces foreach -Ap --include 'packages/*' run typecheck && yarn workspaces foreach -Ap --include 'templates/*' run typecheck && yarn workspace @pcms/app run typecheck",
+    "test": "yarn workspaces foreach -Ap --include 'packages/*' run test && yarn workspaces foreach -Ap --include 'templates/*' run test && yarn workspace @pcms/app run test"
   },
   "devDependencies": {
     "husky": "^9.1.7"

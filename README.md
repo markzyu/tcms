@@ -9,13 +9,12 @@ yarn workspace @pcms/app tauri android init
 yarn workspace @pcms/app tauri ios init
 ```
 
-Then you must build the `packages/` and website `templates/`:
+To verify the baseline correctness of all packages, templates, and the app, run:
 ```bash
-yarn build
-yarn test
+yarn typecheck && yarn build && yarn test && echo '[pcms] all baseline correctness checks passed.'
 ```
 
-Then, you can start the development server for the PCMS app:
+Meanwhile, you can start the development server for the PCMS app:
 
 For Desktop development, run:
 ```bash
