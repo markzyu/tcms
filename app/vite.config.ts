@@ -32,6 +32,19 @@ export default defineConfig(() => ({
     environment: "jsdom",
     setupFiles: ["./src/vitest.setup.ts"],
     globals: true,
+    coverage: {
+      provider: "v8" as const,
+      reporter: ["text", "html"],
+      include: ["src/**/*.{ts,vue}"],
+      exclude: [
+        "src/**/*.spec.ts",
+        "src/**/*.d.ts",
+        "src/main.ts",
+        "src/vite-env.d.ts",
+        "src/vitest.setup.ts",
+        "src/testUtils.ts",
+      ],
+    },
   },
 
   server: {

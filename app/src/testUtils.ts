@@ -14,11 +14,11 @@ export function renderTest<Props, Data = {}>(
 
   wrapper = mount(component, {
     attachTo: document.body,
-    global: {
-      plugins: [IonicVue],
-      ...options?.global,
-    },
     ...options,
+    global: {
+      ...options?.global,
+      plugins: [IonicVue, ...(options?.global?.plugins ?? [])],
+    },
   });
   return wrapper;
 }

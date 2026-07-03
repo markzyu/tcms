@@ -6,7 +6,7 @@
   <ion-page>
     <ion-header>
       <ion-toolbar>
-        <ion-title class="page-title">
+        <ion-title class="page-title" data-testid="settings-page-title">
           Settings
         </ion-title>
       </ion-toolbar>
