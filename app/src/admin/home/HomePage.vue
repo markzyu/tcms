@@ -52,41 +52,43 @@ import { useLocalCDNControls } from './hooks';
       </ion-toolbar>
     </ion-header>
 
-    <ion-content class="content">
-      <ion-card class="mx-auto max-w-200 mb-4">
-        <div class="relative h-50 rounded-t-sm overflow-hidden">
-          <iframe ref="previewIframe" data-testid="preview-iframe" class="absolute left-0 top-0 w-full object-cover max-w-none h-full -z-10" src="https://picsum.photos/600/400" alt="Random image" />
-        </div>
-        <ion-card-content class="-mb-2" data-testid="home-status">
-          Test: {{ debugUrlSlug }} {{ isLocalCDNRunning ? '(Running)' : '' }} {{ isLocalCDNError ? '(Error)' : '' }}
-        </ion-card-content>
-        <div class="flex justify-end gap-2">
-          <ion-button size="small" fill="clear" data-testid="start-cdn-button" @click="startLocalCDN" v-if="!isLocalCDNRunning">
-            <ion-spinner class="w-4 h-4 mr-2" v-if="isLocalCDNStarting"></ion-spinner>
-            <ion-icon class="w-4 h-4 mr-1 fill-red-600" :icon="alertCircle" v-if="isLocalCDNError"></ion-icon>
-            Start
-          </ion-button>
-          <ion-button size="small" fill="clear" data-testid="stop-cdn-button" @click="stopLocalCDN" v-else>
-            <ion-spinner class="w-4 h-4 mr-2" v-if="isLocalCDNStopping"></ion-spinner>
-            Stop
-          </ion-button>
-          <ion-button size="small" fill="clear" data-testid="edit-button">Edit</ion-button>
-          <ion-button size="small" fill="clear" data-testid="share-button">Share</ion-button>
-        </div>
-      </ion-card>
-      <ion-card class="mx-auto max-w-200">
-        <ion-card-content class="" data-testid="debug-tools-heading">
-          Debug Tools
-        </ion-card-content>
-        <ion-list>
-          <ion-item>
-            <ion-input type="text" label="URL Slug" data-testid="url-slug-input" v-model="debugUrlSlug" :helper-text="isSlugDirty && isLocalCDNRunning ? 'Please restart the server to apply the new slug' : ''"></ion-input>
-          </ion-item>
-          <ion-item>
-            <ion-textarea label="JSON Data" data-testid="json-data-textarea" v-model="debugJson"></ion-textarea>
-          </ion-item>
-        </ion-list>
-      </ion-card>
+    <ion-content>
+      <div class="w-full flex flex-col px-4 py-6 gap-4">
+        <ion-card class="w-full mx-auto max-w-200">
+          <div class="relative h-50 rounded-t-sm overflow-hidden">
+            <iframe ref="previewIframe" data-testid="preview-iframe" class="absolute left-0 top-0 w-full object-cover max-w-none h-full -z-10" src="https://picsum.photos/600/400" alt="Random image" />
+          </div>
+          <ion-card-content class="-mb-2" data-testid="home-status">
+            Test: {{ debugUrlSlug }} {{ isLocalCDNRunning ? '(Running)' : '' }} {{ isLocalCDNError ? '(Error)' : '' }}
+          </ion-card-content>
+          <div class="flex justify-end gap-2">
+            <ion-button size="small" fill="clear" data-testid="start-cdn-button" @click="startLocalCDN" v-if="!isLocalCDNRunning">
+              <ion-spinner class="w-4 h-4 mr-2" v-if="isLocalCDNStarting"></ion-spinner>
+              <ion-icon class="w-4 h-4 mr-1 fill-red-600" :icon="alertCircle" v-if="isLocalCDNError"></ion-icon>
+              Start
+            </ion-button>
+            <ion-button size="small" fill="clear" data-testid="stop-cdn-button" @click="stopLocalCDN" v-else>
+              <ion-spinner class="w-4 h-4 mr-2" v-if="isLocalCDNStopping"></ion-spinner>
+              Stop
+            </ion-button>
+            <ion-button size="small" fill="clear" data-testid="edit-button">Edit</ion-button>
+            <ion-button size="small" fill="clear" data-testid="share-button">Share</ion-button>
+          </div>
+        </ion-card>
+        <ion-card class="w-full mx-auto max-w-200">
+          <ion-card-content class="" data-testid="debug-tools-heading">
+            Debug Tools
+          </ion-card-content>
+          <ion-list>
+            <ion-item>
+              <ion-input type="text" label="URL Slug" data-testid="url-slug-input" v-model="debugUrlSlug" :helper-text="isSlugDirty && isLocalCDNRunning ? 'Please restart the server to apply the new slug' : ''"></ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-textarea label="JSON Data" data-testid="json-data-textarea" v-model="debugJson"></ion-textarea>
+            </ion-item>
+          </ion-list>
+        </ion-card>
+      </div>
     </ion-content>
   </ion-page>
 </template>
