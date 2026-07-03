@@ -4,7 +4,13 @@ import { IonApp, IonRouterOutlet } from '@ionic/vue';
 import { type as osType, OsType } from '@tauri-apps/plugin-os';
 
 const mobileOsTypes: OsType[] = ["android", "ios"];
-const isMobile = computed(() => mobileOsTypes.includes(osType()));
+const isMobile = computed(() => {
+  try {
+    return mobileOsTypes.includes(osType());
+  } catch (error) {
+    return false;
+  }
+});
 </script>
 
 <template>
