@@ -1,4 +1,7 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 
 .is-desktop-os .toolbar-container {
   padding: 0 16px;

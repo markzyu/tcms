@@ -54,8 +54,8 @@ import { useLocalCDNControls } from './hooks';
 
     <ion-content>
       <div class="w-full flex flex-col px-4 py-6 gap-4">
-        <ion-card class="w-full mx-auto max-w-200">
-          <div class="relative h-50 rounded-t-sm overflow-hidden">
+        <ion-card class="w-full mx-auto max-w-[500px]">
+          <div class="relative h-[220px] rounded-t-sm overflow-hidden">
             <iframe ref="previewIframe" data-testid="preview-iframe" class="absolute left-0 top-0 w-full object-cover max-w-none h-full -z-10" src="https://picsum.photos/600/400" alt="Random image" />
           </div>
           <ion-card-content class="-mb-2" data-testid="home-status">
@@ -75,7 +75,7 @@ import { useLocalCDNControls } from './hooks';
             <ion-button size="small" fill="clear" data-testid="share-button">Share</ion-button>
           </div>
         </ion-card>
-        <ion-card class="w-full mx-auto max-w-200">
+        <ion-card class="w-full mx-auto max-w-[500px]">
           <ion-card-content class="" data-testid="debug-tools-heading">
             Debug Tools
           </ion-card-content>

@@ -2,14 +2,12 @@
 import { defineConfig } from "vite";
 import { visualizer } from 'rollup-plugin-visualizer';
 import process from "node:process";
-import tailwindcss from "@tailwindcss/vite";
 import vue from "@vitejs/plugin-vue";
 const host = process.env.TAURI_DEV_HOST;
 
 // https://vite.dev/config/
 export default defineConfig(() => ({
   plugins: [
-    tailwindcss(),
     vue(),
     visualizer({ 
       open: false, 
