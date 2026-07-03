@@ -291,6 +291,10 @@ Additionally, we will have a basic debug UI in Tauri:
 - Row action **“Edit”** → `navigateTo('/tools/template-editor?instanceId=…')`
 - Shows LCDN status (running / stopped)
 
+**Also, very importantly:**
+
+!! At this point, the Admin shell would need to support Internationalization (i18n). We should consider either Vue I18n or our own template schema.
+
 ### Reusable tool chrome
 
 ```
