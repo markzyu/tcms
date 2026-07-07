@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# 1. Get the absolute path of the Git root directory
+GIT_ROOT=$(git rev-parse --show-toplevel)
+
+# 2. Add your custom automation or validation tasks here
+# For example, navigate into a specific folder relative to the root:
+
+echo "[pcms] Running pre-push checks..."
+
+# Run tests, build checks, or linters
+(cd "$GIT_ROOT" && yarn typecheck && yarn build && yarn test && echo '[pcms] all baseline correctness checks passed.')
