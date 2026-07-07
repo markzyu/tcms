@@ -228,7 +228,7 @@ Additionally, we will have a basic debug UI in Tauri:
 
 ### LCDN v0 implementation
 
-- LCDN is an in-process server on **hardcoded static port 8088**
+- LCDN is an in-process, singleton server on **hardcoded static port 8088**
 - LCDN starts via Tauri command. Tauri passes in LCDN config object, along with paths to templates, and instances.
 - LCDN handles "static" server mode directly, without the need for a separate static server crate.
 - Tauri can also control LCDN via IPC/Rust states. Here is a preview of possible features:

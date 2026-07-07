@@ -3,4 +3,30 @@ name = "lcdn-server"
 version = "0.1.0"
 edition = "2024"
 
+[[bin]]
+name = "lcdn-standalone"
+path = "src/main.rs"
+
 [dependencies]
+arc-swap = "1.9.2"
+serde = "1.0.228"
+serde_json = "1.0.150"
+thiserror = "2.0.18"
+
+[dependencies.reqwest]
+version = "0.13.4"
+default-features = false
+features = ["rustls-no-provider", "json"]
+
+[dependencies.rustls]
+version = "0.23.41"
+default-features = false
+features = ["ring"]
+
+[dependencies.tokio]
+version = "1.52.3"
+features = ["rt-multi-thread", "signal", "sync"]
+
+[dependencies.axum]
+version = "0.8.9"
+features = ["http2"]

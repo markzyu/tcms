@@ -1,14 +1,67 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
+mod types;
+
+use arc_swap::ArcSwapOption;
+use axum::{Router, routing::get};
+use std::{
+  net::{Ipv4Addr, SocketAddr},
+  sync::Arc,
+};
+use tokio::sync::mpsc::{Sender, channel};
+
+pub use crate::types::{LcdnConfig, LcdnError};
+
+static SHUTDOWN_CHANNEL: ArcSwapOption<Sender<()>> = ArcSwapOption::const_empty();
+
+pub async fn start_lcdn_server(config: LcdnConfig) -> Result<(), LcdnError> {
+  let LcdnConfig {
+    startup_timeout,
+    healthcheck_timeout,
+    ..
+  } = config;
+  let promise_start = tokio::spawn(async move {
+    let (tx, mut rx) = channel::<()>(100);
+    SHUTDOWN_CHANNEL.store(Some(Arc::new(tx)));
+
+    let app = Router::new().route("/healthcheck", get(|| async { "OK" }));
+    let addr = SocketAddr::from((Ipv4Addr::LOCALHOST, config.port));
+    let listener = tokio::net::TcpListener::bind(addr)
+      .await
+      .map_err(LcdnError::CannotRun)?;
+    axum::serve(listener, app)
+      .with_graceful_shutdown(async move {
+        rx.recv().await;
+      })
+      .await
+      .map_err(LcdnError::CannotRun)
+  });
+
+  // Wait for STARTUP_TIMEOUT, and verify that the server has not crashed
+  tokio::select! {
+      result = promise_start => result,
+      _ = tokio::time::sleep(startup_timeout) => Ok(Ok(())),
+  }
+  .map_err(LcdnError::CannotRun2)??;
+
+  // Perform a healthcheck to verify that the server is running
+  let healthcheck_url = format!("http://localhost:{}/healthcheck", config.port);
+  let client = reqwest::Client::new();
+  let request = client.get(healthcheck_url).timeout(healthcheck_timeout);
+  let response = request
+    .send()
+    .await
+    .map_err(LcdnError::CannotStartHealthcheck)?;
+  let response_code = response.status().as_u16();
+  if response_code != 200 {
+    return Err(LcdnError::HealthcheckFailed(response_code));
+  }
+
+  Ok(())
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+pub async fn stop_lcdn_server() -> Result<(), LcdnError> {
+  let guard = SHUTDOWN_CHANNEL.load();
+  let Some(tx) = guard.as_ref() else {
+    return Ok(());
+  };
+  tx.send(()).await.map_err(|_| LcdnError::CannotStop)
 }
