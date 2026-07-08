@@ -9,9 +9,12 @@ path = "src/main.rs"
 
 [dependencies]
 arc-swap = "1.9.2"
+dashmap = "6.2.1"
+http = "1.4.2"
 serde_json = "1.0.150"
 serde_with = "3.21.0"
 thiserror = "2.0.18"
+tower-layer = "0.3.3"
 uuid = "1.23.4"
 
 [dependencies.axum]

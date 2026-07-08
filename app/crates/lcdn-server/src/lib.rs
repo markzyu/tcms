@@ -1,21 +1,36 @@
 mod types;
 
 use arc_swap::ArcSwapOption;
-use axum::{Router, routing::get};
+use axum::{
+  Router,
+  body::Body,
+  extract::{Path, Request},
+  middleware::{self, Next},
+  response::Response,
+  routing::get,
+};
+use chrono::{DateTime, Utc};
+use dashmap::DashMap;
+use http::{StatusCode, Uri, uri::PathAndQuery};
 use std::{
   net::{Ipv4Addr, SocketAddr},
+  path::{Component, PathBuf},
+  str::FromStr,
   sync::Arc,
 };
 use tokio::sync::mpsc::{Sender, channel};
 use tower_http::services::ServeDir;
+use tower_layer::Layer;
 
 pub use crate::types::{InstanceConfig, LcdnConfig, LcdnError};
 
+// Note: Though these are thread-safe, please don't obtain write-guards from async code.
+//       (Write guards should only be held onto, within a synchronous function)
+//       (Reads guards, and atomic writes, are ok within async code)
 static SHUTDOWN_CHANNEL: ArcSwapOption<Sender<()>> = ArcSwapOption::const_empty();
-
 static LCDN_CONFIG: ArcSwapOption<LcdnConfig> = ArcSwapOption::const_empty();
-static INSTANCE_CONFIGS: ArcSwapOption<Vec<InstanceConfig>> = ArcSwapOption::const_empty();
-static VALID_PATHS: ArcSwapOption<Vec<String>> = ArcSwapOption::const_empty();
+static INSTANCE_CONFIGS: ArcSwapOption<DashMap<String, InstanceConfig>> =
+  ArcSwapOption::const_empty();
 
 pub fn setup_rustls() {
   // Globally register ring as the default crypto provider, if one doesn't exist yet
@@ -23,20 +38,175 @@ pub fn setup_rustls() {
   let _ = rustls::crypto::ring::default_provider().install_default();
 }
 
+fn update_static_configs(mut lcdn_config: LcdnConfig, instance_configs_raw: Vec<InstanceConfig>) {
+  let valid_slugs: Vec<String> = instance_configs_raw
+    .iter()
+    .map(|instance_config| instance_config.slug.clone())
+    .collect();
+  let static_servers: DashMap<String, (ServeDir, ServeDir)> = DashMap::new();
+  let instance_configs: DashMap<String, InstanceConfig> = DashMap::new();
+  for (i, instance_config) in instance_configs_raw.iter().enumerate() {
+    let template_fs_path = format!("templates/{}", instance_config.template_id);
+    let instance_asset_fs_path = format!("instances/{}/assets", instance_config.instance_id);
+    let template_server = ServeDir::new(template_fs_path);
+    let instance_asset_server = ServeDir::new(instance_asset_fs_path);
+    static_servers.insert(
+      valid_slugs[i].clone(),
+      (template_server, instance_asset_server),
+    );
+    instance_configs.insert(instance_config.slug.clone(), instance_config.clone());
+    eprintln!(
+      "update_static_configs: slug: {}, instance_id: {}, template_id: {}",
+      instance_config.slug, instance_config.instance_id, instance_config.template_id
+    );
+  }
+  lcdn_config.instance_ids = instance_configs_raw
+    .iter()
+    .map(|instance_config| instance_config.instance_id.clone())
+    .collect();
+
+  LCDN_CONFIG.store(Some(Arc::new(lcdn_config)));
+  INSTANCE_CONFIGS.store(Some(Arc::new(instance_configs)));
+}
+
+async fn instance_url_sanitization_layer(
+  mut req: Request,
+  next: Next,
+) -> Result<Response, StatusCode> {
+  let instance_configs = INSTANCE_CONFIGS.load();
+  let Some(instance_configs) = instance_configs.as_ref() else {
+    return Err(StatusCode::NOT_FOUND);
+  };
+
+  let mut uri_parts = req.uri().clone().into_parts();
+  let orig_path_and_query = uri_parts.path_and_query.as_ref();
+  let orig_uri_path = orig_path_and_query
+    .map(|pq| pq.path().trim_start_matches('/').to_string())
+    .unwrap_or_default();
+  let orig_uri_path_buf = PathBuf::from(orig_uri_path.clone());
+  let orig_uri_query = orig_path_and_query
+    .map(|pq| pq.query().unwrap_or_default().to_string())
+    .unwrap_or_default();
+  let slug = req
+    .uri()
+    .path()
+    .split('/')
+    .nth(1)
+    .map(|slug| slug.to_string())
+    .ok_or(StatusCode::NOT_FOUND)?;
+
+  eprintln!(
+    "instance_url_sanitization_layer uri: {}. slug: {}",
+    req.uri().to_string(),
+    &slug
+  );
+
+  let instance_config = instance_configs.get(&slug);
+  let Some(instance_config) = instance_config else {
+    eprintln!("instance_url_sanitization_layer: no instance configs");
+    return Err(StatusCode::NOT_FOUND);
+  };
+
+  let path_without_slug = orig_uri_path_buf
+    .components()
+    .skip(1)
+    .collect::<PathBuf>()
+    .to_string_lossy()
+    .to_string();
+  let path_first_component = orig_uri_path_buf.components().nth(0);
+  let path_second_component = orig_uri_path_buf
+    .components()
+    .nth(1)
+    .map(|c| c.as_os_str().to_string_lossy().to_string());
+  let path_components_count = orig_uri_path_buf.components().count();
+
+  // Mappings:
+  // "Invalid string": keep as is or use /
+  // "/slug/assets/...": map to "instances/{instance_id}/{path_without_slug}"
+  // "/slug": map to "templates/{template_id}/index.html"
+  let new_req_path = match (
+    path_first_component,
+    path_second_component.as_deref(),
+    path_components_count,
+  ) {
+    (_, _, 0) => "/".to_string(),
+    (Some(Component::Normal(_)), None, 1) => {
+      format!("templates/{}/index.html", instance_config.template_id)
+    }
+    (Some(Component::Normal(_)), Some("assets"), _) => format!(
+      "instances/{}/{}",
+      instance_config.instance_id, path_without_slug
+    ),
+    _ => orig_uri_path.clone(),
+  };
+  let new_path_and_query_str = format!("/{}?{}", new_req_path, orig_uri_query);
+  let new_req_path_and_query = PathAndQuery::from_str(&new_path_and_query_str).map_err(|_| {
+    eprintln!("Error parsing path and query: {}", &new_path_and_query_str);
+    StatusCode::INTERNAL_SERVER_ERROR
+  })?;
+  uri_parts.path_and_query = Some(new_req_path_and_query);
+  let new_uri = Uri::from_parts(uri_parts).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+  eprintln!("routing /{} to {}", &orig_uri_path, new_uri.to_string());
+  *req.uri_mut() = new_uri;
+  Ok(next.run(req).await)
+}
+
+async fn serve_template_from_zip(
+  Path((template_id, path)): Path<(String, String)>,
+) -> Result<Response, StatusCode> {
+  eprintln!(
+    "serve_template_from_zip: template_id: {}, path: {}",
+    &template_id, &path
+  );
+  Ok(Response::new(Body::from("Hello, World!")))
+}
+
 pub async fn start_lcdn_server(config: LcdnConfig) -> Result<(), LcdnError> {
+  let mock_instance_configs = vec![InstanceConfig {
+    instance_id: "6fa27a2f-2f1e-413d-a842-424242424242".to_string(),
+    name: "My Contact Card".to_string(),
+    slug: "my-contact-card".to_string(),
+    template_id: "my-contact-card".to_string(),
+    current_variant: "en".to_string(),
+    variants: vec!["en".to_string()],
+    created_at: DateTime::<Utc>::default(),
+    updated_at: DateTime::<Utc>::default(),
+  }];
+  update_static_configs(config.clone(), mock_instance_configs);
   let LcdnConfig {
     startup_timeout,
     healthcheck_timeout,
+    port,
     ..
   } = config;
   let promise_start = tokio::spawn(async move {
     let (tx, mut rx) = channel::<()>(100);
     SHUTDOWN_CHANNEL.store(Some(Arc::new(tx)));
 
+    let public_static = ServeDir::new("public");
+    let route_content = Router::new()
+      .fallback_service(public_static)
+      .route(
+        "/templates/{template_id}/{*path}",
+        get(serve_template_from_zip),
+      )
+      .route(
+        "/templates/my-contact-card/index.html",
+        get(|| async { "Hello, World!" }),
+      )
+      .route(
+        "/{slug}/__query__/cdn-bridge.js",
+        get(|| async { "{\"ok\":true}" }),
+      );
+    let route_content = middleware::from_fn(instance_url_sanitization_layer).layer(route_content);
     let app = Router::new()
+      .fallback_service(route_content)
       .route("/healthcheck", get(|| async { "OK" }))
       .nest_service("/static", ServeDir::new("."));
-    let addr = SocketAddr::from((Ipv4Addr::LOCALHOST, config.port));
+    // Router::layer runs after routing and cannot rewrite URIs for route matching.
+    // Wrap the app so sanitization runs before routing instead.
+    let addr = SocketAddr::from((Ipv4Addr::LOCALHOST, port));
     let listener = tokio::net::TcpListener::bind(addr)
       .await
       .map_err(LcdnError::CannotRun)?;
@@ -56,7 +226,7 @@ pub async fn start_lcdn_server(config: LcdnConfig) -> Result<(), LcdnError> {
   .map_err(LcdnError::CannotRun2)??;
 
   // Perform a healthcheck to verify that the server is running
-  let healthcheck_url = format!("http://localhost:{}/healthcheck", config.port);
+  let healthcheck_url = format!("http://localhost:{}/healthcheck", port);
   let client = reqwest::Client::new();
   let request = client.get(healthcheck_url).timeout(healthcheck_timeout);
   let response = request

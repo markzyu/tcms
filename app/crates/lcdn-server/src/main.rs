@@ -4,7 +4,15 @@ use lcdn_server::{LcdnConfig, setup_rustls, start_lcdn_server, stop_lcdn_server}
 async fn main() {
   setup_rustls();
 
-  let config = LcdnConfig::default();
+  // read config from public/lcdn-config.json
+  let Ok(config_file) = std::fs::read_to_string("public/lcdn-config.json") else {
+    eprintln!("Failed to read config file: public/lcdn-config.json");
+    std::process::exit(1);
+  };
+  let Ok(config) = serde_json::from_str::<LcdnConfig>(&config_file) else {
+    eprintln!("Failed to parse config file");
+    std::process::exit(1);
+  };
   let port: u16 = config.port;
 
   println!("Starting LCDN server...");

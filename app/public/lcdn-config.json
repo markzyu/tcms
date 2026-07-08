@@ -1,0 +1,8 @@
+{
+  "port": 8088,
+  "startupTimeout": 1500,
+  "healthcheckTimeout": 3000,
+  "instanceIds": [
+    "6fa27a2f-2f1e-413d-a842-424242424242"
+  ]
+}
