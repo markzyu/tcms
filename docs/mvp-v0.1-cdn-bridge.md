@@ -79,15 +79,15 @@ The only async parts of the APIs in v0.1 are `loadJsLibrary`, `loadEsModule`, an
 
 Multi-page templates do **not** ship one `index.html` per page. There is a **single HTML entry** (CSR shell + one app bundle). Which page the user sees is selected at runtime:
 
-1. **URL query parameter** — the active page is identified by a query param (e.g. **`?shortPageName=main`**, `?shortPageName=projects-0`). The value is the page short name from `template.manifest.json` → `pages`.
-   - Contact card (single page): `/cards/my-slug/` or `/cards/my-slug/?shortPageName=main`
-   - Future multi-page template: `/cards/my-slug/?shortPageName=projects-0`, `/cards/my-slug/?shortPageName=about`
+1. **URL query parameter** — the active page is identified by a query param (e.g. **`?pageShortName=main`**, `?pageShortName=projects-0`). The value is the page short name from `template.manifest.json` → `pages`.
+   - Contact card (single page): `/my-slug/` or `/my-slug/?pageShortName=main`
+   - Future multi-page template: `/my-slug/?pageShortName=projects-0`, `/my-slug/?pageShortName=about`
 2. **Client routing** — React (or Vue) reads that param on load and mounts the matching page component. In-app links between pages update the query param (and may reload, or later use client-side navigation within the same shell).
 3. **LCDN / reversed CDN** — when the browser requests `/__query__/cdn-bridge.js`, the **Referer** URL includes the instance path **and** the page query param. The CDN uses both to resolve the instance. **Local CDN** embeds the matching page's JSON in `initialContentJson`. **Reversed CDN** may omit `initialContentJson` (see [Content provider fallback](#content-provider-fallback)). Same rule as instance ID from referrer: do not open `cdn-bridge.js` directly; instance HTML should use `Referrer-Policy: same-origin` so the full referrer URL (including the page param) is sent on same-origin subresource requests.
 
 Pack-drop and prototype setups follow the same model: one `index.html`, edit the query param in links/bookmarks to reach another page, and ensure the copied `cdn-bridge.js` template (or static stub) matches the page being viewed.
 
-For v0.1 contact card (single page), `shortPageName` may be omitted or defaulted to `main`.
+For v0.1 contact card (single page), `pageShortName` may be omitted or defaulted to `main`.
 
 How to initialize the CDN Bridge object:
 
@@ -124,7 +124,7 @@ Either local CDN, or reversed CDN, or pack drop, should generate the `window.pcm
 
 For **local CDN**, the cdn-bridge script is generated upon previewing (or on each request to `/__query__/cdn-bridge.js`). The generator reads the referrer's instance mount path and page query param, then embeds that page's content in `initialContentJson`. Reload the page (or change the query param) to switch page or pick up variant/instance changes — the mount path does not change without a reload.
 
-Example (local CDN): a request for `cdn-bridge.js` whose Referer is `http://127.0.0.1:3000/cards/my-slug/?shortPageName=main` yields:
+Example (local CDN): a request for `cdn-bridge.js` whose Referer is `http://127.0.0.1:3000/my-slug/?pageShortName=main` yields:
 
 ```js
 window.pcms.cdnBridge = {
@@ -139,13 +139,13 @@ Example (reversed CDN, minimized): the same Referer may yield a script **without
 ```js
 window.pcms.cdnBridge = {
   getCDNType: () => "reversedCDN",
-  getContentJsonPath: (page, variant) => `/cards/my-slug/content/${page}.${variant}.json`,
+  getContentJsonPath: (page, variant) => `/my-slug/content/${page}.${variant}.json`,
   getInitialPreviewVariant: () => "en",
   // …
 };
 ```
 
-A Referer of `…/cards/my-slug/?shortPageName=projects-0` selects `projects-0` content instead, still from the same `index.html` and app bundle.
+A Referer of `…/my-slug/?pageShortName=projects-0` selects `projects-0` content instead, still from the same `index.html` and app bundle.
 
 ## Content provider fallback
 
@@ -153,7 +153,7 @@ Template React/Vue providers (and future `@pcms/react` / `@pcms/vue` packages) *
 
 1. **If `window.pcms.cdnBridge.initialContentJson` is defined** — use it synchronously for the first render (local CDN, pack drop, prototype).
 2. **If it is missing** (typical reversed CDN) — fetch the content JSON asynchronously:
-   - Resolve `pageShortName` from the URL query param (`shortPageName`, defaulting to `main` for single-page templates).
+   - Resolve `pageShortName` from the URL query param (`pageShortName`, defaulting to `main` for single-page templates).
    - Build the URL with `getContentJsonPath(pageShortName, getInitialPreviewVariant())`.
    - `fetch()` that path, parse JSON, then render.
 3. **Expose loading state** while the fallback fetch is in flight (`isLoading: true` until content arrives).

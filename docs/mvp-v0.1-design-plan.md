@@ -60,7 +60,7 @@ Forward-looking shapes (CAS, multi-page manifest, rich editor UI, LCDN/rcdn ops 
 
 ```
 instances/
-  {instanceSlug}/
+  {instanceId}/
     instance.json
     content/
       main.en.json
@@ -88,6 +88,7 @@ Source of truth for instance metadata and which content variant is active.
 
 ```json
 {
+  "instanceId": "6fa27a2f-2f1e-413d-a842-424242424242",
   "slug": "my-contact-card",
   "name": "My contact card",
   "templateId": "example-info-card1",
@@ -95,11 +96,11 @@ Source of truth for instance metadata and which content variant is active.
   "createdAt": 1782051137000,
   "updatedAt": 1782051137000,
   "currentVariant": "en",
-  "variants": ["en", "es"],
+  "variants": ["en", "es"]
 }
 ```
 
-- `**slug**` — the URL slug for this instance. This will later by replaced by the "Page Short Name" in [futures-looking.md](./futures-looking.md).
+- `**slug**` — the URL slug for this instance.
 - `**currentVariant**` — which `{pageShortName}.{variant}.json` files are live for preview/publish.
 - `**variants**` — declared locale/edition tags for this instance. Phase 0 may ship with one variant seeded; the field exists so multi-lingual config does not require a schema migration later.
 
@@ -108,14 +109,16 @@ Source of truth for instance metadata and which content variant is active.
 Flat model for `content/main.{variant}.json` — no arrays in Phase 0.
 
 
-| Field       | Type   | Notes                                      |
-| ----------- | ------ | ------------------------------------------ |
-| `name`      | string | e.g. “John Doe”                            |
-| `headline`  | string | e.g. “Photographer”                        |
-| `bio`       | string | multiline                                  |
-| `email`     | string |                                            |
-| `phone`     | string |                                            |
-| `heroImage` | string | filename under `assets/` (e.g. `hero.jpg`) |
+| Field       | Type   | Notes                                       |
+| ----------- | ------ | ------------------------------------------- |
+| `name`      | string | e.g. “John Doe”                             |
+| `headline`  | string | e.g. “Photographer”                         |
+| `bio`       | string | multiline                                   |
+| `email`     | string |                                             |
+| `phone`     | string |                                             |
+| `heroImage` | string | path relative to mount (`/assets/hero.jpg`) |
+
+And optionally, `heroAltText`, `heroAlignment` (whether the image is left or right aligned).
 
 
 ### `content/main.en.json` (v0 example)
@@ -127,7 +130,7 @@ Flat model for `content/main.{variant}.json` — no arrays in Phase 0.
   "bio": "John is a photographer based in New York City. He is known for his street photography and his use of color. He has been photographing for 10 years. His favorite camera is the Leica M10.",
   "email": "john@example.com",
   "phone": "123-456-7890",
-  "heroImage": "hero.jpg"
+  "heroImage": "/assets/hero.jpg"
 }
 ```
 
@@ -207,6 +210,8 @@ example-info-card1 only — single page, CSR default. LCDN mount paths and backe
 }
 ```
 
+As a reminder, the pages are not individual html files. They are a single PWA html that serves different content based on a query parameter `pageShortName`.
+
 ## Phase 1 — Basic Local CDN
 
 **Goal:** LCDN v0 — one instance, one route, serving html and JS statically. No reversed CDN, no framework cache.
@@ -215,10 +220,10 @@ example-info-card1 only — single page, CSR default. LCDN mount paths and backe
 
 - Read `**lcdn.config.json`** (or equivalent) listing registered instances
 - Bind **127.0.0.1:8088**
-- For each instance at `/cards/{slug}/`:
+- For each instance at `/{slug}/`:
   - Serve active variant content (`content/main.{currentVariant}.json`), other variant files on request, and `assets/`* from instance dir
   - Serve cached/bundled HTML entry (CSR shell)
-- Expose preview URL to Tauri: `http://127.0.0.1:{lcdnPort}/cards/{slug}/`
+- Expose preview URL to Tauri: `http://127.0.0.1:{lcdnPort}/{slug}/`
 
 Additionally, we will have a basic debug UI in Tauri:
 - A start/stop button 
@@ -237,10 +242,29 @@ Additionally, we will have a basic debug UI in Tauri:
   - Tauri can add/remove instances visible to LCDN. LCDN uses Dynamic Routing and reads the config to know which instances to serve.
 - But, for CSR v0, dynamic work is minimal: starting, stopping, and, hotswapping the LCDN config (renaming instance slug, not adding/removing instances)
 
+### `lcdn.config.json`
+
+```json
+{
+  "port": 8088,
+  "startupTimeout": 1500,
+  "healthcheckTimeout": 3000,
+  "instanceIds": [
+    "6fa27a2f-2f1e-413d-a842-424242424242"
+  ]
+}
+```
+
+Note: In rust, we will ask serde to convert the fields from camelCase to snake_case.
+
+The instanceIds array lists the instance ids to enable by default. 
+
+This config file is hotload-able. Tauri can update just about anything by restarting the http server. But, Tauri can also just update the list of instanceIds through an IPC command (which should also update the config file on disk).
+
 ### Tauri commands (minimal)
 
 - `lcdn_start()` / `lcdn_stop()` / `lcdn_status()`
-- `lcdn_rescan_instances()` → renames instance if needed
+- `lcdn_sync_instances()` → reads existing list of instances again. renames instance slug if needed (only if the ids stay the same)
 - `lcdn_get_preview_url(instanceId)` → for Preview tab
 
 ### Out of scope for LCDN v0
@@ -255,10 +279,10 @@ Additionally, we will have a basic debug UI in Tauri:
 ### Success criteria
 
 - lcdn_start() binds 127.0.0.1
-- Seeded instance `my-contact-card` is registered from config/paths passed by Tauri.
+- Seeded instance `6fa27a2f-2f1e-413d-a842-424242424242` is unzipped correctly to `instances/{instanceId}/` and is registered through Tauri to run on LCDN.
 - Solidify Rust struct / serde definitions for `instance.json`, without the JSON Schema for now.
-- GET http://127.0.0.1:{port}/cards/my-contact-card/ renders contact card with content from disk. Verify `Referrer-Policy` header.
-- GET http://127.0.0.1:{port}/cards/my-contact-card/assets/xxx for assets in `content/main.en.json`, where it is specified as `/assets/xxx`
+- GET http://127.0.0.1:{port}/my-contact-card/ renders contact card with content from disk. Verify `Referrer-Policy` header.
+- GET http://127.0.0.1:{port}/my-contact-card/assets/xxx for assets in `content/main.en.json`, where it is specified as `/assets/xxx`
 - GET `/__query__/cdn-bridge.js` (Referer = instance URL) inlines current main.{currentVariant}.json. Verify `cache-control` header.
 - Edit `instances/.../content/main.en.json` → iframe refresh shows new text (no app restart).
 - Slug change updates mount path and preview URL (via config hotswap).
@@ -402,7 +426,7 @@ Ordered list of work **after** the four epics; not all are v0.1 scope.
 ## Smallest vertical slice (sprint 1 checklist)
 
 1. `instance.json` + `content/main.en.json` + JSON Schema (contact card)
-2. LCDN serves active variant content + assets + index.html at `/cards/{slug}/`
+2. LCDN serves active variant content + assets + index.html at `/{slug}/`
 3. example-info-card1 React CSR reads active variant content from LCDN path
 4. Tool: Edit | Preview (iframe)
 5. Admin: one button → open editor for default instance

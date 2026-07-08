@@ -8,7 +8,7 @@ This document lists the desired final shapes of schemas and directory layout whe
 
 ```
 instances/
-  {instanceSlug}/
+  {instanceId}/
     instance.json
     history.json          # content + asset history
     cas/
