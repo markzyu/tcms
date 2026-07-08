@@ -12,6 +12,12 @@ pub use crate::types::{LcdnConfig, LcdnError};
 
 static SHUTDOWN_CHANNEL: ArcSwapOption<Sender<()>> = ArcSwapOption::const_empty();
 
+pub fn setup_rustls() {
+  // Globally register ring as the default crypto provider, if one doesn't exist yet
+  // Ignoring the error (which would fail later, during reqwest initialization anyways)
+  let _ = rustls::crypto::ring::default_provider().install_default();
+}
+
 pub async fn start_lcdn_server(config: LcdnConfig) -> Result<(), LcdnError> {
   let LcdnConfig {
     startup_timeout,

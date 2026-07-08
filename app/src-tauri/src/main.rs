@@ -2,5 +2,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
+  lcdn_server::setup_rustls();
   pcms_lib::run()
 }

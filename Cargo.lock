@@ -2554,6 +2554,7 @@ dependencies = [
 name = "pcms"
 version = "0.1.0"
 dependencies = [
+ "lcdn-server",
  "serde",
  "serde_json",
  "tauri",

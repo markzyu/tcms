@@ -1,7 +1,9 @@
-use lcdn_server::{LcdnConfig, start_lcdn_server, stop_lcdn_server};
+use lcdn_server::{LcdnConfig, setup_rustls, start_lcdn_server, stop_lcdn_server};
 
 #[tokio::main]
 async fn main() {
+  setup_rustls();
+
   let config = LcdnConfig::default();
   let port: u16 = config.port;
 

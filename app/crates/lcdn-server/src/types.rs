@@ -15,6 +15,7 @@ pub enum LcdnError {
   HealthcheckFailed(u16),
 }
 
+#[derive(Clone, Debug)]
 pub struct LcdnConfig {
   pub port: u16,
   pub startup_timeout: Duration,
