@@ -7,10 +7,15 @@ use std::{
   sync::Arc,
 };
 use tokio::sync::mpsc::{Sender, channel};
+use tower_http::services::ServeDir;
 
-pub use crate::types::{LcdnConfig, LcdnError};
+pub use crate::types::{InstanceConfig, LcdnConfig, LcdnError};
 
 static SHUTDOWN_CHANNEL: ArcSwapOption<Sender<()>> = ArcSwapOption::const_empty();
+
+static LCDN_CONFIG: ArcSwapOption<LcdnConfig> = ArcSwapOption::const_empty();
+static INSTANCE_CONFIGS: ArcSwapOption<Vec<InstanceConfig>> = ArcSwapOption::const_empty();
+static VALID_PATHS: ArcSwapOption<Vec<String>> = ArcSwapOption::const_empty();
 
 pub fn setup_rustls() {
   // Globally register ring as the default crypto provider, if one doesn't exist yet
@@ -28,7 +33,9 @@ pub async fn start_lcdn_server(config: LcdnConfig) -> Result<(), LcdnError> {
     let (tx, mut rx) = channel::<()>(100);
     SHUTDOWN_CHANNEL.store(Some(Arc::new(tx)));
 
-    let app = Router::new().route("/healthcheck", get(|| async { "OK" }));
+    let app = Router::new()
+      .route("/healthcheck", get(|| async { "OK" }))
+      .nest_service("/static", ServeDir::new("."));
     let addr = SocketAddr::from((Ipv4Addr::LOCALHOST, config.port));
     let listener = tokio::net::TcpListener::bind(addr)
       .await

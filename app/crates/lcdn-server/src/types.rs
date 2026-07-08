@@ -1,3 +1,6 @@
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+use serde_with::{DurationMilliSeconds, serde_as};
 use std::time::Duration;
 use thiserror::Error;
 
@@ -15,11 +18,29 @@ pub enum LcdnError {
   HealthcheckFailed(u16),
 }
 
-#[derive(Clone, Debug)]
+#[serde_as]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct LcdnConfig {
   pub port: u16,
+  #[serde_as(as = "DurationMilliSeconds<u64>")]
   pub startup_timeout: Duration,
+  #[serde_as(as = "DurationMilliSeconds<u64>")]
   pub healthcheck_timeout: Duration,
+  pub instance_ids: Vec<String>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InstanceConfig {
+  pub instance_id: String,
+  pub slug: String,
+  pub name: String,
+  pub template_id: String,
+  pub created_at: DateTime<Utc>,
+  pub updated_at: DateTime<Utc>,
+  pub current_variant: String,
+  pub variants: Vec<String>,
 }
 
 impl Default for LcdnConfig {
@@ -28,6 +49,7 @@ impl Default for LcdnConfig {
       port: 8088,
       startup_timeout: Duration::from_millis(1500),
       healthcheck_timeout: Duration::from_secs(3),
+      instance_ids: vec![],
     }
   }
 }
