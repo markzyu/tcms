@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "pcms",
+  "productName": "Thor CMS",
   "version": "0.1.0",
-  "identifier": "dev.markzyu.pcms",
+  "identifier": "dev.markzyu.thorcms",
   "build": {
     "beforeDevCommand": "yarn dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "pcms",
+        "title": "Thor",
         "width": 800,
         "height": 600,
         "minWidth": 400,

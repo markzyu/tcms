@@ -1,9 +1,9 @@
 import * as esbuild from "esbuild";
 import * as packageJson from "./package.json" with { type: "json" };
-import { NODE_MODULES_USED_BY_BUILD_SCHEMA_STEP } from "@pcms/mini-app-common";
+import { NODE_MODULES_USED_BY_BUILD_SCHEMA_STEP } from "@tcms/mini-app-common";
 
 const DEPENDENCIES_FROM_LOCAL_CDN = Object.keys(packageJson.dependencies || {})
-  .filter((name) => !name.startsWith("@pcms/"));
+  .filter((name) => !name.startsWith("@tcms/"));
 
 // @ts-ignore: Some linters complain about browser env. But this will be run in Node.
 const isWatch = process.argv.includes("--watch");

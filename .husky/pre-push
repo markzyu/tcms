@@ -6,9 +6,9 @@ GIT_ROOT=$(git rev-parse --show-toplevel)
 # 2. Add your custom automation or validation tasks here
 # For example, navigate into a specific folder relative to the root:
 
-echo "[pcms] Running pre-push checks..."
+echo "[tcms] Running pre-push checks..."
 
 grep "aws" "$GIT_ROOT/Cargo.lock" && echo '[rust] Remove AWS SSL certs from your dependency, please (likely aws-lc-rs).' && exit 1
 
 # Run tests, build checks, or linters
-(cd "$GIT_ROOT" && yarn typecheck && yarn build && yarn test && echo '[pcms] all baseline correctness checks passed.')
+(cd "$GIT_ROOT" && yarn typecheck && yarn build && yarn test && echo '[tcms] all baseline correctness checks passed.')

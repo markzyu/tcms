@@ -1,4 +1,4 @@
-import type { CDNBridge, CDNType } from "@pcms/mini-app-common";
+import type { CDNBridge, CDNType } from "@tcms/mini-app-common";
 
 export const DEFAULT_MOCK_INSTANCE_ROOT_PATH = "/test-template/test-instance";
 
@@ -42,12 +42,12 @@ export function installMockCdnBridge<TContent = unknown>(
   options: CdnBridgeMockOptions<TContent> = {},
 ): MockCdnBridge {
   const mock = createMockCdnBridge(options);
-  window.pcms = { cdnBridge: mock };
+  window.tcms = { cdnBridge: mock };
   return mock;
 }
 
 export function uninstallMockCdnBridge(): void {
-  Reflect.deleteProperty(window, "pcms");
+  Reflect.deleteProperty(window, "tcms");
 }
 
 afterEach(() => {

@@ -1,6 +1,6 @@
 # CDN Bridge object design doc
 
-The CDN Bridge object is a client side JS object at `window.pcms.cdnBridge`. It is used to
+The CDN Bridge object is a client side JS object at `window.tcms.cdnBridge`. It is used to
 
 * find the path to the content JSON for any mini app instance.
 * get the root path of the mounted mini app instance, which the page can then use for page navigations.
@@ -116,18 +116,18 @@ In v0.1 the variant is static per page load. Templates must **not** call `fetchC
 
 The React or Vue side utilities should have a provider that loads initial content and later refreshes the virtual DOM when the variant changes (post–v0.1). See [Content provider fallback](#content-provider-fallback).
 
-Eventually we must also provide `@pcms/react` and `@pcms/vue` packages that will provide the React and Vue side utilities.
+Eventually we must also provide `@tcms/react` and `@tcms/vue` packages that will provide the React and Vue side utilities.
 
 ## Implementation
 
-Either local CDN, or reversed CDN, or pack drop, should generate the `window.pcms.cdnBridge` object to implement the API. It should just be a simple js script that is loaded into the mini app HTML in `<head>`.
+Either local CDN, or reversed CDN, or pack drop, should generate the `window.tcms.cdnBridge` object to implement the API. It should just be a simple js script that is loaded into the mini app HTML in `<head>`.
 
 For **local CDN**, the cdn-bridge script is generated upon previewing (or on each request to `/__query__/cdn-bridge.js`). The generator reads the referrer's instance mount path and page query param, then embeds that page's content in `initialContentJson`. Reload the page (or change the query param) to switch page or pick up variant/instance changes — the mount path does not change without a reload.
 
 Example (local CDN): a request for `cdn-bridge.js` whose Referer is `http://127.0.0.1:3000/my-slug/?pageShortName=main` yields:
 
 ```js
-window.pcms.cdnBridge = {
+window.tcms.cdnBridge = {
   initialContentJson: { name: "John Doe", headline: "Photographer", /* … */ },
   getInitialPreviewVariant: () => "en",
   // …
@@ -137,7 +137,7 @@ window.pcms.cdnBridge = {
 Example (reversed CDN, minimized): the same Referer may yield a script **without** `initialContentJson`; path helpers still work:
 
 ```js
-window.pcms.cdnBridge = {
+window.tcms.cdnBridge = {
   getCDNType: () => "reversedCDN",
   getContentJsonPath: (page, variant) => `/my-slug/content/${page}.${variant}.json`,
   getInitialPreviewVariant: () => "en",
@@ -149,9 +149,9 @@ A Referer of `…/my-slug/?pageShortName=projects-0` selects `projects-0` conten
 
 ## Content provider fallback
 
-Template React/Vue providers (and future `@pcms/react` / `@pcms/vue` packages) **must implement a fallback** for missing `initialContentJson`:
+Template React/Vue providers (and future `@tcms/react` / `@tcms/vue` packages) **must implement a fallback** for missing `initialContentJson`:
 
-1. **If `window.pcms.cdnBridge.initialContentJson` is defined** — use it synchronously for the first render (local CDN, pack drop, prototype).
+1. **If `window.tcms.cdnBridge.initialContentJson` is defined** — use it synchronously for the first render (local CDN, pack drop, prototype).
 2. **If it is missing** (typical reversed CDN) — fetch the content JSON asynchronously:
    - Resolve `pageShortName` from the URL query param (`pageShortName`, defaulting to `main` for single-page templates).
    - Build the URL with `getContentJsonPath(pageShortName, getInitialPreviewVariant())`.
@@ -161,7 +161,7 @@ Template React/Vue providers (and future `@pcms/react` / `@pcms/vue` packages) *
 
 Do not assume `initialContentJson` is always present. Providers that only read `initialContentJson` will fail on reversed CDN when traffic minimization omits inlined JSON.
 
-For pack drop, the cdn-bridge script is not generated upon export. Instead, a template is provided, along with instructions. And it must be edited for public hosting, or for usage without PCMS app.
+For pack drop, the cdn-bridge script is not generated upon export. Instead, a template is provided, along with instructions. And it must be edited for public hosting, or for usage without Thor CMS.
 
 ## Dev mode
 

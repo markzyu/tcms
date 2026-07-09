@@ -1,4 +1,4 @@
-import { definePageContentSchema } from "@pcms/mini-app-common";
+import { definePageContentSchema } from "@tcms/mini-app-common";
 import { z } from "zod";
 
 export const contactCardSchemaName = "main";

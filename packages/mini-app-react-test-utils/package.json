@@ -1,6 +1,6 @@
 {
-  "name": "@pcms/mini-app-react-test-utils",
-  "version": "0.0.1",
+  "name": "@tcms/mini-app-react-test-utils",
+  "version": "0.0.2",
   "type": "module",
   "exports": {
     ".": {
@@ -17,7 +17,7 @@
     "test": "node -e \"\""
   },
   "dependencies": {
-    "@pcms/mini-app-common": "workspace:*",
+    "@tcms/mini-app-common": "workspace:*",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0"

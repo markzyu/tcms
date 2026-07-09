@@ -1,8 +1,8 @@
-# PCMS — Future-looking contracts (draft)
+# TCMS — Future-looking contracts (draft)
 
 **Status:** DRAFT — everything beyond v0.1 Phase 0, is an early draft.
 
-This document lists the desired final shapes of schemas and directory layout when PCMS is fully implemented.
+This document lists the desired final shapes of schemas and directory layout when TCMS is fully implemented.
 
 ## Directory layout (with CAS)
 

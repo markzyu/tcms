@@ -1,8 +1,8 @@
-# PCMS — MVP v0.1 Design Plan
+# TCMS — MVP v0.1 Design Plan
 
 # STATUS: PARTIAL DRAFT (Phases 0-1 are reviewed)
 
-High-level project map and phased delivery plan for the first vertical slice: **contact card** template proving the PCMS spine.
+High-level project map and phased delivery plan for the first vertical slice: **contact card** template proving the TCMS spine.
 
 Complements [requirements.md](./requirements.md), [tech-overview.md](./tech-overview.md), [motivation.md](./motivation.md), and [futures-looking.md](./futures-looking.md) (draft contracts not in Phase 0 scope).
 
@@ -16,7 +16,7 @@ Everything else in motivation (pack drops, today's board, field kit, reversed CD
 
 ## Multi-project map
 
-PCMS is **6 projects** that can ship independently but share contracts:
+TCMS is **6 projects** that can ship independently but share contracts:
 
 
 | #      | Project                      | Owns                                                                      | Defers                                                                     |
@@ -54,7 +54,7 @@ Forward-looking shapes (CAS, multi-page manifest, rich editor UI, LCDN/rcdn ops 
 2. `**instance.json**` (per mini-app instance, user data)
 3. **Variant content files** — `content/{pageShortName}.{variant}.json` (contact card: `main.en.json`, etc.)
 4. Directory layout under app sandbox (see below)
-5. **Standalone example-info-card1 site** — React CSR reading the active variant content file; runnable without PCMS shell for dev/demo
+5. **Standalone example-info-card1 site** — React CSR reading the active variant content file; runnable without Thor CMS shell for dev/demo
 
 ### Directory layout
 
@@ -354,7 +354,7 @@ Pick **one** primary story first (recommended: **Today's board + pack drop expor
 | Story                 | What to add                                                  |
 | --------------------- | ------------------------------------------------------------ |
 | **Today's board (C)** | LCDN on LAN IP; full-screen preview route; “open in browser” |
-| **Pack drop (A/B)**   | Export `instances/{id}/` → `.pcms.zip` per motivation doc    |
+| **Pack drop (A/B)**   | Export `instances/{id}/` → `.tcms.zip` per motivation doc    |
 | **Public link (A/C)** | Reversed CDN upload of assets + optional HTML toggle         |
 
 
@@ -374,7 +374,7 @@ Also: asset picker for hero image, HTML cache on save, persist backend port in `
 ## Repo structure
 
 ```
-pcms/
+tcms/
   docs/
   app/
     crates/        # Local CDN + any template backend

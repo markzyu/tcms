@@ -13,7 +13,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const PACKAGES_DIR = "packages";
-const VERSION_BUMP_PENDING_FLAG = ".git/pcms-version-bump-pending";
+const VERSION_BUMP_PENDING_FLAG = ".git/tcms-version-bump-pending";
 const SKIP_TYPES = new Set(["chore", "refactor", "test", "docs"]);
 const BUMP_TYPES = new Set(["feat!", "feat", "fix"]);
 const ALLOWED_TYPES = new Set([...SKIP_TYPES, ...BUMP_TYPES]);

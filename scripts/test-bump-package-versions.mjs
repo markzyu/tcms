@@ -24,7 +24,7 @@ const ROOT = execSync("git rev-parse --show-toplevel", { encoding: "utf8" }).tri
 process.chdir(ROOT);
 
 const DEMO_PACKAGES = ["demo-a", "demo-b"];
-const VERSION_BUMP_PENDING_FLAG = join(ROOT, ".git/pcms-version-bump-pending");
+const VERSION_BUMP_PENDING_FLAG = join(ROOT, ".git/tcms-version-bump-pending");
 
 function assertCleanWorkingTree() {
   const status = execSync("git status --porcelain", { encoding: "utf8" }).trim();
@@ -45,11 +45,11 @@ function createDemoPackages() {
 
   writeFileSync(
     join(ROOT, "packages/demo-a/package.json"),
-    `${JSON.stringify({ name: "@pcms/demo-a", version: "1.0.0", private: true }, null, 2)}\n`,
+    `${JSON.stringify({ name: "@tcms/demo-a", version: "1.0.0", private: true }, null, 2)}\n`,
   );
   writeFileSync(
     join(ROOT, "packages/demo-b/package.json"),
-    `${JSON.stringify({ name: "@pcms/demo-b", version: "2.1.3", private: true }, null, 2)}\n`,
+    `${JSON.stringify({ name: "@tcms/demo-b", version: "2.1.3", private: true }, null, 2)}\n`,
   );
   writeFileSync(join(ROOT, "packages/demo-a/src/index.ts"), 'export const demoA = "hello";\n');
   writeFileSync(join(ROOT, "packages/demo-b/src/index.ts"), 'export const demoB = "world";\n');
@@ -58,11 +58,11 @@ function createDemoPackages() {
 function resetVersions() {
   writeFileSync(
     join(ROOT, "packages/demo-a/package.json"),
-    `${JSON.stringify({ name: "@pcms/demo-a", version: "1.0.0", private: true }, null, 2)}\n`,
+    `${JSON.stringify({ name: "@tcms/demo-a", version: "1.0.0", private: true }, null, 2)}\n`,
   );
   writeFileSync(
     join(ROOT, "packages/demo-b/package.json"),
-    `${JSON.stringify({ name: "@pcms/demo-b", version: "2.1.3", private: true }, null, 2)}\n`,
+    `${JSON.stringify({ name: "@tcms/demo-b", version: "2.1.3", private: true }, null, 2)}\n`,
   );
 }
 
@@ -96,7 +96,7 @@ function unstageAll() {
 }
 
 function runBump(subject) {
-  const dir = mkdtempSync(join(tmpdir(), "pcms-commit-msg-"));
+  const dir = mkdtempSync(join(tmpdir(), "tcms-commit-msg-"));
   const msgFile = join(dir, "msg.txt");
   writeFileSync(msgFile, subject);
 

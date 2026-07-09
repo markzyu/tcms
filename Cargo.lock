@@ -2596,19 +2596,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pcms"
-version = "0.1.0"
-dependencies = [
- "lcdn-server",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-opener",
- "tauri-plugin-os",
-]
-
-[[package]]
 name = "percent-encoding"
 version = "2.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3970,6 +3957,19 @@ dependencies = [
  "dunce",
  "embed-resource",
  "toml 1.1.2+spec-1.1.0",
+]
+
+[[package]]
+name = "tcms"
+version = "0.1.0"
+dependencies = [
+ "lcdn-server",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-opener",
+ "tauri-plugin-os",
 ]
 
 [[package]]

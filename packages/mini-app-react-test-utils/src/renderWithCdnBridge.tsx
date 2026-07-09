@@ -1,4 +1,4 @@
-import type { CDNBridge } from "@pcms/mini-app-common";
+import type { CDNBridge } from "@tcms/mini-app-common";
 import { render, type RenderOptions, type RenderResult } from "@testing-library/react";
 import type { ReactElement } from "react";
 
@@ -19,7 +19,7 @@ export interface RenderWithCdnBridgeResult extends RenderResult {
 }
 
 /**
- * Render a component with window.pcms.cdnBridge mocked.
+ * Render a component with window.tcms.cdnBridge mocked.
  * Content is provided via initialContentJson; no bundle or network involved.
  *
  * Bind a template content type once per test file:

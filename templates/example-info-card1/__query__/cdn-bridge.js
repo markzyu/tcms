@@ -1,9 +1,9 @@
 (() => {
-  if (!window.pcms) {
-    window.pcms = {};
+  if (!window.tcms) {
+    window.tcms = {};
   }
-  if (!window.pcms.cdnBridge) {
-    window.pcms.cdnBridge = {
+  if (!window.tcms.cdnBridge) {
+    window.tcms.cdnBridge = {
       initialContentJson: {
         name: "John Doe",
         headline: "Photographer",

@@ -1,4 +1,4 @@
-import { cleanUpSchemaDirectory, defineRootManifest } from "@pcms/mini-app-common";
+import { cleanUpSchemaDirectory, defineRootManifest } from "@tcms/mini-app-common";
 await cleanUpSchemaDirectory();
 
 // Do not import any schema until cleanup is done.

@@ -1,5 +1,5 @@
 import { ContactCard } from "./ContactCard";
-import { PageContentProvider } from "@pcms/mini-app-react-utils";
+import { PageContentProvider } from "@tcms/mini-app-react-utils";
 
 export function App() {
   return (

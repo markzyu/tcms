@@ -4,7 +4,7 @@ import type { CDNBridge } from "./cdn-bridge";
 
 declare global {
   interface Window {
-    pcms: {
+    tcms: {
       cdnBridge: CDNBridge;
     };
   }

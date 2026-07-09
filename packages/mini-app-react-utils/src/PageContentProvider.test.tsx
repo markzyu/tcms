@@ -1,5 +1,5 @@
 import { screen, waitFor } from "@testing-library/react";
-import { renderWithCdnBridge } from "@pcms/mini-app-react-test-utils";
+import { renderWithCdnBridge } from "@tcms/mini-app-react-test-utils";
 
 import { PageContentProvider, usePageContentContext } from "./PageContentProvider";
 

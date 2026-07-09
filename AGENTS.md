@@ -1,4 +1,4 @@
-# PCMS — agent notes
+# TCMS — agent notes
 
 Guidance for AI agents working in this repo.
 
@@ -9,7 +9,7 @@ This project expects **Node 22** (see `.nvmrc`). Agent terminals often start wit
 Before `yarn`, `npm`, or other Node tooling, activate the repo Node version:
 
 ```bash
-cd pcms   # repo root (where .nvmrc lives)
+cd tcms   # repo root (where .nvmrc lives)
 
 export NVM_DIR="${HOME}/.nvm"
 source "$NVM_DIR/nvm.sh"
@@ -20,5 +20,5 @@ node -v   # should report v22.x
 If `nvm use` fails or `node -v` is still wrong, prepend the nvm-managed binary directly (works when sourcing nvm does not):
 
 ```bash
-export PATH="$HOME/.nvm/versions/node/v22.23.0/bin:$PATH" && cd pcms && node -v && yarn install
+export PATH="$HOME/.nvm/versions/node/v22.23.0/bin:$PATH" && cd tcms && node -v && yarn install
 ```

@@ -1,6 +1,6 @@
 import { CONTACT_CARD_TEST_IDS } from "./constants";
 import { ContactCardContent } from "./content/contactCard";
-import { usePageContentContext } from "@pcms/mini-app-react-utils";
+import { usePageContentContext } from "@tcms/mini-app-react-utils";
 
 export const ContactCard = () => {
   const { contentJson, isLoading } = usePageContentContext<ContactCardContent>();

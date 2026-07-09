@@ -1,10 +1,10 @@
 #!/usr/bin/env sh
 # Include package.json version bumps in the commit (git add in commit-msg is not enough on stock Git).
-if [ ! -f .git/pcms-version-bump-pending ]; then
+if [ ! -f .git/tcms-version-bump-pending ]; then
   exit 0
 fi
 
-rm .git/pcms-version-bump-pending
+rm .git/tcms-version-bump-pending
 
 for packageJson in packages/*/package.json; do
   if [ -f "$packageJson" ]; then

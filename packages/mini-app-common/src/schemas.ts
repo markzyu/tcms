@@ -90,7 +90,7 @@ export const defineRootManifest = async (props: DefineRootManifestProps) => {
   const packageJson = await import(path.join(WORKDIR, "package.json"));
   const packageDependencies = packageJson.dependencies || {};
   const dependencies = Object.entries(packageDependencies)
-    .filter(([name]) => !name.startsWith("@pcms/"))
+    .filter(([name]) => !name.startsWith("@tcms/"))
     .map(([name, version]) => (
       `${name}@${version}`
     ));

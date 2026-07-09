@@ -1,6 +1,6 @@
 {
-  "name": "@pcms/mini-app-common",
-  "version": "0.0.5",
+  "name": "@tcms/mini-app-common",
+  "version": "0.0.6",
   "type": "module",
   "exports": {
     ".": {

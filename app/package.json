@@ -1,5 +1,5 @@
 {
-  "name": "@pcms/app",
+  "name": "@tcms/app",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -11,7 +11,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "tauri": "tauri",
-    "typecheck": "vue-tsc --noEmit && echo '[@pcms/app] typecheck passed.'"
+    "typecheck": "vue-tsc --noEmit && echo '[@tcms/app] typecheck passed.'"
   },
   "dependencies": {
     "@ionic/vue": "^8.8.13",

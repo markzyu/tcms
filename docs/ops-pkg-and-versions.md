@@ -10,16 +10,16 @@ So this document covers some basic rules about versioning.
 
 ### Monorepo structure & coupling
 
-- **`app/` and `templates/`** are always built and shipped **together**. There should be **no way to build the app against an older template** (no semver npm dep; build order + embed/copy template `dist`, not `@pcms/template-*@version`).
+- **`app/` and `templates/`** are always built and shipped **together**. There should be **no way to build the app against an older template** (no semver npm dep; build order + embed/copy template `dist`, not `@tcms/template-*@version`).
 - **`templates/` → `packages/`** can use **semver / npm** later. Templates may pin **older published helpers** while the monorepo moves on.
 - **`packages/*`** workspace is declared but was empty at first; you're about to add publishable helpers.
 
 Within packages, we adopt a naming scheme, based on the three levels of Security as mentioned in [tech-overview.md](./tech-overview.md):
 
-- `@pcms/common` is a list of public types and utilities that are shared between all three levels of Security.
-- `@pcms/mini-app-*` for mini-app packages (Harness for connecting Vue/React mini apps to Local CDN)
-- `@pcms/tool-*` for tool packages (Any common types and utilities used by tools)
-- `@pcms/admin-*` for admin shell packages (Any common types and utilities used by the admin shell)
+- `@tcms/common` is a list of public types and utilities that are shared between all three levels of Security.
+- `@tcms/mini-app-*` for mini-app packages (Harness for connecting Vue/React mini apps to Local CDN)
+- `@tcms/tool-*` for tool packages (Any common types and utilities used by tools)
+- `@tcms/admin-*` for admin shell packages (Any common types and utilities used by the admin shell)
 
 Build scripts: All templates and packages should have `build`, `typecheck` and `test` scripts at the least, even if they just return 0: 
 
@@ -30,7 +30,7 @@ Build scripts: All templates and packages should have `build`, `typecheck` and `
 ### Dependency / versioning policy
 
 - **Inside the monorepo (daily dev):** workspace link — `*` (Yarn 1) or `workspace:*` (Berry). “Latest” means **whatever is on disk** in `packages/*`.
-- **Published helpers on npm:** explicit pin (e.g. `0.1.0`) or `npm:@pcms/common@0.1.0` on Berry when workspace is newer.
+- **Published helpers on npm:** explicit pin (e.g. `0.1.0`) or `npm:@tcms/common@0.1.0` on Berry when workspace is newer.
 - **Yarn workspace resolution:** local workspace wins when **name matches + range satisfies**; not “npm first.” Tight pin can pull registry; broad range / `*` stays local.
 - **Debugging old built versions:** not automatic with workspace linking; options are git, `yarn pack` + `file:`, or a private registry — you understood that tradeoff.
 

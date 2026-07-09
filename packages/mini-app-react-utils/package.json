@@ -1,6 +1,6 @@
 {
-  "name": "@pcms/mini-app-react-utils",
-  "version": "0.0.1",
+  "name": "@tcms/mini-app-react-utils",
+  "version": "0.0.2",
   "type": "module",
   "exports": {
     ".": {
@@ -17,14 +17,14 @@
     "test": "jest"
   },
   "dependencies": {
-    "@pcms/mini-app-common": "workspace:*"
+    "@tcms/mini-app-common": "workspace:*"
   },
   "peerDependencies": {
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
   },
   "devDependencies": {
-    "@pcms/mini-app-react-test-utils": "workspace:*",
+    "@tcms/mini-app-react-test-utils": "workspace:*",
     "@types/jest": "^29.5.14",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
