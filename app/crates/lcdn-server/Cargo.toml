@@ -46,3 +46,8 @@ features = ["rt-multi-thread", "signal", "sync"]
 [dependencies.tower-http]
 version = "0.7.0"
 features = ["fs"]
+
+[dependencies.zip]
+version = "8.6.0"
+default-features = false
+features = ["deflate"]

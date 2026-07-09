@@ -36,6 +36,7 @@ pub struct InstanceConfig {
   pub instance_id: String,
   pub slug: String,
   pub name: String,
+  pub template_scope: String,
   pub template_id: String,
   pub created_at: DateTime<Utc>,
   pub updated_at: DateTime<Utc>,

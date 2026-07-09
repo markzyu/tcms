@@ -13,6 +13,9 @@ use chrono::{DateTime, Utc};
 use dashmap::DashMap;
 use http::{StatusCode, Uri, uri::PathAndQuery};
 use std::{
+  fs::File,
+  io::BufReader,
+  io::Read,
   net::{Ipv4Addr, SocketAddr},
   path::{Component, PathBuf},
   str::FromStr,
@@ -21,6 +24,7 @@ use std::{
 use tokio::sync::mpsc::{Sender, channel};
 use tower_http::services::ServeDir;
 use tower_layer::Layer;
+use zip::ZipArchive;
 
 pub use crate::types::{InstanceConfig, LcdnConfig, LcdnError};
 
@@ -123,7 +127,8 @@ async fn instance_url_sanitization_layer(
   // Mappings:
   // "Invalid string": keep as is or use /
   // "/slug/assets/...": map to "instances/{instance_id}/{path_without_slug}"
-  // "/slug": map to "templates/{template_id}/index.html"
+  // "/slug/...": map to "templates/{template_scope}/{template_id}/{path_without_slug}"
+  // "/slug": map to "templates/{template_scope}/{template_id}/index.html"
   let new_req_path = match (
     path_first_component,
     path_second_component.as_deref(),
@@ -131,12 +136,15 @@ async fn instance_url_sanitization_layer(
   ) {
     (_, _, 0) => "/".to_string(),
     (Some(Component::Normal(_)), None, 1) => {
-      format!("templates/{}/index.html", instance_config.template_id)
+      format!("templates/{}/{}/index.html", instance_config.template_scope, instance_config.template_id)
     }
     (Some(Component::Normal(_)), Some("assets"), _) => format!(
       "instances/{}/{}",
       instance_config.instance_id, path_without_slug
     ),
+    (Some(Component::Normal(_)), _, _) => {
+      format!("templates/{}/{}/{}", instance_config.template_scope, instance_config.template_id, path_without_slug)
+    },
     _ => orig_uri_path.clone(),
   };
   let new_path_and_query_str = format!("/{}?{}", new_req_path, orig_uri_query);
@@ -153,13 +161,22 @@ async fn instance_url_sanitization_layer(
 }
 
 async fn serve_template_from_zip(
-  Path((template_id, path)): Path<(String, String)>,
+  Path((template_scope, template_id, path)): Path<(String, String, String)>,
 ) -> Result<Response, StatusCode> {
   eprintln!(
-    "serve_template_from_zip: template_id: {}, path: {}",
-    &template_id, &path
+    "serve_template_from_zip: template: {}/{}, path: {}",
+    &template_scope, &template_id, &path
   );
-  Ok(Response::new(Body::from("Hello, World!")))
+  let zip_path = format!("public/templates/{}/{}.zip", template_scope, template_id);
+  let zip_file = File::open(zip_path).map_err(|_| StatusCode::NOT_FOUND)?;
+  let zip_reader = BufReader::new(zip_file);
+  let mut zip = ZipArchive::new(zip_reader).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+  let mut file = zip.by_name(&path).map_err(|_| StatusCode::NOT_FOUND)?;
+  let mut file_content = Vec::new();
+  file
+    .read_to_end(&mut file_content)
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+  Ok(Response::new(Body::from(file_content)))
 }
 
 pub async fn start_lcdn_server(config: LcdnConfig) -> Result<(), LcdnError> {
@@ -167,7 +184,8 @@ pub async fn start_lcdn_server(config: LcdnConfig) -> Result<(), LcdnError> {
     instance_id: "6fa27a2f-2f1e-413d-a842-424242424242".to_string(),
     name: "My Contact Card".to_string(),
     slug: "my-contact-card".to_string(),
-    template_id: "my-contact-card".to_string(),
+    template_scope: "@tcms".to_string(),
+    template_id: "template-example-info-card1".to_string(),
     current_variant: "en".to_string(),
     variants: vec!["en".to_string()],
     created_at: DateTime::<Utc>::default(),
@@ -188,12 +206,8 @@ pub async fn start_lcdn_server(config: LcdnConfig) -> Result<(), LcdnError> {
     let route_content = Router::new()
       .fallback_service(public_static)
       .route(
-        "/templates/{template_id}/{*path}",
+        "/templates/{template_scope}/{template_id}/{*path}",
         get(serve_template_from_zip),
-      )
-      .route(
-        "/templates/my-contact-card/index.html",
-        get(|| async { "Hello, World!" }),
       )
       .route(
         "/{slug}/__query__/cdn-bridge.js",

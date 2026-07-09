@@ -261,6 +261,8 @@ The instanceIds array lists the instance ids to enable by default.
 
 This config file is hotload-able. Tauri can update just about anything by restarting the http server. But, Tauri can also just update the list of instanceIds through an IPC command (which should also update the config file on disk).
 
+As for the storage of templates vs instances: Templates are stored as zipfiles under public `templates/@tcms` folder, because they won't change. But instances must be actual files in folders. We could ship example instances using zipfiles but those must be unzipped to the public `instances` folder.
+
 ### Tauri commands (minimal)
 
 - `lcdn_start()` / `lcdn_stop()` / `lcdn_status()`
