@@ -21,13 +21,13 @@ Same engine, many verticals (board, pack drop, field kit, maker play). v1 can pr
 | Concept | What it is |
 |--------|------------|
 | **Local CDN** | On-phone preview layer: single entry point, proxies to mini-app backends on localhost. For **authoring and in-venue LAN preview**, not public internet traffic. |
-| **Content pack drop** | Export a site bundle (HTML, assets, config) and **transfer offline** (share sheet, Xender-style, backup/restore). Recipient imports into Thor CMS or opens via browser if served locally. **No mobile data** to duplicate what a colleague already has. |
-| **Today’s board** | Owner updates content on phone → **display device** (old phone, tablet, TV stick) on same Wi‑Fi shows the loop. Viewers **look at the screen**; they don’t install Thor CMS. |
+| **Content pack drop** | Export a site bundle (HTML, assets, config) and **transfer offline** (share sheet, Xender-style, backup/restore). Recipient imports into the Thor CMS or opens via browser if served locally. **No mobile data** to duplicate what a colleague already has. |
+| **Today’s board** | Owner updates content on phone → **display device** (old phone, tablet, TV stick) on same Wi‑Fi shows the loop. Viewers **look at the screen**; they don’t install the ThorCMS app. |
 | **Public link / reversed CDN** | When online, sync **static assets** (and optional HTML snapshot) to **user’s bucket** (S3, R2, GitHub, etc.). QR or WhatsApp bio points to `https://…`. Phone is **not** the origin for static traffic. |
 | **LAN QR preview** | Fallback when nobody has data: join shop Wi‑Fi/hotspot, open local URL in **browser**. For demos and dead zones — not the main customer path. |
 | **Phone-origin server** | Port-forwarding + foreground app (screensaver on iOS) so **live/dynamic** traffic hits the phone. **Last resort** for power users — not the default pitch for A or C. |
 
-**Viewers:** Owners have Thor CMS. Almost everyone else uses a **browser** or looks at a **display**. Requiring Thor CMS on the customer’s phone is only for **pack handoffs between editors**, not for reading a menu.
+**Viewers:** Owners have the ThorCMS app. Almost everyone else uses a **browser** or looks at a **display**. Requiring the ThorCMS app on the customer’s phone is only for **pack handoffs between editors**, not for reading a menu.
 
 ## Content pack drops (technical language)
 
@@ -35,7 +35,7 @@ A **pack drop** is how Thor CMS moves a **whole mini-app instance** — content,
 
 ### What gets dropped?
 
-Yes: **a zip archive**, plus structured metadata Thor CMS can read. A pack is **not** a random folder dump; it is the same **static layer Local CDN would serve**, bundled for transport.
+Yes: **a zip archive**, plus structured metadata the ThorCMS app can read. A pack is **not** a random folder dump; it is the same **static layer Local CDN would serve**, bundled for transport.
 
 Typical contents:
 
@@ -48,12 +48,12 @@ Typical contents:
 | **`cache/`** | Optional HTML snapshot (CSR or SSR), cached JS framework files |
 | **`meta.json`** | Export time, source device, optional signature (future trust circle) |
 
-What is **not** in a pack: the Thor app itself, trusted backend **binaries** (those ship with the app store install), or a substitute for installing a template the recipient’s app doesn’t already support.
+What is **not** in a pack: the ThorCMS app itself, trusted backend **binaries** (those ship with the app store install), or a substitute for installing a template the recipient’s app doesn’t already support.
 
 ### How does a drop happen?
 
 1. **Author** finishes edits in Admin / Tools; Local CDN preview looks correct.
-2. **Export pack** from Backup & restore or the mini-app’s “Share pack” action → Thor CMS writes **`Something.tcms.zip`** (name TBD) to storage.
+2. **Export pack** from Backup & restore or the mini-app’s “Share pack” action → the ThorCMS app writes **`Something.tcms.zip`** (name TBD) to storage.
 3. **Transfer offline** — any channel that moves a file without internet:
    - Xender / SHAREit / LocalSend / Files by Google Nearby
    - Bluetooth, USB, SD card, “Save to Files” then AirDrop-style handoff
@@ -66,11 +66,11 @@ No Thor CMS server in the cloud is required for steps 1–4. The zip **is** the 
 
 Depends on **who** they are:
 
-#### Path 1 — Another Thor CMS user (most common for pack drops)
+#### Path 1 — Another ThorCMS app user (most common for pack drops)
 
-They **import** the zip inside Thor CMS (Backup & restore → Receive pack, or mini-app import).
+They **import** the zip inside the ThorCMS app (Backup & restore → Receive pack, or mini-app import).
 
-Thor CMS then:
+The ThorCMS app then:
 
 - Validates manifest + template compatibility (“do I have this template installed?”)
 - **Installs** a new mini-app instance, or **replaces** one instance (partial restore — no merge of two divergent edits)
@@ -87,15 +87,15 @@ This is the core **A** and **B** loop: HQ phone → pack drop → field phone; c
 
 #### Path 2 — Wall display / in-venue screen (market C)
 
-Usually **one phone owns Thor CMS** (imports or authors the pack). A **second device** (old phone, tablet, TV stick) on the same Wi‑Fi opens the site in a **browser** pointed at Local CDN on the owner’s phone — **today’s board** mode. The pack drop often lands on the **owner** device first; the display just renders what Local CDN serves.
+Usually **one phone runs the ThorCMS app** (imports or authors the pack). A **second device** (old phone, tablet, TV stick) on the same Wi‑Fi opens the site in a **browser** pointed at Local CDN on the owner’s phone — **today’s board** mode. The pack drop often lands on the **owner** device first; the display just renders what Local CDN serves.
 
-Viewers do **not** need the zip and do **not** need Thor CMS.
+Viewers do **not** need the zip and do **not** need the ThorCMS app.
 
 #### Path 3 — Public visitors (link, not pack)
 
 End customers do **not** receive zips. Owner imports or authors, then **reversed CDN** (or static export to GitHub Pages) produces a normal **`https://`** link for WhatsApp bio. Pack drop is for **operators**, not diners.
 
-#### Path 4 — Static-only, no Thor CMS on recipient (edge case)
+#### Path 4 — Static-only, no ThorCMS app on recipient (edge case)
 
 If the template is **fully static** (no mini-app backend needed to serve HTML calls), an advanced user could unzip and host `index.html` elsewhere — same as tech-overview “export static HTMLs” mode. That is **export for hosting**, not the main pack-drop UX. Thor CMS optimizes for Path 1.
 
@@ -103,7 +103,7 @@ If the template is **fully static** (no mini-app backend needed to serve HTML ca
 
 | Mechanism | What moves | Typical recipient |
 |-----------|------------|-------------------|
-| **Pack drop** | `.tcms.zip` offline | another Thor CMS install |
+| **Pack drop** | `.tcms.zip` offline | another ThorCMS app install |
 | **Today’s board** | Nothing — owner serves on LAN | Eyes / browser on display |
 | **Reversed CDN** | Static files uploaded to **your** bucket | Anyone with link |
 | **Static export** | Plain HTML zip for Netlify/GitHub | Web host |

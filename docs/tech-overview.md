@@ -2,11 +2,18 @@
 
 High-level architecture from design discussions. Intentionally brief; see **Open questions** for unresolved detail.
 
+## Naming
+
+* **TCMS** and **Thor CMS** both refer to the whole system, beyond just the mobile/desktop app.
+* **ThorCMS** refers to the app (store name, window title, and in-app branding).
+
+In prose, keep **app** when describing the installable product (e.g. “the ThorCMS app”). Use **Thor CMS** when referring to the CMS concept or the full TCMS expansion — not as the app’s display name.
+
 ## Architecture summary
 
-Thor CMS is a **native mobile app** that has multiple different Frontend parts, split into security levels:
+**Thor CMS** is delivered by the **ThorCMS** native mobile app, which has multiple different Frontend parts, split into security levels:
 
-1. **Admin shell** — the main UI of the Thor app, able to configure and launch hosted apps, able to launch tools as part of the configuration workflows; all privileged OS operations (starting http servers, etc).
+1. **Admin shell** — the main UI of the ThorCMS app, able to configure and launch hosted apps, able to launch tools as part of the configuration workflows; all privileged OS operations (starting http servers, etc).
 2. **Tools** — premade websites meant as productivity tools, that users can utilize to author CMS templates, and do basic OPS work on the phone; scoped OS features (opening files and storing them for mini app assets, but not starting http servers).
 3. **Mini app(s)** — one or more real **HTTP servers** on `127.0.0.1` serving CMS templates; rendered in a **sandboxed iframe** (no Tauri runtime).
 
@@ -19,7 +26,7 @@ But there is one more hidden backend component: Local CDN (LCDN)
 
 ### Local CDN
 
-In terms of security boundaries, Local CDN is a hidden mini app. It is a separate binary that just reads configurations and hosts static files. It runs in the **foreground** whenever there is at least one running mini app. On iOS, keeping servers alive requires the app to stay foregrounded; Thor shows a **fullscreen screensaver** while serving (not shown in Developer Mode; see below). 
+In terms of security boundaries, Local CDN is a hidden mini app. It is a separate binary that just reads configurations and hosts static files. It runs in the **foreground** whenever there is at least one running mini app. On iOS, keeping servers alive requires the app to stay foregrounded; the ThorCMS app shows a **fullscreen screensaver** while serving (not shown in Developer Mode; see below).
 
 Local CDN serves for other mini apps:
 
@@ -60,7 +67,7 @@ There are 3 modes for users to publish their websites
 * Exporting to a personal server: Users must have a computer that is publicly accessible. Phone exports CDN static content + an install script for the server binaries.
 * (Static HTMLs only) Exporting to an external service: Phone exports CDN static content for templates that are completely static. User can upload this to Github Pages, netlify, or any service of their choice.
 
-There is technically a 4th mode: Serving on another phone. But it is basically the same as the "backup and restore" feature of Thor CMS app data.
+There is technically a 4th mode: Serving on another phone. But it is basically the same as the "backup and restore" feature of ThorCMS app data.
 
 ## Versioning and CAS
 
@@ -82,13 +89,13 @@ In MVP v0.1, the versioning system and CAS storage do not exist. Phase 0 uses pl
 
 (A) For the Admin shell, and for tools, we rely heavily on Tauri's security models. We would need to write Tauri commands that access Mobile Phone's OS. Here we should prefer **narrow, user-confirmed OS access** over broad commands that can access random parts of filesystem or wide network privileges.
 
-Tauri doesn't host the commands on a public socket and is instead only accessibile from its own webview, even when using the brownfield pattern. So the default brownfield security is enough. But we should still enable the Tauri Isolation Pattern, because: (1) we won't ever use Tauri commands to read a verbatim file into JS memory. Instead, everything goes through Local CDN (2) The isolation pattern can be useful to sanity check that Tools are not accidentally being used by users to open and edit files from other apps: All super user functions are restricted to files owned by the Thor app, to comply with any potential app store requirements
+Tauri doesn't host the commands on a public socket and is instead only accessibile from its own webview, even when using the brownfield pattern. So the default brownfield security is enough. But we should still enable the Tauri Isolation Pattern, because: (1) we won't ever use Tauri commands to read a verbatim file into JS memory. Instead, everything goes through Local CDN (2) The isolation pattern can be useful to sanity check that Tools are not accidentally being used by users to open and edit files from other apps: All super user functions are restricted to files owned by the ThorCMS app, to comply with any potential app store requirements
 
 (B) For mini apps, we run them outside Tauri and as separate backends.
 
 Mini apps servers, and Local CDN are served on insecure HTTP. User must bring their own reverse proxy / port forwarding / hosting solutions.
 
-When in Thor app, Mini apps URLs and Local CDN URLs must always be opened from a sandboxed iframe, which does not have access to Tauri runtime.
+When in the ThorCMS app, Mini apps URLs and Local CDN URLs must always be opened from a sandboxed iframe, which does not have access to Tauri runtime.
 
 Mini app servers must open port on localhost only. Mini app servers would run with the same Filesystem/OS permssions as the app binary itself. Bundled backends only: each trusted server is **shipped with the app** as a static, codesigned binary (on iOS, may run in-process as a thread rather than a separate process). They serve **predefined template schemas only**, not arbitrary user-supplied server logic. Optional on-demand download bundles (see requirements) are still author-signed splits of the same trusted binaries—not user-defined custom servers.
 
@@ -99,7 +106,7 @@ Local CDN's CSP policy should be indirectly configurable, to allow adding record
 
 ## Developer Mode
 
-Developer mode is for power users who want to create their own templates while using a **backend HTTP server in another app** on the phone (e.g. Termux on Android, Pythonista on iPad). Thor CMS does not ship or trust that server; the user must find and run a separate app that can bind a localhost port.
+Developer mode is for power users who want to create their own templates while using a **backend HTTP server in another app** on the phone (e.g. Termux on Android, Pythonista on iPad). The ThorCMS app does not ship or trust that server; the user must find and run a separate app that can bind a localhost port.
 
 This requires adding Local CDN hosting rules to whitelist the developer's URL, which must be a new port and must be localhost only. Create a hidden menu within the Admin shell to enable this feature. (Assets, contents and JS frameworks would still load from Local CDN.)
 
@@ -112,7 +119,7 @@ Unrelated: There might eventually be a remote Admin UI, because super users woul
 - **Whitelist** what may load inside the shell WebView, including within templates and mini apps. Each mini app **manifest** must declare any external dependency (domains/hosts).
 - **Always allowed**: local CDN, and external, pre-approved **CDN hosts** for JS/CSS.
 - **Declared iframe hosts**: templates may embed third-party pages (e.g. sign-in or ordering) only for domains listed in the manifest; users must not use unlisted sites for those functions. A template may offer multiple listed choices.
-- **Not allowed inline**: undeclared external images, videos, and general third-party pages — these may exist as links; clicking opens the phone's browser, not Thor.
+- **Not allowed inline**: undeclared external images, videos, and general third-party pages — these may exist as links; clicking opens the phone's browser, not the ThorCMS app.
 - Block non-whitelisted **top-level navigation**. Mini apps should either remain in iframe, or open in another app like the real browser
 
 ### Persistence and recovery

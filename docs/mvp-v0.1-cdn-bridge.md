@@ -161,7 +161,7 @@ Template React/Vue providers (and future `@tcms/react` / `@tcms/vue` packages) *
 
 Do not assume `initialContentJson` is always present. Providers that only read `initialContentJson` will fail on reversed CDN when traffic minimization omits inlined JSON.
 
-For pack drop, the cdn-bridge script is not generated upon export. Instead, a template is provided, along with instructions. And it must be edited for public hosting, or for usage without Thor CMS.
+For pack drop, the cdn-bridge script is not generated upon export. Instead, a template is provided, along with instructions. And it must be edited for public hosting, or for usage without the ThorCMS app.
 
 ## Dev mode
 

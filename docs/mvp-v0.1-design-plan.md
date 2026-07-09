@@ -54,7 +54,7 @@ Forward-looking shapes (CAS, multi-page manifest, rich editor UI, LCDN/rcdn ops 
 2. `**instance.json**` (per mini-app instance, user data)
 3. **Variant content files** — `content/{pageShortName}.{variant}.json` (contact card: `main.en.json`, etc.)
 4. Directory layout under app sandbox (see below)
-5. **Standalone example-info-card1 site** — React CSR reading the active variant content file; runnable without Thor CMS shell for dev/demo
+5. **Standalone example-info-card1 site** — React CSR reading the active variant content file; runnable without the ThorCMS app shell for dev/demo
 
 ### Directory layout
 

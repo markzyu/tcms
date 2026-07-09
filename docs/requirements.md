@@ -14,7 +14,7 @@ It is aimed at (1) regular users who pick templates and paste tokens to spin up 
 - Keep the experience **simple and safe for end users** (install template, configure tokens/paths, open and preview their website without unsafely publishing it everywhere rightaway).
 - Allow **power users** to make use of local DBs, local CDN configurations, cloud services tokens, custom publishing methods, and similar power tools. But they should expect to do some glue work in other apps (e.g. Termux on Android, Pythonista on iPad).
 - Support **multi-lingual configuration without multi-tenant hosting** (no parallel language URLs for user apps); config schema may exist for multiple languages, but is served flat for a small number of uses/users.
-    - Even the Thor app itself, the admin interface must support multiple languages and internationalization. (This is also, in a way, not really multi tenant hosting, but just a selection of the current "strings"/"CMS content" context)
+    - Even the ThorCMS app itself, the admin interface must support multiple languages and internationalization. (This is also, in a way, not really multi tenant hosting, but just a selection of the current "strings"/"CMS content" context)
 
 ## Out of scope / rejected
 
@@ -38,8 +38,8 @@ We won't implement the following
 ### Tools
 
 - JSON editor: A phone-friendly editor that relies on JSON schemas to simplify the editing experience of JSONs. This would be shown as the main interface to create a new mini app from template. This can also optionally integrate with AI API keys to assist folks who just want to chat with an AI (authentication with cloud services). But it must be able to show the edits in real time on Phone UI.
-- Hosting options: Instead of using the generic JSON editor for this, we should desing a native UI for ease of use. This is part of the Settings in Thor app. These options include a field for public hostname, a list of mini apps and their configurations (highlighting the URL pathname), and **reversed Local CDN** settings (remote provider, bucket/repo, API token, public static base URL). This "Hosting options" tool is also what shows up when editing a mini app instance.
-- Backup and restore: Authentication with cloud services can also provide access to buckets and storage APIs. Use these to backup and retore the content of Thor CMS apps. This "Backup and restore" UI must support partially restoring only a specific mini app from any existing version of backup. But it won't support merging.
+- Hosting options: Instead of using the generic JSON editor for this, we should desing a native UI for ease of use. This is part of the Settings in the ThorCMS app. These options include a field for public hostname, a list of mini apps and their configurations (highlighting the URL pathname), and **reversed Local CDN** settings (remote provider, bucket/repo, API token, public static base URL). This "Hosting options" tool is also what shows up when editing a mini app instance.
+- Backup and restore: Authentication with cloud services can also provide access to buckets and storage APIs. Use these to backup and retore the content of apps in Thor CMS. This "Backup and restore" UI must support partially restoring only a specific mini app from any existing version of backup. But it won't support merging.
 - CDN Operations: Allow dynamically caching any JS framework. Allow configuring a local URL that proxies requests to all external CDNs. Allow configuring whether the local URL prefers external CDN first, or prefers cache first (**context-aware routing**: preview prefers localhost/Local CDN; external visitors prefer remote CDN when reversed CDN is enabled). Allow clearing cache by framework. Allow configuring allowlists and banlists. Allow **publish/sync** of the local static layer to a remote bucket (reversed Local CDN)—manual or on content change—when a token is configured. Separate toggles: **reversed Local CDN** on/off and **HTML on remote CDN** on/off (HTML upload can be disabled while other static sync stays on).
 
 - Other "Tools", which are reallly just webapps with Tauri access meant to provide super user abilities: Simple tools with file access (for my own dev purposes), phone UIs for cloud servies. Examples: SHASUM calculator with Virustotal integration (requires API key). Path of Exile tool to quickly search economy data, with access to native OCR (on device). A basic video editor powered by Melt (perhaps can even generate vague cutpoints using Whisper).
@@ -74,7 +74,7 @@ Eventually there might also be a remote management UI to start/stop/configure mi
 
 - **App Store–friendly default path**: no device-wide CA install, no broad ATS/network exceptions without justification.
 - **Memory-conscious**: prefer one reused WebView; avoid many concurrent heavy WebViews; keep mini apps in “tooling SPA” weight class where possible.
-- **Honest background behavior**: backends and realtime features assume **foreground-first** on mobile. While mini apps are served, Thor keeps the app foregrounded; on iOS this uses a **fullscreen screensaver** (standard path only; not Developer Mode).
+- **Honest background behavior**: backends and realtime features assume **foreground-first** on mobile. While mini apps are served, the ThorCMS app keeps itself foregrounded; on iOS this uses a **fullscreen screensaver** (standard path only; not Developer Mode).
 
 ## Open questions
 
