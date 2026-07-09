@@ -1,8 +1,8 @@
 # TCMS — Requirements Overview
 
-**TCMS** (Thor CMS) — Portable CMS for workers in the field.
+TCMS (Thor CMS) is a FOSS webpage builder — technically a local CMS+CDN suite — for communities whose only computer is their phone.
 
-Thor CMS is a phone-hosted, self-contained toolkit that lets you host, configure, and serve small web apps from the phone itself -- and allows you to take the finalized website and deploy it through any vendor or device you'd like.
+TCMS is a phone-hosted, self-contained toolkit that lets you host, configure, and serve small web apps from the phone itself -- and allows you to take the finalized website and deploy it through any vendor or device you'd like.
 
 It is aimed at (1) regular users who pick templates and paste tokens to spin up simple websites, (2) power users who make use of built-in tools for their own usefulness, editing JSONs, cropping images to fit divs, calling popular web services, etc. (3) and power users who make use of pre-bundled backend server binaries, and offline caches of JS frameworks, to create custom local webapps.
 
