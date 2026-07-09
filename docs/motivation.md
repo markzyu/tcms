@@ -1,6 +1,6 @@
 # TCMS — Motivation & markets
 
-As mentioned in [requirements.md](./requirements.md), TCMS (Thor CMS) is a FOSS webpage builder — technically a local CMS+CDN suite — for communities whose only computer is their phone. This document explores the original motivations behind the project, the markets it is aimed at, and how the use cases fit together.
+As mentioned in [requirements.md](./requirements.md), TCMS (Thor CMS) is a FOSS webpage workshop — technically a local CMS+CDN suite — for communities whose only hammer is their phone. This document explores the original motivations behind the project, the markets it is aimed at, and how the use cases fit together.
 
 Why this project exists, who it is for, and how the use cases fit together. Complements [requirements.md](./requirements.md) and [tech-overview.md](./tech-overview.md).
 
