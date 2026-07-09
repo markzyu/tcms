@@ -232,6 +232,12 @@ async fn serve_template_from_zip(
   Ok(response)
 }
 
+async fn serve_query_cdn_bridge() -> Result<Response, StatusCode> {
+  let body = Body::from("{\"ok\":true}");
+  let response = Response::new(body);
+  Ok(response)
+}
+
 pub async fn start_lcdn_server(config: LcdnConfig) -> Result<(), LcdnError> {
   let mock_instance_configs = vec![InstanceConfig {
     instance_id: "6fa27a2f-2f1e-413d-a842-424242424242".to_string(),
@@ -255,6 +261,7 @@ pub async fn start_lcdn_server(config: LcdnConfig) -> Result<(), LcdnError> {
     let (tx, mut rx) = channel::<()>(100);
     SHUTDOWN_CHANNEL.store(Some(Arc::new(tx)));
 
+    // TODO: Rename the internal URL routes to separate concerns between root paths: /templates/, /instances/, /queries/, /dependencies/ (react/vue) etc
     let public_static = ServeDir::new("public");
     let route_content = Router::new()
       .fallback_service(public_static)
@@ -264,7 +271,7 @@ pub async fn start_lcdn_server(config: LcdnConfig) -> Result<(), LcdnError> {
       )
       .route(
         "/{slug}/__query__/cdn-bridge.js",
-        get(|| async { "{\"ok\":true}" }),
+        get(serve_query_cdn_bridge),
       );
     let route_content = middleware::from_fn(instance_url_sanitization_layer).layer(route_content);
     let app = Router::new()

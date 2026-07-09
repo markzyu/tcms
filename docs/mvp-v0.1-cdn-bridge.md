@@ -185,11 +185,11 @@ The author would create an importmap through relative URL paths, which will be r
 <script type="importmap">
     {
         "imports": {
-            "react": "/__query__/react@18.3.1/index.js",
-            "react-dom": "/__query__/react-dom@18.3.1/index.js"
+            "react": "/__deps__/react@18.3.1/index.js",
+            "react-dom": "/__deps__/react-dom@18.3.1/index.js"
         }
     }
 </script>
 ```
 
-When using local CDN, these `__query__` paths do not exist on disk. But local CDN can route them to the correct location similar to how `proxy_pass` mirrors the content of a url. And it is up to the browser to follow the `cache-control` header and maximize performance.
+When using local CDN, these `__deps__` and `__query__` paths do not exist on disk. But local CDN can route them to the correct location similar to how `proxy_pass` mirrors the content of a url. And it is up to the browser to follow the `cache-control` header and maximize performance.
