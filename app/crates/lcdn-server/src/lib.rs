@@ -153,8 +153,14 @@ pub async fn stop_lcdn_server() -> Result<(), LcdnError> {
   };
   tx.send(()).await.map_err(|_| LcdnError::CannotStop)?;
   drop(guard);
+  SHOULD_RELOAD_CONFIGS.store(false, Ordering::Release);
   SHUTDOWN_CHANNEL.store(None);
+  PORT.store(0, Ordering::Release);
   Ok(())
+}
+
+pub fn is_lcdn_server_running() -> bool {
+  PORT.load(Ordering::Acquire) != 0
 }
 
 pub async fn run_healthcheck(port: u16, timeout: Duration) -> Result<(), LcdnError> {
