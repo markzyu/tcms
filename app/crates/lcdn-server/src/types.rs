@@ -75,6 +75,15 @@ pub struct AppState {
 }
 
 impl AppState {
+  pub(crate) fn replace_configs(
+    &self,
+    lcdn_config: LcdnConfig,
+    instance_configs: DashMap<String, InstanceConfig>,
+  ) {
+    self.lcdn_config.store(Arc::new(lcdn_config));
+    self.instance_configs.store(Arc::new(instance_configs));
+  }
+
   pub(crate) fn from_complete_configs(
     mut lcdn_config: LcdnConfig,
     instance_configs_raw: Vec<InstanceConfig>,

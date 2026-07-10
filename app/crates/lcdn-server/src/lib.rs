@@ -6,10 +6,21 @@ mod types;
 mod test_helpers;
 
 use arc_swap::ArcSwapOption;
-use axum::{Router, middleware, routing::get};
+use axum::{
+  Router,
+  extract::{Request, State},
+  middleware::{self, Next},
+  response::Response,
+  routing::get,
+};
+use http::StatusCode;
 use std::{
   net::{Ipv4Addr, SocketAddr},
-  sync::Arc,
+  sync::{
+    Arc,
+    atomic::{AtomicBool, AtomicU16, Ordering},
+  },
+  time::Duration,
 };
 use tokio::sync::mpsc::{Sender, channel};
 use tower_http::services::ServeDir;
@@ -20,8 +31,10 @@ use crate::layers::instance_url_sanitization_layer;
 
 pub use crate::types::{AppState, InstanceConfig, LcdnConfig, LcdnError};
 
-// This is the only global singleton state.
+// These are the only global singleton states.
+static PORT: AtomicU16 = AtomicU16::new(0);
 static SHUTDOWN_CHANNEL: ArcSwapOption<Sender<()>> = ArcSwapOption::const_empty();
+static SHOULD_RELOAD_CONFIGS: AtomicBool = AtomicBool::new(false);
 
 pub fn setup_rustls() {
   // Globally register ring as the default crypto provider, if one doesn't exist yet
@@ -54,6 +67,38 @@ pub(crate) fn make_app(app_state: AppState) -> Router {
     .fallback_service(route_content)
     .route("/healthcheck", get(|| async { "OK" }))
     .nest_service("/static", ServeDir::new("."))
+    .layer(middleware::from_fn_with_state(
+      app_state.clone(),
+      config_reload_middleware,
+    ))
+}
+
+async fn config_reload_middleware(
+  State(app_state): State<AppState>,
+  req: Request,
+  next: Next,
+) -> Result<Response, StatusCode> {
+  if let Ok(true) =
+    SHOULD_RELOAD_CONFIGS.compare_exchange(true, false, Ordering::AcqRel, Ordering::Acquire)
+  {
+    let new_app_state = {
+      let config_guard = app_state.lcdn_config.load();
+      let public_path = app_state.public_content_path.clone();
+      AppState::from_config(config_guard.as_ref().clone(), public_path.as_ref().clone())
+        .map_err(|e| {
+          eprintln!("Error reloading configs: {}", e);
+        })
+        .unwrap_or(app_state.clone())
+    };
+    let new_config_guard = new_app_state.lcdn_config.load();
+    let new_instance_configs_guard = new_app_state.instance_configs.load();
+    app_state.replace_configs(
+      new_config_guard.as_ref().clone(),
+      new_instance_configs_guard.as_ref().clone(),
+    );
+    eprintln!("Done reloading configs");
+  }
+  Ok(next.run(req).await)
 }
 
 pub async fn start_lcdn_server(app_state: AppState) -> Result<(), LcdnError> {
@@ -84,19 +129,11 @@ pub async fn start_lcdn_server(app_state: AppState) -> Result<(), LcdnError> {
       .map_err(LcdnError::CannotRun)
   });
 
+  PORT.store(port, Ordering::Release);
+
   let result = {
     // Perform a healthcheck to verify that the server is running
-    let healthcheck_url = format!("http://localhost:{}/healthcheck", port);
-    let client = reqwest::Client::new();
-    let request_task = async {
-      let request = client.get(healthcheck_url).timeout(startup_timeout);
-      let response = request.send().await.map_err(LcdnError::HealthcheckError)?;
-      let response_code = response.status().as_u16();
-      if response_code != 200 {
-        return Err(LcdnError::HealthcheckFailed(response_code));
-      }
-      Ok(())
-    };
+    let request_task = run_healthcheck(port, startup_timeout);
     tokio::select! {
       x = request_task => x,
       x = server_task => x.unwrap_or(Err(LcdnError::CannotRunAndJoin)),
@@ -118,6 +155,27 @@ pub async fn stop_lcdn_server() -> Result<(), LcdnError> {
   drop(guard);
   SHUTDOWN_CHANNEL.store(None);
   Ok(())
+}
+
+pub async fn run_healthcheck(port: u16, timeout: Duration) -> Result<(), LcdnError> {
+  let healthcheck_url = format!("http://localhost:{}/healthcheck", port);
+  let client = reqwest::Client::new();
+  let request = client.get(healthcheck_url).timeout(timeout);
+  let response = request.send().await.map_err(LcdnError::HealthcheckError)?;
+  let response_code = response.status().as_u16();
+  if response_code != 200 {
+    return Err(LcdnError::HealthcheckFailed(response_code));
+  }
+  Ok(())
+}
+
+pub async fn reload_configs(timeout: Duration) -> Result<(), LcdnError> {
+  let port = PORT.load(Ordering::Acquire);
+
+  SHOULD_RELOAD_CONFIGS.store(true, Ordering::Release);
+
+  // Run health check to trigger a config reload
+  run_healthcheck(port, timeout).await
 }
 
 #[cfg(test)]

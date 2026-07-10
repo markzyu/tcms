@@ -1,6 +1,8 @@
 use std::path::PathBuf;
 
-use lcdn_server::{AppState, LcdnConfig, setup_rustls, start_lcdn_server, stop_lcdn_server};
+use lcdn_server::{
+  AppState, LcdnConfig, reload_configs, setup_rustls, start_lcdn_server, stop_lcdn_server,
+};
 
 #[tokio::main]
 async fn main() {
@@ -31,6 +33,14 @@ async fn main() {
   }
 
   println!("LCDN server started on port {}", port);
+
+  // Simulate a config reload
+  tokio::spawn(async move {
+    tokio::time::sleep(std::time::Duration::from_secs(20)).await;
+    if let Err(e) = reload_configs(std::time::Duration::from_secs(2)).await {
+      eprintln!("Error reloading configs: {}", e);
+    }
+  });
 
   if let Err(e) = tokio::signal::ctrl_c().await {
     eprintln!(
