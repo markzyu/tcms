@@ -35,6 +35,7 @@ pub fn test_instance_config(slug: &str) -> InstanceConfig {
 pub fn test_lcdn_config(port: u16) -> LcdnConfig {
   LcdnConfig {
     port,
+    same_origin_domains: vec!["localhost".to_string()],
     ..LcdnConfig::default()
   }
 }

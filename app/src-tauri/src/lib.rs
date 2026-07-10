@@ -10,8 +10,8 @@ fn greet(name: &str) -> String {
 
 #[tauri::command]
 async fn lcdn_start(lcdn_config: LcdnConfig, public_content_path: String) -> Result<(), String> {
-  let app_state =
-    AppState::from_config(lcdn_config, PathBuf::from(public_content_path)).map_err(|e| e.to_string())?;
+  let app_state = AppState::from_config(lcdn_config, PathBuf::from(public_content_path))
+    .map_err(|e| e.to_string())?;
   lcdn_server::start_lcdn_server(app_state)
     .await
     .map_err(|e| e.to_string())

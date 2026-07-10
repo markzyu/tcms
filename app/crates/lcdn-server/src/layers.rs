@@ -3,7 +3,7 @@ use axum::{
   middleware::Next,
   response::Response,
 };
-use http::{StatusCode, Uri, header, uri::{PathAndQuery}};
+use http::{StatusCode, Uri, header, uri::PathAndQuery};
 use std::{
   path::{Component, PathBuf},
   str::FromStr,
@@ -349,7 +349,10 @@ mod tests {
       .header(header::REFERER, "http://[::1")
       .body(Body::empty())
       .expect("request");
-    assert_eq!(get_referer_as_uri(&request, &vec!["localhost".to_string()]), None);
+    assert_eq!(
+      get_referer_as_uri(&request, &vec!["localhost".to_string()]),
+      None
+    );
   }
 
   #[tokio::test]
