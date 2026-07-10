@@ -26,6 +26,18 @@ pub(crate) fn edit_uri_path(
 
   let new_uri_path = edit_fn(orig_uri_path.clone());
 
+  // Sanitize the new path to remove query. But, remove the leading / from PathAndQuery.
+  let parseable_new_uri_path = format!("/{}", new_uri_path);
+  let parse_new_uri_path = PathAndQuery::from_str(&parseable_new_uri_path).map_err(|_| {
+    eprintln!("Error parsing edited path: {}", &new_uri_path);
+    StatusCode::INTERNAL_SERVER_ERROR
+  })?;
+  let new_uri_path = parse_new_uri_path
+    .path()
+    .trim_start_matches('/')
+    .to_string();
+
+  // Combine the new path with the original query
   let new_path_and_query_str = format!("/{}?{}", new_uri_path, orig_uri_query);
   let new_req_path_and_query = PathAndQuery::from_str(&new_path_and_query_str).map_err(|_| {
     eprintln!("Error parsing path and query: {}", &new_path_and_query_str);
@@ -157,4 +169,215 @@ pub(crate) async fn instance_url_sanitization_layer(
   })?;
 
   Ok(next.run(req).await)
+}
+
+#[cfg(test)]
+mod tests {
+  use axum::{Router, body::Body, extract::Request, middleware, routing::get};
+  use http::{StatusCode, Uri, header};
+  use std::str::FromStr;
+  use tempfile::tempdir;
+  use tower::ServiceExt;
+
+  use crate::test_helpers::{
+    TEST_INSTANCE_ID, TEST_SLUG, TEST_TEMPLATE_ID, TEST_TEMPLATE_SCOPE, body_to_string,
+    test_app_state, test_instance_config,
+  };
+
+  use super::*;
+
+  fn test_instance() -> InstanceConfig {
+    test_instance_config(TEST_SLUG)
+  }
+
+  fn sanitization_test_app(app_state: AppState) -> Router {
+    Router::new()
+      .fallback(get(|uri: Uri| async move { uri.path().to_string() }))
+      .layer(middleware::from_fn_with_state(
+        app_state.clone(),
+        instance_url_sanitization_layer,
+      ))
+      .with_state(app_state)
+  }
+
+  async fn run_sanitization(app_state: AppState, request: Request<Body>) -> (StatusCode, String) {
+    let response = sanitization_test_app(app_state)
+      .oneshot(request)
+      .await
+      .expect("service response");
+    let status = response.status();
+    let body = body_to_string(response.into_body()).await;
+    (status, body)
+  }
+
+  #[test]
+  fn map_external_uri_path_empty() {
+    let instance = test_instance();
+    assert_eq!(
+      map_external_uri_path_to_internal(String::new(), TEST_SLUG.to_string(), &instance),
+      "/"
+    );
+  }
+
+  #[test]
+  fn map_external_uri_path_slug_root() {
+    let instance = test_instance();
+    assert_eq!(
+      map_external_uri_path_to_internal("café-card".to_string(), TEST_SLUG.to_string(), &instance),
+      format!("templates/{TEST_TEMPLATE_SCOPE}/{TEST_TEMPLATE_ID}/index.html")
+    );
+  }
+
+  #[test]
+  fn map_external_uri_path_assets() {
+    let instance = test_instance();
+    assert_eq!(
+      map_external_uri_path_to_internal(
+        "café-card/assets/héro.jpg".to_string(),
+        TEST_SLUG.to_string(),
+        &instance
+      ),
+      format!("instances/{TEST_INSTANCE_ID}/assets/héro.jpg")
+    );
+  }
+
+  #[test]
+  fn map_external_uri_path_query() {
+    let instance = test_instance();
+    assert_eq!(
+      map_external_uri_path_to_internal(
+        "café-card/__query__/cdn-bridge.js".to_string(),
+        TEST_SLUG.to_string(),
+        &instance
+      ),
+      format!("queries/by_slug/{TEST_SLUG}/cdn-bridge.js")
+    );
+  }
+
+  #[test]
+  fn map_external_uri_path_template_page() {
+    let instance = test_instance();
+    assert_eq!(
+      map_external_uri_path_to_internal(
+        "café-card/pages/à-propos.html".to_string(),
+        TEST_SLUG.to_string(),
+        &instance
+      ),
+      format!("templates/{TEST_TEMPLATE_SCOPE}/{TEST_TEMPLATE_ID}/pages/à-propos.html")
+    );
+  }
+
+  #[test]
+  fn map_external_uri_path_fallback() {
+    let instance = test_instance();
+    let external = "../café/attack".to_string();
+    assert_eq!(
+      map_external_uri_path_to_internal(external.clone(), TEST_SLUG.to_string(), &instance),
+      external
+    );
+  }
+
+  #[test]
+  fn edit_uri_path_happy_path() {
+    let mut uri = Uri::from_static("/old/path?foo=bar");
+    edit_uri_path(&mut uri, |_| "new/path".to_string()).expect("ok");
+    assert_eq!(uri.path(), "/new/path");
+    assert_eq!(uri.query(), Some("foo=bar"));
+  }
+
+  #[test]
+  fn edit_uri_path_question_mark_in_path() {
+    let mut uri = Uri::from_static("/old/path");
+    edit_uri_path(&mut uri, |_| "foo?bar".to_string()).expect("ok");
+    assert_eq!(uri.path(), "/foo");
+    assert_eq!(uri.query(), Some(""));
+  }
+
+  #[test]
+  fn edit_uri_path_ampersand_in_path() {
+    let mut uri = Uri::from_static("/old/path");
+    edit_uri_path(&mut uri, |_| "foo&bar".to_string()).expect("ok");
+    assert_eq!(uri.path(), "/foo&bar");
+    assert_eq!(uri.query(), Some(""));
+  }
+
+  #[test]
+  fn get_slug_from_uri_normal() {
+    let uri = Uri::from_static("/my-contact-card/foo");
+    assert_eq!(get_slug_from_uri(&uri), Some("my-contact-card".to_string()));
+  }
+
+  #[test]
+  fn get_slug_from_uri_triple_slash() {
+    let uri = Uri::from_str("http://localhost///abc/test").expect("uri");
+    assert_eq!(get_slug_from_uri(&uri), Some(String::new()));
+  }
+
+  #[test]
+  fn get_referer_as_uri_valid() {
+    let request = Request::builder()
+      .uri("/")
+      .header(header::REFERER, "http://localhost/caf%C3%A9-card/")
+      .body(Body::empty())
+      .expect("request");
+    let referer = get_referer_as_uri(&request).expect("referer");
+    assert_eq!(referer.path(), "/caf%C3%A9-card/");
+  }
+
+  #[test]
+  fn get_referer_as_uri_invalid() {
+    let request = Request::builder()
+      .uri("/")
+      .header(header::REFERER, "http://[::1")
+      .body(Body::empty())
+      .expect("request");
+    assert_eq!(get_referer_as_uri(&request), None);
+  }
+
+  #[tokio::test]
+  async fn instance_url_sanitization_layer_slug_from_uri() {
+    let dir = tempdir().unwrap();
+    let app_state = test_app_state(dir.path().to_path_buf(), vec![test_instance()]);
+    let request = Request::builder()
+      .uri(format!("/{TEST_SLUG}/pages/à-propos.html"))
+      .body(Body::empty())
+      .expect("request");
+    let (status, body) = run_sanitization(app_state, request).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(
+      body,
+      format!("/templates/{TEST_TEMPLATE_SCOPE}/{TEST_TEMPLATE_ID}/pages/à-propos.html")
+    );
+  }
+
+  #[tokio::test]
+  async fn instance_url_sanitization_layer_slug_from_referer() {
+    let dir = tempdir().unwrap();
+    // Referer URLs are percent-encoded; slug lookup uses the encoded path segment.
+    let slug = "caf%C3%A9-card";
+    let app_state = test_app_state(dir.path().to_path_buf(), vec![test_instance_config(slug)]);
+    let request = Request::builder()
+      .uri("/assets/héro.jpg")
+      .header(header::REFERER, format!("http://localhost/{slug}/"))
+      .body(Body::empty())
+      .expect("request");
+    let (status, body) = run_sanitization(app_state, request).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(
+      body,
+      format!("/instances/{TEST_INSTANCE_ID}/assets/héro.jpg")
+    );
+  }
+
+  #[tokio::test]
+  async fn instance_url_sanitization_layer_unknown_slug() {
+    let dir = tempdir().unwrap();
+    let app_state = test_app_state(dir.path().to_path_buf(), vec![test_instance()]);
+    let request = Request::builder()
+      .uri("/unknown-slüg/foo")
+      .body(Body::empty())
+      .expect("request");
+    let (status, _body) = run_sanitization(app_state, request).await;
+    assert_eq!(status, StatusCode::NOT_FOUND);
+  }
 }

@@ -2,6 +2,9 @@ mod datasources;
 mod layers;
 mod types;
 
+#[cfg(test)]
+mod test_helpers;
+
 use arc_swap::ArcSwapOption;
 use axum::{Router, middleware, routing::get};
 use chrono::{DateTime, Utc};
@@ -134,4 +137,121 @@ pub async fn stop_lcdn_server() -> Result<(), LcdnError> {
   drop(guard);
   SHUTDOWN_CHANNEL.store(None);
   Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+  use axum::body::Body;
+  use http::{Request, StatusCode, header};
+  use tempfile::tempdir;
+  use tower::ServiceExt;
+
+  use crate::test_helpers::{
+    TEST_SLUG, body_to_bytes, body_to_string, setup_integration_fixture, test_app_state,
+    test_instance_config,
+  };
+
+  use super::*;
+
+  fn integration_app() -> (tempfile::TempDir, Router) {
+    let dir = tempdir().expect("tempdir");
+    setup_integration_fixture(dir.path());
+    let app_state = test_app_state(
+      dir.path().to_path_buf(),
+      vec![test_instance_config(TEST_SLUG)],
+    );
+    (dir, make_app(app_state))
+  }
+
+  #[tokio::test]
+  async fn integration_healthcheck_route() {
+    let (_dir, app) = integration_app();
+    let response = app
+      .oneshot(
+        Request::builder()
+          .uri("/healthcheck")
+          .body(Body::empty())
+          .expect("request"),
+      )
+      .await
+      .expect("response");
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(body_to_string(response.into_body()).await, "OK");
+  }
+
+  #[tokio::test]
+  async fn integration_mapping_slug_root() {
+    let (_dir, app) = integration_app();
+    let response = app
+      .oneshot(
+        Request::builder()
+          .uri(format!("/{TEST_SLUG}"))
+          .body(Body::empty())
+          .expect("request"),
+      )
+      .await
+      .expect("response");
+    assert_eq!(response.status(), StatusCode::OK);
+    assert!(body_to_string(response.into_body()).await.contains("caf"));
+  }
+
+  #[tokio::test]
+  async fn integration_mapping_template_page() {
+    let (_dir, app) = integration_app();
+    let response = app
+      .oneshot(
+        Request::builder()
+          .uri(format!("/{TEST_SLUG}/pages/a-propos.html"))
+          .body(Body::empty())
+          .expect("request"),
+      )
+      .await
+      .expect("response");
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+      response.headers().get(header::CONTENT_TYPE).unwrap(),
+      "text/html"
+    );
+  }
+
+  #[tokio::test]
+  async fn integration_mapping_assets() {
+    let (_dir, app) = integration_app();
+    let response = app
+      .oneshot(
+        Request::builder()
+          .uri(format!("/{TEST_SLUG}/assets/hero.jpg"))
+          .body(Body::empty())
+          .expect("request"),
+      )
+      .await
+      .expect("response");
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+      body_to_bytes(response.into_body()).await,
+      b"fake-jpeg-bytes"
+    );
+  }
+
+  #[tokio::test]
+  async fn integration_mapping_query_cdn_bridge() {
+    let (_dir, app) = integration_app();
+    let response = app
+      .oneshot(
+        Request::builder()
+          .uri(format!("/{TEST_SLUG}/__query__/cdn-bridge.js"))
+          .body(Body::empty())
+          .expect("request"),
+      )
+      .await
+      .expect("response");
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+      response.headers().get(header::CONTENT_TYPE).unwrap(),
+      "application/javascript"
+    );
+    let body = body_to_string(response.into_body()).await;
+    assert!(body.contains("window.tcms.cdnBridge"));
+    assert!(body.contains("JSON.parse("));
+  }
 }

@@ -107,3 +107,214 @@ pub(crate) async fn serve_query_cdn_bridge(
   );
   Ok(response)
 }
+
+#[cfg(test)]
+mod tests {
+  use axum::extract::{Path, State};
+  use http::StatusCode;
+  use tempfile::tempdir;
+
+  use crate::test_helpers::{
+    TEST_INSTANCE_ID, TEST_SLUG, TEST_TEMPLATE_ID, TEST_TEMPLATE_SCOPE, TEST_VARIANT,
+    body_to_bytes, body_to_string, test_app_state, test_instance_config, write_bytes,
+    write_instance_content, write_zip,
+  };
+
+  use super::*;
+
+  fn app_state_with_instance(content_root: &std::path::Path) -> AppState {
+    test_app_state(
+      content_root.to_path_buf(),
+      vec![test_instance_config(TEST_SLUG)],
+    )
+  }
+
+  #[tokio::test]
+  async fn serve_template_from_zip_happy_path() {
+    let dir = tempdir().unwrap();
+    write_zip(
+      dir.path(),
+      TEST_TEMPLATE_SCOPE,
+      TEST_TEMPLATE_ID,
+      &[("index.html", b"<html>ok</html>")],
+    );
+    let state = app_state_with_instance(dir.path());
+    let response = serve_template_from_zip(
+      State(state),
+      Path((
+        TEST_TEMPLATE_SCOPE.to_string(),
+        TEST_TEMPLATE_ID.to_string(),
+        "index.html".to_string(),
+      )),
+    )
+    .await
+    .expect("200");
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+      response.headers().get(header::CONTENT_TYPE).unwrap(),
+      "text/html"
+    );
+    assert_eq!(
+      body_to_string(response.into_body()).await,
+      "<html>ok</html>"
+    );
+  }
+
+  #[tokio::test]
+  async fn serve_template_from_zip_missing_zip() {
+    let dir = tempdir().unwrap();
+    let state = app_state_with_instance(dir.path());
+    let err = serve_template_from_zip(
+      State(state),
+      Path((
+        TEST_TEMPLATE_SCOPE.to_string(),
+        TEST_TEMPLATE_ID.to_string(),
+        "index.html".to_string(),
+      )),
+    )
+    .await
+    .unwrap_err();
+    assert_eq!(err, StatusCode::NOT_FOUND);
+  }
+
+  #[tokio::test]
+  async fn serve_template_from_zip_corrupt_zip() {
+    let dir = tempdir().unwrap();
+    let zip_path = dir.path().join(format!(
+      "templates/{TEST_TEMPLATE_SCOPE}/{TEST_TEMPLATE_ID}.zip"
+    ));
+    write_bytes(&zip_path, b"this is not a zip file");
+    let state = app_state_with_instance(dir.path());
+    let err = serve_template_from_zip(
+      State(state),
+      Path((
+        TEST_TEMPLATE_SCOPE.to_string(),
+        TEST_TEMPLATE_ID.to_string(),
+        "index.html".to_string(),
+      )),
+    )
+    .await
+    .unwrap_err();
+    assert_eq!(err, StatusCode::INTERNAL_SERVER_ERROR);
+  }
+
+  #[tokio::test]
+  async fn serve_template_from_zip_missing_file_in_zip() {
+    let dir = tempdir().unwrap();
+    write_zip(
+      dir.path(),
+      TEST_TEMPLATE_SCOPE,
+      TEST_TEMPLATE_ID,
+      &[("index.html", b"<html>ok</html>")],
+    );
+    let state = app_state_with_instance(dir.path());
+    let err = serve_template_from_zip(
+      State(state),
+      Path((
+        TEST_TEMPLATE_SCOPE.to_string(),
+        TEST_TEMPLATE_ID.to_string(),
+        "missing.html".to_string(),
+      )),
+    )
+    .await
+    .unwrap_err();
+    assert_eq!(err, StatusCode::NOT_FOUND);
+  }
+
+  #[tokio::test]
+  async fn serve_template_from_zip_default_mime_type() {
+    let dir = tempdir().unwrap();
+    write_zip(
+      dir.path(),
+      TEST_TEMPLATE_SCOPE,
+      TEST_TEMPLATE_ID,
+      &[("data/noext", b"raw-bytes")],
+    );
+    let state = app_state_with_instance(dir.path());
+    let response = serve_template_from_zip(
+      State(state),
+      Path((
+        TEST_TEMPLATE_SCOPE.to_string(),
+        TEST_TEMPLATE_ID.to_string(),
+        "data/noext".to_string(),
+      )),
+    )
+    .await
+    .expect("200");
+    assert_eq!(
+      response.headers().get(header::CONTENT_TYPE).unwrap(),
+      "application/octet-stream"
+    );
+    assert_eq!(body_to_bytes(response.into_body()).await, b"raw-bytes");
+  }
+
+  #[tokio::test]
+  async fn serve_query_cdn_bridge_happy_path() {
+    let dir = tempdir().unwrap();
+    write_instance_content(
+      dir.path(),
+      TEST_INSTANCE_ID,
+      TEST_VARIANT,
+      r#"{"name":"John","note":"café"}"#,
+    );
+    let state = app_state_with_instance(dir.path());
+    let response = serve_query_cdn_bridge(State(state), Path(TEST_SLUG.to_string()))
+      .await
+      .expect("200");
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+      response.headers().get(header::CONTENT_TYPE).unwrap(),
+      "application/javascript"
+    );
+    let body = body_to_string(response.into_body()).await;
+    assert!(body.contains("JSON.parse("));
+    assert!(body.contains("caf"));
+  }
+
+  #[tokio::test]
+  async fn serve_query_cdn_bridge_malicious_content_json() {
+    let dir = tempdir().unwrap();
+    let malicious =
+      r#"{"x":"</script><script>alert(1)</script>","y":"\"}; alert(1);//","z":"café"}"#;
+    write_instance_content(dir.path(), TEST_INSTANCE_ID, TEST_VARIANT, malicious);
+    let state = app_state_with_instance(dir.path());
+    let response = serve_query_cdn_bridge(State(state), Path(TEST_SLUG.to_string()))
+      .await
+      .expect("200");
+    let body = body_to_string(response.into_body()).await;
+    assert!(body.contains("JSON.parse("));
+    let embedded = serde_json::to_string(malicious).expect("embed");
+    assert!(
+      body.contains(&embedded),
+      "file content must be JSON-string-embedded in JSON.parse(...)"
+    );
+    let roundtrip: String = serde_json::from_str(&embedded).expect("roundtrip");
+    assert_eq!(roundtrip, malicious);
+  }
+
+  #[tokio::test]
+  async fn serve_query_cdn_bridge_missing_content_json() {
+    let dir = tempdir().unwrap();
+    let state = app_state_with_instance(dir.path());
+    let err = serve_query_cdn_bridge(State(state), Path(TEST_SLUG.to_string()))
+      .await
+      .unwrap_err();
+    assert_eq!(err, StatusCode::NOT_FOUND);
+  }
+
+  #[tokio::test]
+  async fn serve_query_cdn_bridge_missing_instance_config() {
+    let dir = tempdir().unwrap();
+    write_instance_content(
+      dir.path(),
+      TEST_INSTANCE_ID,
+      TEST_VARIANT,
+      r#"{"name":"John"}"#,
+    );
+    let state = app_state_with_instance(dir.path());
+    let err = serve_query_cdn_bridge(State(state), Path("unknown-slüg".to_string()))
+      .await
+      .unwrap_err();
+    assert_eq!(err, StatusCode::NOT_FOUND);
+  }
+}
