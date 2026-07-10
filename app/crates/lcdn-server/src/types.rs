@@ -1,9 +1,13 @@
 use arc_swap::ArcSwap;
-use chrono::{DateTime, Utc};
 use dashmap::DashMap;
 use serde::{Deserialize, Serialize};
-use serde_with::{DurationMilliSeconds, serde_as};
-use std::{path::PathBuf, sync::Arc, time::Duration};
+use serde_with::{DurationMilliSeconds, TimestampMilliSeconds, serde_as};
+use std::{
+  fs::File,
+  path::PathBuf,
+  sync::Arc,
+  time::{Duration, SystemTime},
+};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -18,6 +22,10 @@ pub enum LcdnError {
   HealthcheckError(reqwest::Error),
   #[error("Healthcheck failed, status code: {0}")]
   HealthcheckFailed(u16),
+  #[error("Instance config not found: {0}")]
+  InstanceConfigNotFound(String),
+  #[error("Instance config invalid: {0}: {1:#?}")]
+  InstanceConfigInvalid(String, serde_json::Error),
 }
 
 #[serde_as]
@@ -30,6 +38,7 @@ pub struct LcdnConfig {
   pub instance_ids: Vec<String>,
 }
 
+#[serde_as]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InstanceConfig {
@@ -38,8 +47,11 @@ pub struct InstanceConfig {
   pub name: String,
   pub template_scope: String,
   pub template_id: String,
-  pub created_at: DateTime<Utc>,
-  pub updated_at: DateTime<Utc>,
+  pub template_version: String,
+  #[serde_as(as = "TimestampMilliSeconds<i64>")]
+  pub created_at: SystemTime,
+  #[serde_as(as = "TimestampMilliSeconds<i64>")]
+  pub updated_at: SystemTime,
   pub current_variant: String,
   pub variants: Vec<String>,
 }
@@ -55,7 +67,7 @@ impl Default for LcdnConfig {
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct AppState {
+pub struct AppState {
   pub lcdn_config: Arc<ArcSwap<LcdnConfig>>,
   pub instance_configs: Arc<ArcSwap<DashMap<String, InstanceConfig>>>,
   // Path to the public content directory, containing /instances and /templates
@@ -63,7 +75,7 @@ pub(crate) struct AppState {
 }
 
 impl AppState {
-  pub(crate) fn from_configs(
+  pub(crate) fn from_complete_configs(
     mut lcdn_config: LcdnConfig,
     instance_configs_raw: Vec<InstanceConfig>,
     public_content_path: PathBuf,
@@ -82,5 +94,26 @@ impl AppState {
       instance_configs: Arc::new(ArcSwap::new(Arc::new(instance_configs))),
       public_content_path: Arc::new(public_content_path),
     }
+  }
+
+  pub fn from_config(
+    lcdn_config: LcdnConfig,
+    public_content_path: PathBuf,
+  ) -> Result<Self, LcdnError> {
+    let mut instance_configs: Vec<InstanceConfig> = Vec::new();
+    for instance_id in lcdn_config.instance_ids.iter() {
+      let config_path =
+        public_content_path.join(format!("instances/{}/instance.json", instance_id));
+      let config_file = File::open(config_path)
+        .map_err(|_| LcdnError::InstanceConfigNotFound(instance_id.clone()))?;
+      let config = serde_json::from_reader::<File, InstanceConfig>(config_file)
+        .map_err(|e| LcdnError::InstanceConfigInvalid(instance_id.clone(), e))?;
+      instance_configs.push(config);
+    }
+    Ok(Self::from_complete_configs(
+      lcdn_config,
+      instance_configs,
+      public_content_path,
+    ))
   }
 }

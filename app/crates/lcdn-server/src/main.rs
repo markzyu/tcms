@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use lcdn_server::{LcdnConfig, setup_rustls, start_lcdn_server, stop_lcdn_server};
+use lcdn_server::{AppState, LcdnConfig, setup_rustls, start_lcdn_server, stop_lcdn_server};
 
 #[tokio::main]
 async fn main() {
@@ -19,7 +19,12 @@ async fn main() {
 
   println!("Starting LCDN server...");
 
-  let result = start_lcdn_server(config, PathBuf::from("public")).await;
+  let app_state = AppState::from_config(config, PathBuf::from("public"));
+  let result = if let Ok(app_state) = app_state {
+    start_lcdn_server(app_state).await
+  } else {
+    app_state.map(|_| ())
+  };
   if let Err(e) = result {
     eprintln!("Error: {}", e);
     std::process::exit(1);

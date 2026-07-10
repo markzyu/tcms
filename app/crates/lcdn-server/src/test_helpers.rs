@@ -2,9 +2,9 @@ use std::{
   fs::{self, File},
   io::Write,
   path::{Path, PathBuf},
+  time::SystemTime,
 };
 
-use chrono::{DateTime, Utc};
 use http_body_util::BodyExt;
 use zip::ZipWriter;
 use zip::write::SimpleFileOptions;
@@ -24,10 +24,11 @@ pub fn test_instance_config(slug: &str) -> InstanceConfig {
     slug: slug.to_string(),
     template_scope: TEST_TEMPLATE_SCOPE.to_string(),
     template_id: TEST_TEMPLATE_ID.to_string(),
+    template_version: "1.0.0".to_string(),
     current_variant: TEST_VARIANT.to_string(),
     variants: vec![TEST_VARIANT.to_string()],
-    created_at: DateTime::<Utc>::default(),
-    updated_at: DateTime::<Utc>::default(),
+    created_at: SystemTime::now(),
+    updated_at: SystemTime::now(),
   }
 }
 
@@ -39,7 +40,7 @@ pub fn test_lcdn_config(port: u16) -> LcdnConfig {
 }
 
 pub fn test_app_state(public_content_path: PathBuf, instances: Vec<InstanceConfig>) -> AppState {
-  AppState::from_configs(test_lcdn_config(8088), instances, public_content_path)
+  AppState::from_complete_configs(test_lcdn_config(8088), instances, public_content_path)
 }
 
 pub fn write_zip(

@@ -7,23 +7,18 @@ mod test_helpers;
 
 use arc_swap::ArcSwapOption;
 use axum::{Router, middleware, routing::get};
-use chrono::{DateTime, Utc};
 use std::{
   net::{Ipv4Addr, SocketAddr},
-  path::PathBuf,
   sync::Arc,
 };
 use tokio::sync::mpsc::{Sender, channel};
 use tower_http::services::ServeDir;
 use tower_layer::Layer;
 
+use crate::datasources::{serve_query_cdn_bridge, serve_template_from_zip};
 use crate::layers::instance_url_sanitization_layer;
-use crate::{
-  datasources::{serve_query_cdn_bridge, serve_template_from_zip},
-  types::AppState,
-};
 
-pub use crate::types::{InstanceConfig, LcdnConfig, LcdnError};
+pub use crate::types::{AppState, InstanceConfig, LcdnConfig, LcdnError};
 
 // This is the only global singleton state.
 static SHUTDOWN_CHANNEL: ArcSwapOption<Sender<()>> = ArcSwapOption::const_empty();
@@ -61,27 +56,13 @@ pub(crate) fn make_app(app_state: AppState) -> Router {
     .nest_service("/static", ServeDir::new("."))
 }
 
-pub async fn start_lcdn_server(
-  config: LcdnConfig,
-  public_content_path: PathBuf,
-) -> Result<(), LcdnError> {
-  let mock_instance_configs = vec![InstanceConfig {
-    instance_id: "6fa27a2f-2f1e-413d-a842-424242424242".to_string(),
-    name: "My Contact Card".to_string(),
-    slug: "my-contact-card".to_string(),
-    template_scope: "@tcms".to_string(),
-    template_id: "template-example-info-card1".to_string(),
-    current_variant: "en".to_string(),
-    variants: vec!["en".to_string()],
-    created_at: DateTime::<Utc>::default(),
-    updated_at: DateTime::<Utc>::default(),
-  }];
-  let LcdnConfig {
+pub async fn start_lcdn_server(app_state: AppState) -> Result<(), LcdnError> {
+  let config_guard = app_state.lcdn_config.load();
+  let &LcdnConfig {
     startup_timeout,
     port,
     ..
-  } = config;
-  let app_state = AppState::from_configs(config, mock_instance_configs, public_content_path);
+  } = config_guard.as_ref();
 
   // Make sure the port is open before we try to ping the healthcheck
   let addr = SocketAddr::from((Ipv4Addr::LOCALHOST, port));
