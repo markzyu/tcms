@@ -25,8 +25,6 @@ pub struct LcdnConfig {
   pub port: u16,
   #[serde_as(as = "DurationMilliSeconds<u64>")]
   pub startup_timeout: Duration,
-  #[serde_as(as = "DurationMilliSeconds<u64>")]
-  pub healthcheck_timeout: Duration,
   pub instance_ids: Vec<String>,
 }
 
@@ -48,8 +46,7 @@ impl Default for LcdnConfig {
   fn default() -> Self {
     Self {
       port: 8088,
-      startup_timeout: Duration::from_millis(1500),
-      healthcheck_timeout: Duration::from_secs(3),
+      startup_timeout: Duration::from_millis(3000),
       instance_ids: vec![],
     }
   }

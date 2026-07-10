@@ -1,14 +1,6 @@
-use axum::{
-  body::Body,
-  extract::Path,
-  response::Response,
-};
+use axum::{body::Body, extract::Path, response::Response};
 use http::{HeaderValue, StatusCode, header};
-use std::{
-  fs::File,
-  io::BufReader,
-  io::Read,
-};
+use std::{fs::File, io::BufReader, io::Read};
 
 use crate::store::{INSTANCE_CONFIGS, LCDN_CONFIG};
 use zip::ZipArchive;
@@ -49,7 +41,9 @@ pub(crate) async fn serve_template_from_zip(
 // TODO: Create an init function that unzips instances' zip files to a user homedir on target OS
 
 // Serve the cdn-bridge.js file based on the instance config
-pub(crate) async fn serve_query_cdn_bridge(Path(slug): Path<String>) -> Result<Response, StatusCode> {
+pub(crate) async fn serve_query_cdn_bridge(
+  Path(slug): Path<String>,
+) -> Result<Response, StatusCode> {
   let lcdn_config = LCDN_CONFIG.load();
   let Some(lcdn_config) = lcdn_config.as_ref() else {
     eprintln!("serve_query_cdn_bridge: no lcdn config");
@@ -75,6 +69,9 @@ pub(crate) async fn serve_query_cdn_bridge(Path(slug): Path<String>) -> Result<R
     serde_json::to_string(&origin_url).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
   let content_json =
     std::fs::read_to_string(content_json_path).map_err(|_| StatusCode::NOT_FOUND)?;
+  // Verify that the content JSON is valid JSON
+  let _ = serde_json::from_str::<serde_json::Value>(&content_json)
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
   let initial_preview_variant = serde_json::to_string(&instance_config.current_variant)
     .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
   let body_str = format!(

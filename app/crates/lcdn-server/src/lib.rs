@@ -3,11 +3,7 @@ mod layers;
 mod store;
 mod types;
 
-use axum::{
-  Router,
-  middleware,
-  routing::get,
-};
+use axum::{Router, middleware, routing::get};
 use chrono::{DateTime, Utc};
 use dashmap::DashMap;
 use std::{
@@ -76,11 +72,17 @@ pub async fn start_lcdn_server(config: LcdnConfig) -> Result<(), LcdnError> {
   update_static_configs(config.clone(), mock_instance_configs);
   let LcdnConfig {
     startup_timeout,
-    healthcheck_timeout,
     port,
     ..
   } = config;
-  let promise_start = tokio::spawn(async move {
+
+  // Make sure the port is open before we try to ping the healthcheck
+  let addr = SocketAddr::from((Ipv4Addr::LOCALHOST, port));
+  let listener = tokio::net::TcpListener::bind(addr)
+    .await
+    .map_err(LcdnError::CannotRun)?;
+
+  tokio::spawn(async move {
     let (tx, mut rx) = channel::<()>(100);
     SHUTDOWN_CHANNEL.store(Some(Arc::new(tx)));
 
@@ -107,10 +109,6 @@ pub async fn start_lcdn_server(config: LcdnConfig) -> Result<(), LcdnError> {
       .nest_service("/static", ServeDir::new("."));
 
     // Start the server
-    let addr = SocketAddr::from((Ipv4Addr::LOCALHOST, port));
-    let listener = tokio::net::TcpListener::bind(addr)
-      .await
-      .map_err(LcdnError::CannotRun)?;
     axum::serve(listener, app)
       .with_graceful_shutdown(async move {
         rx.recv().await;
@@ -119,17 +117,10 @@ pub async fn start_lcdn_server(config: LcdnConfig) -> Result<(), LcdnError> {
       .map_err(LcdnError::CannotRun)
   });
 
-  // Wait for STARTUP_TIMEOUT, and verify that the server has not crashed
-  tokio::select! {
-      result = promise_start => result,
-      _ = tokio::time::sleep(startup_timeout) => Ok(Ok(())),
-  }
-  .map_err(LcdnError::CannotRun2)??;
-
   // Perform a healthcheck to verify that the server is running
   let healthcheck_url = format!("http://localhost:{}/healthcheck", port);
   let client = reqwest::Client::new();
-  let request = client.get(healthcheck_url).timeout(healthcheck_timeout);
+  let request = client.get(healthcheck_url).timeout(startup_timeout);
   let response = request
     .send()
     .await

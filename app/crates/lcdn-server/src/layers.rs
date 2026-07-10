@@ -1,8 +1,4 @@
-use axum::{
-  extract::Request,
-  middleware::Next,
-  response::Response,
-};
+use axum::{extract::Request, middleware::Next, response::Response};
 use http::{StatusCode, Uri, header, uri::PathAndQuery};
 use std::{
   path::{Component, PathBuf},
