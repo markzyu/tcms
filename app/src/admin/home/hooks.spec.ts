@@ -1,5 +1,10 @@
-import { expect } from 'vitest';
+import { expect, vi } from 'vitest';
 import { useLocalCDNControls } from "./hooks";
+
+const mockTauriInvoke = vi.hoisted(() => vi.fn(() => false));
+vi.mock("@tauri-apps/api/core", () => ({
+  invoke: mockTauriInvoke,
+}));
 
 describe("useLocalCDNControls", () => {
   it("exports all fields and start/stop do not crash without awaiting", () => {
@@ -18,5 +23,7 @@ describe("useLocalCDNControls", () => {
 
     controls.startLocalCDN();
     controls.stopLocalCDN();
+
+    expect(mockTauriInvoke).toHaveBeenCalledWith("lcdn_start");
   });
 });

@@ -1,4 +1,5 @@
 import { ref } from "vue";
+import { invoke } from "@tauri-apps/api/core";
 
 export const useLocalCDNControls = (initSlug: string, onStarted: () => Promise<void>) => {
   const isLocalCDNRunning = ref(false);
@@ -7,14 +8,19 @@ export const useLocalCDNControls = (initSlug: string, onStarted: () => Promise<v
   const isLocalCDNStopping = ref(false);
   const currentLCDNSlug = ref(initSlug);
   const startLocalCDN = async () => {
-    await onStarted();
-    // Randomly decide if the local CDN will error, for testing purposes
-    if (_decideLocalCDNError()) {
-      isLocalCDNError.value = true;
-      isLocalCDNRunning.value = false;
-    } else {
-      isLocalCDNError.value = false;
-      isLocalCDNRunning.value = true;
+    try {
+      await invoke("lcdn_start");
+      await onStarted();
+      // Randomly decide if the local CDN will error, for testing purposes
+      if (_decideLocalCDNError()) {
+        isLocalCDNError.value = true;
+        isLocalCDNRunning.value = false;
+      } else {
+        isLocalCDNError.value = false;
+        isLocalCDNRunning.value = true;
+      }
+    } catch (error) {
+      console.error("TESTT", error);
     }
   };
   const stopLocalCDN = () => {
