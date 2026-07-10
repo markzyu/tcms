@@ -38,6 +38,8 @@ pub struct LcdnConfig {
   #[serde_as(as = "DurationMilliSeconds<u64>")]
   pub startup_timeout: Duration,
   pub instance_ids: Vec<String>,
+  // A list of domains and ports only, without protocol or path.
+  pub same_origin_domains: Vec<String>,
 }
 
 #[serde_as]
@@ -64,8 +66,16 @@ impl Default for LcdnConfig {
       port: 8088,
       startup_timeout: Duration::from_millis(3000),
       instance_ids: vec![],
+      same_origin_domains: vec!["localhost:8088".to_string(), "127.0.0.1:8088".to_string()],
     }
   }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LcdnStatus {
+  pub port: Option<u16>,
+  pub running: bool,
 }
 
 #[derive(Clone, Debug)]

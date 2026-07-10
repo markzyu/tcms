@@ -20,7 +20,8 @@
     "@tauri-apps/plugin-opener": "^2.5.4",
     "@tauri-apps/plugin-os": "~2",
     "vue": "^3.5.39",
-    "vue-router": "^5.1.0"
+    "vue-router": "^5.1.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.11.4",

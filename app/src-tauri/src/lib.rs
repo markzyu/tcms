@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use lcdn_server::{AppState, LcdnConfig};
+use lcdn_server::{AppState, LcdnConfig, LcdnStatus};
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
@@ -9,10 +9,9 @@ fn greet(name: &str) -> String {
 }
 
 #[tauri::command]
-async fn lcdn_start() -> Result<(), String> {
-  let config = LcdnConfig::default();
+async fn lcdn_start(lcdn_config: LcdnConfig, public_content_path: String) -> Result<(), String> {
   let app_state =
-    AppState::from_config(config, PathBuf::from("public")).map_err(|e| e.to_string())?;
+    AppState::from_config(lcdn_config, PathBuf::from(public_content_path)).map_err(|e| e.to_string())?;
   lcdn_server::start_lcdn_server(app_state)
     .await
     .map_err(|e| e.to_string())
@@ -33,12 +32,8 @@ async fn lcdn_reload_configs() -> Result<(), String> {
 }
 
 #[tauri::command]
-fn lcdn_status() -> String {
-  if lcdn_server::is_lcdn_server_running() {
-    "running".to_string()
-  } else {
-    "stopped".to_string()
-  }
+fn lcdn_status() -> LcdnStatus {
+  lcdn_server::get_lcdn_server_status()
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

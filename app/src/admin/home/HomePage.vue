@@ -1,39 +1,43 @@
 <script setup lang="ts">
   import { IonButton, IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonCard, IonCardContent, IonButtons, IonIcon, IonSpinner, IonList, IonItem, IonInput, IonTextarea } from '@ionic/vue';
   import { alertCircle, moon, playCircle } from 'ionicons/icons';
-  import { computed, ref } from 'vue';
+  import { computed, ref, watch } from 'vue';
 import { useLocalCDNControls } from './hooks';
 
   const initSlug = 'my-contact-card';
 
   const debugUrlSlug = ref(initSlug);
   const debugJson = ref('{}');
-  const previewIframe = ref<HTMLIFrameElement | null>(null);
+  const showErrorTooltip = ref(false);
 
   const {
     isLocalCDNRunning,
-    isLocalCDNError,
     isLocalCDNStarting,
     isLocalCDNStopping,
     currentLCDNSlug,
+    localCDNError,
     startLocalCDN,
     stopLocalCDN,
-  } = useLocalCDNControls(initSlug, async () => {
-    if (previewIframe.value) {
-      isLocalCDNStarting.value = true;
-      previewIframe.value.src = previewIframe.value.src;
-      // TODO: When we have real servers, race with a setTimeout to fail upon timeout
-      await new Promise(resolve => previewIframe.value?.addEventListener('load', resolve, { once: true }));
-      isLocalCDNStarting.value = false;
-      currentLCDNSlug.value = debugUrlSlug.value;
-    }
-  });
+    urlToVisit,
+  } = useLocalCDNControls(initSlug);
 
   const isSlugDirty = computed(() => debugUrlSlug.value !== currentLCDNSlug.value);
+  const iframeSrc = computed(() => urlToVisit.value ?? 'https://picsum.photos/600/400');
+  watch(localCDNError, (newVal) => {
+    if (newVal) {
+      setTimeout(() => {
+        showErrorTooltip.value = true;
+      }, 100);
+    }
+  });
+  const dismissErrorTooltip = () => {
+    localCDNError.value = null;
+    showErrorTooltip.value = false;
+  };
 </script>
 
 <template>
-  <ion-page>
+  <ion-page @click="dismissErrorTooltip">
     <ion-header>
       <ion-toolbar class="toolbar-container">
         <ion-buttons slot="start">
@@ -56,21 +60,24 @@ import { useLocalCDNControls } from './hooks';
       <div class="w-full -lg:flex flex-col px-4 py-6 gap-4 lg:grid lg:grid-cols-[500px_1fr] lg:px-[60px]">
         <ion-card class="w-full mx-auto max-w-[500px]">
           <div class="relative h-[220px] rounded-t-sm overflow-hidden">
-            <iframe ref="previewIframe" data-testid="preview-iframe" class="absolute left-0 top-0 w-full object-cover max-w-none h-full -z-10" src="https://picsum.photos/600/400" alt="Random image" />
+            <iframe data-testid="preview-iframe" class="absolute left-0 top-0 w-full object-cover max-w-none h-full -z-10" :src="iframeSrc" alt="Random image" referrerpolicy="no-referrer" />
           </div>
           <ion-card-content class="-mb-2" data-testid="home-status">
-            Test: {{ debugUrlSlug }} {{ isLocalCDNRunning ? '(Running)' : '' }} {{ isLocalCDNError ? '(Error)' : '' }}
+            Test: {{ debugUrlSlug }} {{ isLocalCDNRunning ? '(Running)' : '' }} {{ localCDNError ? '(Error)' : '' }}
           </ion-card-content>
           <div class="flex justify-end gap-2">
-            <ion-button size="small" fill="clear" data-testid="start-cdn-button" @click="startLocalCDN" v-if="!isLocalCDNRunning">
+            <ion-button size="small" fill="clear" data-testid="start-cdn-button" @click="startLocalCDN(debugUrlSlug)" v-if="!isLocalCDNRunning">
               <ion-spinner class="w-4 h-4 mr-2" v-if="isLocalCDNStarting"></ion-spinner>
-              <ion-icon class="w-4 h-4 mr-1 fill-red-600" :icon="alertCircle" v-if="isLocalCDNError"></ion-icon>
+              <ion-icon class="w-4 h-4 mr-1 fill-red-600" :icon="alertCircle" v-if="localCDNError"></ion-icon>
               Start
             </ion-button>
             <ion-button size="small" fill="clear" data-testid="stop-cdn-button" @click="stopLocalCDN" v-else>
               <ion-spinner class="w-4 h-4 mr-2" v-if="isLocalCDNStopping"></ion-spinner>
               Stop
             </ion-button>
+            <div class="pointer-events-none absolute bottom-10 left-20 right-20 bg-white p-2 rounded-md shadow-md" v-if="localCDNError && showErrorTooltip">
+              {{ localCDNError }}
+            </div>
             <ion-button size="small" fill="clear" data-testid="edit-button">Edit</ion-button>
             <ion-button size="small" fill="clear" data-testid="share-button">Share</ion-button>
           </div>

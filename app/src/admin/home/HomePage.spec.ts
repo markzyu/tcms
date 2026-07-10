@@ -1,42 +1,59 @@
-import { expect } from 'vitest';
+import { expect, Mock } from 'vitest';
 import { flushPromises, type VueWrapper } from "@vue/test-utils";
 import { IonInput } from "@ionic/vue";
 import { screen, waitFor } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
 
 import { clickIonButton, renderTest } from "../../testUtils";
+import { LcdnStatus } from '../lcdn-types.ts';
 import HomePage from "./HomePage.vue";
 
 const INITIAL_SLUG = "my-contact-card";
 const RESTART_HELPER_TEXT = "Please restart the server to apply the new slug";
 
-const mockDecideLocalCDNError = vi.hoisted(() => vi.fn(() => false));
-
-// This is the Vitest equivalent of jest.patch('./hooks', () => ({...jest.requireActual('./hooks')}))
-vi.mock("./hooks", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("./hooks")>();
-
-  return {
-    ...actual,
-    _decideLocalCDNError: mockDecideLocalCDNError,
-    useLocalCDNControls: (initSlug: string, onStarted: () => Promise<void>) => {
-      const controls = actual.useLocalCDNControls(initSlug, onStarted);
-
-      controls.startLocalCDN = async () => {
-        await onStarted();
-        if (mockDecideLocalCDNError()) {
-          controls.isLocalCDNError.value = true;
-          controls.isLocalCDNRunning.value = false;
-        } else {
-          controls.isLocalCDNError.value = false;
-          controls.isLocalCDNRunning.value = true;
-        }
+const mockTauri = vi.hoisted(() => {
+  let wantError = false;
+  let status: LcdnStatus = {
+    running: false,
+    port: null
+  };
+  const methods: Record<string, Mock> = {
+    lcdn_start: vi.fn().mockImplementation(async () => {
+      if (wantError) {
+        wantError = false;
+        status = {
+          running: false,
+          port: null
+        };
+        throw new Error("Test error");
+      }
+      status = {
+        running: true,
+        port: 8088
       };
-
-      return controls;
-    },
+    }),
+    lcdn_stop: vi.fn().mockImplementation(async () => status = {
+      running: false,
+      port: null
+    }),
+    lcdn_status: vi.fn().mockImplementation(async () => status),
+    setWantError: vi.fn().mockImplementation((value: boolean) => wantError = value),
+  };
+  const mockInvoke = vi.fn().mockImplementation((method: string) => {
+    if (method in methods) {
+      return methods[method]();
+    }
+    return Promise.resolve(null);
+  });
+  return {
+    mockInvoke,
+    methods,
   };
 });
+
+vi.mock("@tauri-apps/api/core", () => ({
+  invoke: mockTauri.mockInvoke,
+}));
 
 async function getUrlSlugNativeInput() {
   const ionInputElement = screen.getByTestId("url-slug-input") as unknown as HTMLIonInputElement;
@@ -79,8 +96,10 @@ async function setUrlSlug(slug: string) {
 
 describe("HomePage", () => {
   beforeEach(() => {
-    mockDecideLocalCDNError.mockReset();
-    mockDecideLocalCDNError.mockReturnValue(false);
+    mockTauri.methods.lcdn_start.mockClear();
+    mockTauri.methods.lcdn_stop.mockClear();
+    mockTauri.methods.lcdn_status.mockClear();
+    mockTauri.methods.setWantError(false);
   });
 
   it("renders all components", () => {
@@ -109,7 +128,7 @@ describe("HomePage", () => {
   });
 
   it("can start server, and if it fails, can start again", async () => {
-    mockDecideLocalCDNError.mockReturnValueOnce(true).mockReturnValue(false);
+    mockTauri.methods.setWantError(true);
     renderTest(HomePage);
 
     await clickStartAndLoadPreview();

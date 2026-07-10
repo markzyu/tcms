@@ -1,48 +1,74 @@
 import { ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
+import { invokeWithType, LcdnConfig, LcdnStatusSchema } from "../lcdn-types";
 
-export const useLocalCDNControls = (initSlug: string, onStarted: () => Promise<void>) => {
+export const useLocalCDNControls = (initSlug: string) => {
   const isLocalCDNRunning = ref(false);
-  const isLocalCDNError = ref(false);
   const isLocalCDNStarting = ref(false);
   const isLocalCDNStopping = ref(false);
   const currentLCDNSlug = ref(initSlug);
-  const startLocalCDN = async () => {
+  const localCDNHost = ref<string | null>(null);
+  const localCDNError = ref<string | null>(null);
+  const urlToVisit = ref<string | null>(null);
+  const updateLocalCDNStatus = async () => {
     try {
-      await invoke("lcdn_start");
-      await onStarted();
-      // Randomly decide if the local CDN will error, for testing purposes
-      if (_decideLocalCDNError()) {
-        isLocalCDNError.value = true;
-        isLocalCDNRunning.value = false;
+      const status = await invokeWithType(LcdnStatusSchema, "lcdn_status");
+      console.log("TESTT", status);
+      localCDNHost.value = status.port ? `http://localhost:${status.port}` : null;
+      isLocalCDNRunning.value = status.running;
+
+      if (status.running) {
+        isLocalCDNStarting.value = false;
       } else {
-        isLocalCDNError.value = false;
-        isLocalCDNRunning.value = true;
+        isLocalCDNStopping.value = false;
       }
     } catch (error) {
+      localCDNHost.value = null;
+      localCDNError.value = "Failed to get local CDN status: " + error;
+      isLocalCDNRunning.value = false;
       console.error("TESTT", error);
     }
+  }
+  const startLocalCDN = async (slugToVisit: string) => {
+    try {
+      const lcdnConfig: LcdnConfig = {
+        port: 8088,
+        startupTimeout: 3000,
+        instanceIds: ["6fa27a2f-2f1e-413d-a842-424242424242"],
+        sameOriginDomains: ["localhost:8088", "127.0.0.1:8088"],
+      };
+      const args = {
+        lcdnConfig,
+        publicContentPath: "/Users/mark/projects/tcms/app/public",
+      }
+      await invoke("lcdn_start", args);
+      urlToVisit.value = `http://localhost:${lcdnConfig.port}/${slugToVisit}`;
+      currentLCDNSlug.value = slugToVisit;
+    } catch (error) {
+      console.error("TESTT", error);
+      localCDNError.value = String(error);
+    }
+    await updateLocalCDNStatus();
   };
-  const stopLocalCDN = () => {
+  const stopLocalCDN = async () => {
     isLocalCDNStopping.value = true;
-    setTimeout(() => {
-      isLocalCDNStopping.value = false;
-      isLocalCDNRunning.value = false;
-      isLocalCDNError.value = false;
-    }, 1000);
+    try {
+      await invoke("lcdn_stop");
+    } catch (error) {
+      console.error("TESTT", error);
+      localCDNError.value = String(error);
+    }
+    await updateLocalCDNStatus();
   };
   return {
     isLocalCDNRunning,
-    isLocalCDNError,
     isLocalCDNStarting,
     isLocalCDNStopping,
     currentLCDNSlug,
+    localCDNHost,
+    localCDNError,
     startLocalCDN,
     stopLocalCDN,
+    urlToVisit,
   };
-};
-
-// This is meant to be a test harness to override the random decision for local CDN error
-export const _decideLocalCDNError = () => {
-  return Math.random() > 0.7;
 };

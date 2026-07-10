@@ -3,7 +3,7 @@ use axum::{
   middleware::Next,
   response::Response,
 };
-use http::{StatusCode, Uri, header, uri::PathAndQuery};
+use http::{StatusCode, Uri, header, uri::{PathAndQuery}};
 use std::{
   path::{Component, PathBuf},
   str::FromStr,
@@ -55,7 +55,7 @@ pub(crate) fn get_slug_from_uri(uri: &Uri) -> Option<String> {
   uri.path().split('/').nth(1).map(|slug| slug.to_string())
 }
 
-pub(crate) fn get_referer_as_uri(req: &Request) -> Option<Uri> {
+pub(crate) fn get_referer_as_uri(req: &Request, same_origin_domains: &Vec<String>) -> Option<Uri> {
   req
     .headers()
     .get(header::REFERER)
@@ -69,6 +69,23 @@ pub(crate) fn get_referer_as_uri(req: &Request) -> Option<Uri> {
       Uri::from_str(referer)
         .map_err(|_| eprintln!("Invalid referer: {}", referer))
         .ok()
+    })
+    .and_then(|uri| {
+      if let Some(uri_host_str) = uri.host() {
+        let port = uri.port().map(|p| p.to_string()).unwrap_or("".to_string());
+        let host_and_port = if port.is_empty() {
+          uri_host_str.to_string()
+        } else {
+          format!("{}:{}", uri_host_str, port)
+        };
+        if same_origin_domains.contains(&host_and_port) {
+          Some(uri)
+        } else {
+          None
+        }
+      } else {
+        None
+      }
     })
 }
 
@@ -134,11 +151,12 @@ pub(crate) async fn instance_url_sanitization_layer(
   next: Next,
 ) -> Result<Response, StatusCode> {
   let instance_configs = app_state.instance_configs.load();
+  let lcdn_config_guard = app_state.lcdn_config.load();
 
   // Derive slug from URI or from Referer header
   let uri_string = req.uri().to_string();
   let slug_from_uri = get_slug_from_uri(req.uri());
-  let referer_uri = get_referer_as_uri(&req);
+  let referer_uri = get_referer_as_uri(&req, &lcdn_config_guard.same_origin_domains);
   let slug_from_referer = referer_uri.and_then(|referer| get_slug_from_uri(&referer));
   let slug = slug_from_referer
     .clone()
@@ -320,7 +338,7 @@ mod tests {
       .header(header::REFERER, "http://localhost/caf%C3%A9-card/")
       .body(Body::empty())
       .expect("request");
-    let referer = get_referer_as_uri(&request).expect("referer");
+    let referer = get_referer_as_uri(&request, &vec!["localhost".to_string()]).expect("referer");
     assert_eq!(referer.path(), "/caf%C3%A9-card/");
   }
 
@@ -331,7 +349,7 @@ mod tests {
       .header(header::REFERER, "http://[::1")
       .body(Body::empty())
       .expect("request");
-    assert_eq!(get_referer_as_uri(&request), None);
+    assert_eq!(get_referer_as_uri(&request, &vec!["localhost".to_string()]), None);
   }
 
   #[tokio::test]

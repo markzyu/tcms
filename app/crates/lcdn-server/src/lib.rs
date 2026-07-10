@@ -24,7 +24,7 @@ use tower_layer::Layer;
 use crate::datasources::{serve_query_cdn_bridge, serve_template_from_zip};
 use crate::layers::instance_url_sanitization_layer;
 
-pub use crate::types::{AppState, InstanceConfig, LcdnConfig, LcdnError};
+pub use crate::types::{AppState, InstanceConfig, LcdnConfig, LcdnError, LcdnStatus};
 
 // These are the only global singleton states.
 static PORT: AtomicU16 = AtomicU16::new(0);
@@ -170,7 +170,15 @@ pub async fn stop_lcdn_server() -> Result<(), LcdnError> {
 }
 
 pub fn is_lcdn_server_running() -> bool {
-  PORT.load(Ordering::Acquire) != 0
+  get_lcdn_server_status().running
+}
+
+pub fn get_lcdn_server_status() -> LcdnStatus {
+  let port = PORT.load(Ordering::Acquire);
+  LcdnStatus {
+    port: if port == 0 { None } else { Some(port) },
+    running: port != 0,
+  }
 }
 
 pub async fn run_healthcheck(port: u16, timeout: Duration) -> Result<(), LcdnError> {
