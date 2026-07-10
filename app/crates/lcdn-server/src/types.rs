@@ -26,6 +26,8 @@ pub enum LcdnError {
   InstanceConfigNotFound(String),
   #[error("Instance config invalid: {0}: {1:#?}")]
   InstanceConfigInvalid(String, serde_json::Error),
+  #[error("Another shutdown request is in progress")]
+  ShutdownInProgress,
 }
 
 #[serde_as]

@@ -5,7 +5,6 @@ mod types;
 #[cfg(test)]
 mod test_helpers;
 
-use arc_swap::ArcSwapOption;
 use axum::{
   Router,
   extract::{Request, State},
@@ -16,13 +15,9 @@ use axum::{
 use http::StatusCode;
 use std::{
   net::{Ipv4Addr, SocketAddr},
-  sync::{
-    Arc,
-    atomic::{AtomicBool, AtomicU16, Ordering},
-  },
+  sync::atomic::{AtomicBool, AtomicU16, Ordering},
   time::Duration,
 };
-use tokio::sync::mpsc::{Sender, channel};
 use tower_http::services::ServeDir;
 use tower_layer::Layer;
 
@@ -33,7 +28,7 @@ pub use crate::types::{AppState, InstanceConfig, LcdnConfig, LcdnError};
 
 // These are the only global singleton states.
 static PORT: AtomicU16 = AtomicU16::new(0);
-static SHUTDOWN_CHANNEL: ArcSwapOption<Sender<()>> = ArcSwapOption::const_empty();
+static SHOULD_SHUTDOWN: AtomicBool = AtomicBool::new(false);
 static SHOULD_RELOAD_CONFIGS: AtomicBool = AtomicBool::new(false);
 
 pub fn setup_rustls() {
@@ -102,6 +97,10 @@ async fn config_reload_middleware(
 }
 
 pub async fn start_lcdn_server(app_state: AppState) -> Result<(), LcdnError> {
+  if SHOULD_SHUTDOWN.load(Ordering::Acquire) {
+    return Err(LcdnError::ShutdownInProgress);
+  }
+
   let config_guard = app_state.lcdn_config.load();
   let &LcdnConfig {
     startup_timeout,
@@ -116,17 +115,27 @@ pub async fn start_lcdn_server(app_state: AppState) -> Result<(), LcdnError> {
     .map_err(LcdnError::CannotRun)?;
 
   let server_task = tokio::spawn(async move {
-    let (tx, mut rx) = channel::<()>(100);
-    SHUTDOWN_CHANNEL.store(Some(Arc::new(tx)));
+    SHOULD_SHUTDOWN.store(false, Ordering::Release);
 
     // Start the server
     let app = make_app(app_state.clone());
-    axum::serve(listener, app)
+    let result = axum::serve(listener, app)
       .with_graceful_shutdown(async move {
-        rx.recv().await;
+        loop {
+          if SHOULD_SHUTDOWN.load(Ordering::Acquire) {
+            break;
+          }
+          tokio::time::sleep(Duration::from_millis(100)).await;
+        }
       })
       .await
-      .map_err(LcdnError::CannotRun)
+      .map_err(LcdnError::CannotRun);
+
+    // Mark the server as stopped
+    SHOULD_RELOAD_CONFIGS.store(false, Ordering::Release);
+    SHOULD_SHUTDOWN.store(false, Ordering::Release);
+    PORT.store(0, Ordering::Release);
+    result
   });
 
   PORT.store(port, Ordering::Release);
@@ -147,15 +156,16 @@ pub async fn start_lcdn_server(app_state: AppState) -> Result<(), LcdnError> {
 }
 
 pub async fn stop_lcdn_server() -> Result<(), LcdnError> {
-  let guard = SHUTDOWN_CHANNEL.load();
-  let Some(tx) = guard.as_ref() else {
+  if SHOULD_SHUTDOWN
+    .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
+    .is_err()
+  {
     return Ok(());
-  };
-  tx.send(()).await.map_err(|_| LcdnError::CannotStop)?;
-  drop(guard);
-  SHOULD_RELOAD_CONFIGS.store(false, Ordering::Release);
-  SHUTDOWN_CHANNEL.store(None);
-  PORT.store(0, Ordering::Release);
+  }
+
+  while is_lcdn_server_running() {
+    tokio::time::sleep(Duration::from_millis(100)).await;
+  }
   Ok(())
 }
 
