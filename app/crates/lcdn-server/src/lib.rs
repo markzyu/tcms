@@ -154,6 +154,7 @@ async fn instance_url_sanitization_layer(
   //     - "/slug/assets/...": map to "instances/{instance_id}/{path_without_slug}"
   //     - "/slug/...": map to "templates/{template_scope}/{template_id}/{path_without_slug}"
   //     - "/slug": map to "templates/{template_scope}/{template_id}/index.html"
+  //     - "/slug/__query__/...": map to "queries/by_slug/{slug}/..."
   edit_uri_path(req.uri_mut(), |orig_uri_path| {
     // First, make correction to the original URI by adding slug from Referer header
     let orig_uri_path = if let Some(slug_from_referer) = &slug_from_referer {
@@ -175,6 +176,12 @@ async fn instance_url_sanitization_layer(
       .components()
       .nth(1)
       .map(|c| c.as_os_str().to_string_lossy().to_string());
+    let path_third_and_rest = orig_uri_path_buf
+      .components()
+      .skip(2)
+      .collect::<PathBuf>()
+      .to_string_lossy()
+      .to_string();
     let path_components_count = orig_uri_path_buf.components().count();
     match (
       path_first_component,
@@ -190,7 +197,9 @@ async fn instance_url_sanitization_layer(
         "instances/{}/{}",
         instance_config.instance_id, path_without_slug
       ),
-      (Some(Component::Normal(_)), Some("__query__"), _) => orig_uri_path,
+      (Some(Component::Normal(_)), Some("__query__"), _) => {
+        format!("queries/by_slug/{}/{}", slug, path_third_and_rest)
+      }
       (Some(Component::Normal(_)), _, _) => format!(
         "templates/{}/{}/{}",
         instance_config.template_scope, instance_config.template_id, path_without_slug
@@ -203,6 +212,8 @@ async fn instance_url_sanitization_layer(
 }
 
 // TODO: Rely on tauri fs to read the zip file from assets
+// TODO: Also, consider adding a TLS cache only for small files in the ZIP to reduce fs overhead
+//       (large files are not gonna be cache-able on the phone anyways)
 async fn serve_template_from_zip(
   Path((template_scope, template_id, path)): Path<(String, String, String)>,
 ) -> Result<Response, StatusCode> {
@@ -253,12 +264,19 @@ async fn serve_query_cdn_bridge(Path(slug): Path<String>) -> Result<Response, St
     eprintln!("serve_query_cdn_bridge: no instance configs");
     return Err(StatusCode::NOT_FOUND);
   };
-  let content_json_path = format!("public/instances/{}/content/main.{}.json", instance_config.instance_id, instance_config.current_variant);
+  let content_json_path = format!(
+    "public/instances/{}/content/main.{}.json",
+    instance_config.instance_id, instance_config.current_variant
+  );
   let origin_url = format!("http://localhost:{}", lcdn_config.port);
-  let origin_url = serde_json::to_string(&origin_url).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-  let content_json = std::fs::read_to_string(content_json_path).map_err(|_| StatusCode::NOT_FOUND)?;
-  let initial_preview_variant = serde_json::to_string(&instance_config.current_variant).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-  let body_str = format!(r#"
+  let origin_url =
+    serde_json::to_string(&origin_url).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+  let content_json =
+    std::fs::read_to_string(content_json_path).map_err(|_| StatusCode::NOT_FOUND)?;
+  let initial_preview_variant = serde_json::to_string(&instance_config.current_variant)
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+  let body_str = format!(
+    r#"
 (() => {{
   if (!window.tcms) {{
     window.tcms = {{}};
@@ -276,11 +294,17 @@ async fn serve_query_cdn_bridge(Path(slug): Path<String>) -> Result<Response, St
       loadEsModule: () => Promise.resolve({{}}),
     }};
   }}
-}})();
-  "#, initial_content_json=content_json, initial_preview_variant=initial_preview_variant, origin_url=origin_url);
+}})();"#,
+    initial_content_json = content_json,
+    initial_preview_variant = initial_preview_variant,
+    origin_url = origin_url
+  );
   let body = Body::from(body_str);
   let mut response = Response::new(body);
-  response.headers_mut().insert(header::CONTENT_TYPE, HeaderValue::from_static("application/javascript"));
+  response.headers_mut().insert(
+    header::CONTENT_TYPE,
+    HeaderValue::from_static("application/javascript"),
+  );
   Ok(response)
 }
 
@@ -307,7 +331,7 @@ pub async fn start_lcdn_server(config: LcdnConfig) -> Result<(), LcdnError> {
     let (tx, mut rx) = channel::<()>(100);
     SHUTDOWN_CHANNEL.store(Some(Arc::new(tx)));
 
-    // TODO: Rename the internal URL routes to separate concerns between root paths: /templates/, /instances/, /queries/, /dependencies/ (react/vue) etc
+    // Internal URI paths can start with: /templates/, /instances/, /queries/, /dependencies/ (react/vue)
     let public_static = ServeDir::new("public");
     let route_content = Router::new()
       .fallback_service(public_static)
@@ -316,16 +340,20 @@ pub async fn start_lcdn_server(config: LcdnConfig) -> Result<(), LcdnError> {
         get(serve_template_from_zip),
       )
       .route(
-        "/{slug}/__query__/cdn-bridge.js",
+        "/queries/by_slug/{slug}/cdn-bridge.js",
         get(serve_query_cdn_bridge),
       );
+
+    // Convert external URI paths to internal URI paths for routing
     let route_content = middleware::from_fn(instance_url_sanitization_layer).layer(route_content);
+
+    // Add other external routes like /healthcheck
     let app = Router::new()
       .fallback_service(route_content)
       .route("/healthcheck", get(|| async { "OK" }))
       .nest_service("/static", ServeDir::new("."));
-    // Router::layer runs after routing and cannot rewrite URIs for route matching.
-    // Wrap the app so sanitization runs before routing instead.
+
+    // Start the server
     let addr = SocketAddr::from((Ipv4Addr::LOCALHOST, port));
     let listener = tokio::net::TcpListener::bind(addr)
       .await
