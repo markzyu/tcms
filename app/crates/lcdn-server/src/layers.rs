@@ -1,13 +1,20 @@
-use axum::{extract::Request, middleware::Next, response::Response};
+use axum::{
+  extract::{Request, State},
+  middleware::Next,
+  response::Response,
+};
 use http::{StatusCode, Uri, header, uri::PathAndQuery};
 use std::{
   path::{Component, PathBuf},
   str::FromStr,
 };
 
-use crate::store::INSTANCE_CONFIGS;
+use crate::{InstanceConfig, types::AppState};
 
-fn edit_uri_path(uri: &mut Uri, edit_fn: impl FnOnce(String) -> String) -> Result<(), StatusCode> {
+pub(crate) fn edit_uri_path(
+  uri: &mut Uri,
+  edit_fn: impl FnOnce(String) -> String,
+) -> Result<(), StatusCode> {
   let mut uri_parts = uri.clone().into_parts();
   let orig_path_and_query = uri_parts.path_and_query.as_ref();
   let orig_uri_path = orig_path_and_query
@@ -32,11 +39,11 @@ fn edit_uri_path(uri: &mut Uri, edit_fn: impl FnOnce(String) -> String) -> Resul
   Ok(())
 }
 
-fn get_slug_from_uri(uri: &Uri) -> Option<String> {
+pub(crate) fn get_slug_from_uri(uri: &Uri) -> Option<String> {
   uri.path().split('/').nth(1).map(|slug| slug.to_string())
 }
 
-fn get_referer_as_uri(req: &Request) -> Option<Uri> {
+pub(crate) fn get_referer_as_uri(req: &Request) -> Option<Uri> {
   req
     .headers()
     .get(header::REFERER)
@@ -53,14 +60,68 @@ fn get_referer_as_uri(req: &Request) -> Option<Uri> {
     })
 }
 
+// Change only the uri path based on slug and instance config
+pub(crate) fn map_external_uri_path_to_internal(
+  external_uri_path: String,
+  slug: String,
+  instance_config: &InstanceConfig,
+) -> String {
+  // Desired URI path mappings:
+  //     - "Invalid string": keep as is or use /
+  //     - "/slug/assets/...": map to "instances/{instance_id}/{path_without_slug}"
+  //     - "/slug/...": map to "templates/{template_scope}/{template_id}/{path_without_slug}"
+  //     - "/slug": map to "templates/{template_scope}/{template_id}/index.html"
+  //     - "/slug/__query__/...": map to "queries/by_slug/{slug}/..."
+  let orig_uri_path_buf = PathBuf::from(external_uri_path.clone());
+  let path_without_slug = orig_uri_path_buf
+    .components()
+    .skip(1)
+    .collect::<PathBuf>()
+    .to_string_lossy()
+    .to_string();
+  let path_first_component = orig_uri_path_buf.components().nth(0);
+  let path_second_component = orig_uri_path_buf
+    .components()
+    .nth(1)
+    .map(|c| c.as_os_str().to_string_lossy().to_string());
+  let path_third_and_rest = orig_uri_path_buf
+    .components()
+    .skip(2)
+    .collect::<PathBuf>()
+    .to_string_lossy()
+    .to_string();
+  let path_components_count = orig_uri_path_buf.components().count();
+  match (
+    path_first_component,
+    path_second_component.as_deref(),
+    path_components_count,
+  ) {
+    (_, _, 0) => "/".to_string(),
+    (Some(Component::Normal(_)), None, 1) => format!(
+      "templates/{}/{}/index.html",
+      instance_config.template_scope, instance_config.template_id
+    ),
+    (Some(Component::Normal(_)), Some("assets"), _) => format!(
+      "instances/{}/{}",
+      instance_config.instance_id, path_without_slug
+    ),
+    (Some(Component::Normal(_)), Some("__query__"), _) => {
+      format!("queries/by_slug/{}/{}", slug, path_third_and_rest)
+    }
+    (Some(Component::Normal(_)), _, _) => format!(
+      "templates/{}/{}/{}",
+      instance_config.template_scope, instance_config.template_id, path_without_slug
+    ),
+    _ => external_uri_path,
+  }
+}
+
 pub(crate) async fn instance_url_sanitization_layer(
+  State(app_state): State<AppState>,
   mut req: Request,
   next: Next,
 ) -> Result<Response, StatusCode> {
-  let instance_configs = INSTANCE_CONFIGS.load();
-  let Some(instance_configs) = instance_configs.as_ref() else {
-    return Err(StatusCode::NOT_FOUND);
-  };
+  let instance_configs = app_state.instance_configs.load();
 
   // Derive slug from URI or from Referer header
   let uri_string = req.uri().to_string();
@@ -83,63 +144,16 @@ pub(crate) async fn instance_url_sanitization_layer(
     return Err(StatusCode::NOT_FOUND);
   };
 
-  // Desired URI path mappings:
-  //     - "Invalid string": keep as is or use /
-  //     - "/slug/assets/...": map to "instances/{instance_id}/{path_without_slug}"
-  //     - "/slug/...": map to "templates/{template_scope}/{template_id}/{path_without_slug}"
-  //     - "/slug": map to "templates/{template_scope}/{template_id}/index.html"
-  //     - "/slug/__query__/...": map to "queries/by_slug/{slug}/..."
-  edit_uri_path(req.uri_mut(), |orig_uri_path| {
+  edit_uri_path(req.uri_mut(), |uri_path| {
     // First, make correction to the original URI by adding slug from Referer header
-    let orig_uri_path = if let Some(slug_from_referer) = &slug_from_referer {
-      format!("{}/{}", slug_from_referer, orig_uri_path)
+    let uri_path = if let Some(slug_from_referer) = &slug_from_referer {
+      format!("{}/{}", slug_from_referer, uri_path)
     } else {
-      orig_uri_path
+      uri_path
     };
 
     // Then, perform URI path mapping:
-    let orig_uri_path_buf = PathBuf::from(orig_uri_path.clone());
-    let path_without_slug = orig_uri_path_buf
-      .components()
-      .skip(1)
-      .collect::<PathBuf>()
-      .to_string_lossy()
-      .to_string();
-    let path_first_component = orig_uri_path_buf.components().nth(0);
-    let path_second_component = orig_uri_path_buf
-      .components()
-      .nth(1)
-      .map(|c| c.as_os_str().to_string_lossy().to_string());
-    let path_third_and_rest = orig_uri_path_buf
-      .components()
-      .skip(2)
-      .collect::<PathBuf>()
-      .to_string_lossy()
-      .to_string();
-    let path_components_count = orig_uri_path_buf.components().count();
-    match (
-      path_first_component,
-      path_second_component.as_deref(),
-      path_components_count,
-    ) {
-      (_, _, 0) => "/".to_string(),
-      (Some(Component::Normal(_)), None, 1) => format!(
-        "templates/{}/{}/index.html",
-        instance_config.template_scope, instance_config.template_id
-      ),
-      (Some(Component::Normal(_)), Some("assets"), _) => format!(
-        "instances/{}/{}",
-        instance_config.instance_id, path_without_slug
-      ),
-      (Some(Component::Normal(_)), Some("__query__"), _) => {
-        format!("queries/by_slug/{}/{}", slug, path_third_and_rest)
-      }
-      (Some(Component::Normal(_)), _, _) => format!(
-        "templates/{}/{}/{}",
-        instance_config.template_scope, instance_config.template_id, path_without_slug
-      ),
-      _ => orig_uri_path,
-    }
+    map_external_uri_path_to_internal(uri_path, slug, &instance_config)
   })?;
 
   Ok(next.run(req).await)

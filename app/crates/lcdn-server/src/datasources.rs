@@ -1,21 +1,29 @@
-use axum::{body::Body, extract::Path, response::Response};
+use axum::{
+  body::Body,
+  extract::{Path, State},
+  response::Response,
+};
 use http::{HeaderValue, StatusCode, header};
 use std::{fs::File, io::BufReader, io::Read};
 
-use crate::store::{INSTANCE_CONFIGS, LCDN_CONFIG};
 use zip::ZipArchive;
+
+use crate::types::AppState;
 
 // TODO: Rely on tauri fs to read the zip file from assets
 // TODO: Also, consider adding a TLS cache only for small files in the ZIP to reduce fs overhead
 //       (large files are not gonna be cache-able on the phone anyways)
 pub(crate) async fn serve_template_from_zip(
+  State(app_state): State<AppState>,
   Path((template_scope, template_id, path)): Path<(String, String, String)>,
 ) -> Result<Response, StatusCode> {
   eprintln!(
     "serve_template_from_zip: template: {}/{}, path: {}",
     &template_scope, &template_id, &path
   );
-  let zip_path = format!("public/templates/{}/{}.zip", template_scope, template_id);
+  let public_content_path = app_state.public_content_path.as_path();
+  let zip_path =
+    public_content_path.join(format!("templates/{}/{}.zip", template_scope, template_id));
   let zip_file = File::open(zip_path).map_err(|_| StatusCode::NOT_FOUND)?;
   let zip_reader = BufReader::new(zip_file);
   let mut zip = ZipArchive::new(zip_reader).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
@@ -42,36 +50,29 @@ pub(crate) async fn serve_template_from_zip(
 
 // Serve the cdn-bridge.js file based on the instance config
 pub(crate) async fn serve_query_cdn_bridge(
+  State(app_state): State<AppState>,
   Path(slug): Path<String>,
 ) -> Result<Response, StatusCode> {
-  let lcdn_config = LCDN_CONFIG.load();
-  let Some(lcdn_config) = lcdn_config.as_ref() else {
-    eprintln!("serve_query_cdn_bridge: no lcdn config");
-    return Err(StatusCode::NOT_FOUND);
-  };
   // Fetch instance config from slug
-  let instance_configs = INSTANCE_CONFIGS.load();
-  let Some(instance_configs) = instance_configs.as_ref() else {
-    eprintln!("serve_query_cdn_bridge: no instance configs");
-    return Err(StatusCode::NOT_FOUND);
-  };
+  let lcdn_config = app_state.lcdn_config.load();
+  let instance_configs = app_state.instance_configs.load();
   let instance_config = instance_configs.get(&slug);
   let Some(instance_config) = instance_config else {
     eprintln!("serve_query_cdn_bridge: no instance configs");
     return Err(StatusCode::NOT_FOUND);
   };
-  let content_json_path = format!(
-    "public/instances/{}/content/main.{}.json",
+  let public_content_path = app_state.public_content_path.as_path();
+  let content_json_path = public_content_path.join(format!(
+    "instances/{}/content/main.{}.json",
     instance_config.instance_id, instance_config.current_variant
-  );
+  ));
   let origin_url = format!("http://localhost:{}", lcdn_config.port);
   let origin_url =
     serde_json::to_string(&origin_url).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
   let content_json =
     std::fs::read_to_string(content_json_path).map_err(|_| StatusCode::NOT_FOUND)?;
-  // Verify that the content JSON is valid JSON
-  let _ = serde_json::from_str::<serde_json::Value>(&content_json)
-    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+  let content_json =
+    serde_json::to_string(&content_json).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
   let initial_preview_variant = serde_json::to_string(&instance_config.current_variant)
     .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
   let body_str = format!(
@@ -82,7 +83,7 @@ pub(crate) async fn serve_query_cdn_bridge(
   }}
   if (!window.tcms.cdnBridge) {{
     window.tcms.cdnBridge = {{
-      initialContentJson: {initial_content_json},
+      initialContentJson: JSON.parse({initial_content_json}),
       getCDNType: () => "localCDN",
       getContentJsonPath: () => "/__query__/not_implemented_yet.json",
       getInitialPreviewVariant: () => {initial_preview_variant},

@@ -1,24 +1,29 @@
 mod datasources;
 mod layers;
-mod store;
 mod types;
 
+use arc_swap::ArcSwapOption;
 use axum::{Router, middleware, routing::get};
 use chrono::{DateTime, Utc};
-use dashmap::DashMap;
 use std::{
   net::{Ipv4Addr, SocketAddr},
+  path::PathBuf,
   sync::Arc,
 };
-use tokio::sync::mpsc::channel;
+use tokio::sync::mpsc::{Sender, channel};
 use tower_http::services::ServeDir;
 use tower_layer::Layer;
 
-use crate::datasources::{serve_query_cdn_bridge, serve_template_from_zip};
 use crate::layers::instance_url_sanitization_layer;
-use crate::store::{INSTANCE_CONFIGS, LCDN_CONFIG, SHUTDOWN_CHANNEL};
+use crate::{
+  datasources::{serve_query_cdn_bridge, serve_template_from_zip},
+  types::AppState,
+};
 
 pub use crate::types::{InstanceConfig, LcdnConfig, LcdnError};
+
+// This is the only global singleton state.
+static SHUTDOWN_CHANNEL: ArcSwapOption<Sender<()>> = ArcSwapOption::const_empty();
 
 pub fn setup_rustls() {
   // Globally register ring as the default crypto provider, if one doesn't exist yet
@@ -26,38 +31,37 @@ pub fn setup_rustls() {
   let _ = rustls::crypto::ring::default_provider().install_default();
 }
 
-fn update_static_configs(mut lcdn_config: LcdnConfig, instance_configs_raw: Vec<InstanceConfig>) {
-  let valid_slugs: Vec<String> = instance_configs_raw
-    .iter()
-    .map(|instance_config| instance_config.slug.clone())
-    .collect();
-  let static_servers: DashMap<String, (ServeDir, ServeDir)> = DashMap::new();
-  let instance_configs: DashMap<String, InstanceConfig> = DashMap::new();
-  for (i, instance_config) in instance_configs_raw.iter().enumerate() {
-    let template_fs_path = format!("templates/{}", instance_config.template_id);
-    let instance_asset_fs_path = format!("instances/{}/assets", instance_config.instance_id);
-    let template_server = ServeDir::new(template_fs_path);
-    let instance_asset_server = ServeDir::new(instance_asset_fs_path);
-    static_servers.insert(
-      valid_slugs[i].clone(),
-      (template_server, instance_asset_server),
-    );
-    instance_configs.insert(instance_config.slug.clone(), instance_config.clone());
-    eprintln!(
-      "update_static_configs: slug: {}, instance_id: {}, template_id: {}",
-      instance_config.slug, instance_config.instance_id, instance_config.template_id
-    );
-  }
-  lcdn_config.instance_ids = instance_configs_raw
-    .iter()
-    .map(|instance_config| instance_config.instance_id.clone())
-    .collect();
+pub(crate) fn make_app(app_state: AppState) -> Router {
+  // Internal URI paths can start with: /templates/, /instances/, /queries/, /dependencies/ (react/vue)
+  let public_static = ServeDir::new(app_state.public_content_path.as_path());
+  let route_content = Router::new()
+    .fallback_service(public_static)
+    .route(
+      "/templates/{template_scope}/{template_id}/{*path}",
+      get(serve_template_from_zip),
+    )
+    .route(
+      "/queries/by_slug/{slug}/cdn-bridge.js",
+      get(serve_query_cdn_bridge),
+    )
+    .with_state(app_state.clone());
 
-  LCDN_CONFIG.store(Some(Arc::new(lcdn_config)));
-  INSTANCE_CONFIGS.store(Some(Arc::new(instance_configs)));
+  // Convert external URI paths to internal URI paths for routing
+  let route_content =
+    middleware::from_fn_with_state(app_state.clone(), instance_url_sanitization_layer)
+      .layer(route_content);
+
+  // Add other external routes like /healthcheck
+  Router::new()
+    .fallback_service(route_content)
+    .route("/healthcheck", get(|| async { "OK" }))
+    .nest_service("/static", ServeDir::new("."))
 }
 
-pub async fn start_lcdn_server(config: LcdnConfig) -> Result<(), LcdnError> {
+pub async fn start_lcdn_server(
+  config: LcdnConfig,
+  public_content_path: PathBuf,
+) -> Result<(), LcdnError> {
   let mock_instance_configs = vec![InstanceConfig {
     instance_id: "6fa27a2f-2f1e-413d-a842-424242424242".to_string(),
     name: "My Contact Card".to_string(),
@@ -69,12 +73,12 @@ pub async fn start_lcdn_server(config: LcdnConfig) -> Result<(), LcdnError> {
     created_at: DateTime::<Utc>::default(),
     updated_at: DateTime::<Utc>::default(),
   }];
-  update_static_configs(config.clone(), mock_instance_configs);
   let LcdnConfig {
     startup_timeout,
     port,
     ..
   } = config;
+  let app_state = AppState::from_configs(config, mock_instance_configs, public_content_path);
 
   // Make sure the port is open before we try to ping the healthcheck
   let addr = SocketAddr::from((Ipv4Addr::LOCALHOST, port));
@@ -82,33 +86,12 @@ pub async fn start_lcdn_server(config: LcdnConfig) -> Result<(), LcdnError> {
     .await
     .map_err(LcdnError::CannotRun)?;
 
-  tokio::spawn(async move {
+  let server_task = tokio::spawn(async move {
     let (tx, mut rx) = channel::<()>(100);
     SHUTDOWN_CHANNEL.store(Some(Arc::new(tx)));
 
-    // Internal URI paths can start with: /templates/, /instances/, /queries/, /dependencies/ (react/vue)
-    let public_static = ServeDir::new("public");
-    let route_content = Router::new()
-      .fallback_service(public_static)
-      .route(
-        "/templates/{template_scope}/{template_id}/{*path}",
-        get(serve_template_from_zip),
-      )
-      .route(
-        "/queries/by_slug/{slug}/cdn-bridge.js",
-        get(serve_query_cdn_bridge),
-      );
-
-    // Convert external URI paths to internal URI paths for routing
-    let route_content = middleware::from_fn(instance_url_sanitization_layer).layer(route_content);
-
-    // Add other external routes like /healthcheck
-    let app = Router::new()
-      .fallback_service(route_content)
-      .route("/healthcheck", get(|| async { "OK" }))
-      .nest_service("/static", ServeDir::new("."));
-
     // Start the server
+    let app = make_app(app_state.clone());
     axum::serve(listener, app)
       .with_graceful_shutdown(async move {
         rx.recv().await;
@@ -117,20 +100,29 @@ pub async fn start_lcdn_server(config: LcdnConfig) -> Result<(), LcdnError> {
       .map_err(LcdnError::CannotRun)
   });
 
-  // Perform a healthcheck to verify that the server is running
-  let healthcheck_url = format!("http://localhost:{}/healthcheck", port);
-  let client = reqwest::Client::new();
-  let request = client.get(healthcheck_url).timeout(startup_timeout);
-  let response = request
-    .send()
-    .await
-    .map_err(LcdnError::CannotStartHealthcheck)?;
-  let response_code = response.status().as_u16();
-  if response_code != 200 {
-    return Err(LcdnError::HealthcheckFailed(response_code));
+  let result = {
+    // Perform a healthcheck to verify that the server is running
+    let healthcheck_url = format!("http://localhost:{}/healthcheck", port);
+    let client = reqwest::Client::new();
+    let request_task = async {
+      let request = client.get(healthcheck_url).timeout(startup_timeout);
+      let response = request.send().await.map_err(LcdnError::HealthcheckError)?;
+      let response_code = response.status().as_u16();
+      if response_code != 200 {
+        return Err(LcdnError::HealthcheckFailed(response_code));
+      }
+      Ok(())
+    };
+    tokio::select! {
+      x = request_task => x,
+      x = server_task => x.unwrap_or(Err(LcdnError::CannotRunAndJoin)),
+    }
+  };
+  if let Err(_) = result {
+    // Try to stop the server if the healthcheck fails
+    let _ = stop_lcdn_server().await;
   }
-
-  Ok(())
+  result
 }
 
 pub async fn stop_lcdn_server() -> Result<(), LcdnError> {
@@ -138,5 +130,8 @@ pub async fn stop_lcdn_server() -> Result<(), LcdnError> {
   let Some(tx) = guard.as_ref() else {
     return Ok(());
   };
-  tx.send(()).await.map_err(|_| LcdnError::CannotStop)
+  tx.send(()).await.map_err(|_| LcdnError::CannotStop)?;
+  drop(guard);
+  SHUTDOWN_CHANNEL.store(None);
+  Ok(())
 }
