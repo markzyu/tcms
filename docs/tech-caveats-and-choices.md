@@ -15,6 +15,26 @@ This uses Media Queries v4 syntax (media query ranges) as well as Native CSS Nes
 
 Both of these are not supported by older devices. And this project cares about supporting older devices.
 
+## Tauri FS and Path plugins
+
+As of the time of project creation, Tauri doesn't have mature support for the App Data folder of mobile OS: https://github.com/tauri-apps/tauri/issues/12276
+
+Additionally, we intend to bundle the templates and assets into the ThorCMS app itself as a standard Tauri bundle.
+
+So we use this workaround to handle mobile OS file system operations:
+
+* LocalCDN will run on native FS syscalls. It must be given a folder which it has the permissions to read and write to.
+* ThorCMS will use Tauri resourceDir to read the templates from its app bundle.
+* ThorCMS will rely on Tauri path plugin to deduce the Windows/macOS/Linux paths for app data folder.
+* However, for iOS and Android, ThorCMS will determine the storage location by itself.
+* And, ThorCMS will use native FS syscalls to copy the templates to the target storage location.
+
+This workaround has the following assumptions:
+
+* Each OS should provide a parent folder that the ThorCMS app has +RW-X access to.
+* This folder has a standard path on each OS, which we can deduce based on OS version alone.
+
+
 ## Safari ESM Backfill
 
 Because we want to support macbooks as old as 2015, and because the system webview on these devices do not support modern importmap syntax, we need to use a backfill library: https://github.com/guybedford/es-module-shims
