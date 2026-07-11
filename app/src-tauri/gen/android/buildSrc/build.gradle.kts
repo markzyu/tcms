@@ -18,6 +18,7 @@ repositories {
 
 dependencies {
     compileOnly(gradleApi())
-    implementation("com.android.tools.build:gradle:8.11.0")
+    implementation("com.android.tools.build:gradle:7.1.3")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.5.31")
 }
 
