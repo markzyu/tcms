@@ -48,7 +48,7 @@ open class RustPlugin : Plugin<Project> {
 
         afterEvaluate {
             for (profile in listOf("debug", "release")) {
-                val profileCapitalized = profile[0].toUpperCase() + profile.substring(1)
+                val profileCapitalized = profile.replaceFirstChar { it.uppercase() }
                 val buildTask = tasks.maybeCreate(
                     "rustBuildUniversal$profileCapitalized",
                     DefaultTask::class.java
@@ -62,7 +62,7 @@ open class RustPlugin : Plugin<Project> {
                 for (targetPair in targetsList.withIndex()) {
                     val targetName = targetPair.value
                     val targetArch = archList[targetPair.index]
-                    val targetArchCapitalized = targetArch[0].toUpperCase() + targetArch.substring(1)
+                    val targetArchCapitalized = targetArch.replaceFirstChar { it.uppercase() }
                     val targetBuildTask = project.tasks.maybeCreate(
                         "rustBuild$targetArchCapitalized$profileCapitalized",
                         BuildTask::class.java
