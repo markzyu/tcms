@@ -48,3 +48,50 @@ To build the app bundle and estimate bundle size, run this and then open the `ap
 ```bash
 yarn workspace @tcms/app build
 ```
+
+## Recommended VSCode Setup
+
+Please make sure `rust-analyzer` is installed and make sure `checkOnSave` is disabled. This is because it conflicts with Android Studio's gradle builds (cache busting issues).
+
+```json
+{
+  "editor.tabSize": 2,
+  "rust-client.engine": "rust-analyzer",
+  "rust-analyzer.checkOnSave": false,
+  "[rust]": {
+      "editor.tabSize": 2,
+      "editor.quickSuggestions": {
+          "other": true,
+          "comments": false,
+          "strings": true
+      }
+  }
+}
+```
+
+Instead, we have a custom build task in VSCode to manually run cargo check for the target architecture: `.vscode/tasks.json`.
+
+Please add the following to keyboard shortcuts to run the build task:
+```json
+{
+  "key": "ctrl+shift+c",
+  "command": "workbench.action.tasks.runTask",
+  "args": "Cargo Check (Target Arch)"
+}
+```
+
+Or, for vim extension users, add the following to VSCode User Settings:
+```json
+{
+  "vim.normalModeKeyBindingsNonRecursive": [
+    {
+      "before": ["<leader>", "c"],
+      "commands": [
+        {
+          "command": "workbench.action.tasks.runTask",
+          "args": "Cargo Check (Target Arch)"
+        }
+      ],
+    }
+  ]
+}
