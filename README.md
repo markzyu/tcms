@@ -7,6 +7,10 @@ yarn
 yarn prepare
 yarn workspace @tcms/app tauri android init
 yarn workspace @tcms/app tauri ios init
+
+# In order for Android Studio to access yarn, link it to the following directory
+mkdir -p ~/.local/bin
+ln -s $(which yarn) ~/.local/bin/yarn-tcms
 ```
 
 To verify the baseline correctness of all packages, templates, and the app, run:

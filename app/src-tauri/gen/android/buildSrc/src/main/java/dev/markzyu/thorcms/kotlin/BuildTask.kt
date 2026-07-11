@@ -16,7 +16,9 @@ open class BuildTask : DefaultTask() {
 
     @TaskAction
     fun assemble() {
-        val executable = """yarn""";
+        // Read homedir and then construct the executable path
+        val homeDir = System.getProperty("user.home")
+        val executable = "$homeDir/.local/bin/yarn-tcms"
         try {
             runTauriCli(executable)
         } catch (e: Exception) {

@@ -2239,6 +2239,7 @@ __metadata:
     vue: "npm:^3.5.39"
     vue-router: "npm:^5.1.0"
     vue-tsc: "npm:^3.3.5"
+    zod: "npm:^4.4.3"
   languageName: unknown
   linkType: soft
 
