@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
+    "lcdn": "CARGO_TARGET_DIR=src-tauri/target/lcdn cargo run --bin lcdn-standalone",
     "preview": "vite preview",
     "test": "vitest run && cargo test && echo '[cargo fmt] Running lint checks ...' && cargo fmt --check --all",
     "test:watch": "vitest",

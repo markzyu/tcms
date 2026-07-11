@@ -1,6 +1,7 @@
 {
   "port": 8088,
   "startupTimeout": 3000,
+  "same_origin_domains": ["localhost:8088", "127.0.0.1:8088"],
   "instanceIds": [
     "6fa27a2f-2f1e-413d-a842-424242424242"
   ]
