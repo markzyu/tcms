@@ -38,6 +38,9 @@ fn lcdn_status() -> LcdnStatus {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+  // Setup the Reqwest client to use Ring/Rustls
+  lcdn_server::setup_rustls();
+
   tauri::Builder::default()
     .plugin(tauri_plugin_os::init())
     .plugin(tauri_plugin_opener::init())
