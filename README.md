@@ -36,12 +36,12 @@ yarn workspace @tcms/app tauri dev
 
 For Android development, run:
 ```bash
-yarn workspace @tcms/app tauri android dev
+yarn workspace @tcms/app tauri android dev --host
 ```
 
 For iOS development, run:
 ```bash
-yarn workspace @tcms/app tauri ios dev
+yarn workspace @tcms/app tauri ios dev --host
 ```
 
 To build the app bundle and estimate bundle size, run this and then open the `app/dist/bundle-size-analysis.html` file:
@@ -52,6 +52,8 @@ yarn workspace @tcms/app build
 ## Recommended VSCode Setup
 
 Please make sure `rust-analyzer` is installed and make sure `checkOnSave` is disabled. This is because it conflicts with Android Studio's gradle builds (cache busting issues).
+
+This repo aims to setup all non-tauri builds of Rust to use their own isolated target directories. It's probably not perfect, but it's a start.
 
 ```json
 {
