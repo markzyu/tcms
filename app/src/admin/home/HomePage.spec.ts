@@ -18,6 +18,7 @@ const mockTauri = vi.hoisted(() => {
     port: null
   };
   const methods: Record<string, Mock> = {
+    ensure_os_data_dir: vi.fn().mockResolvedValue("./public"),
     lcdn_start: vi.fn().mockImplementation(async () => {
       if (wantError) {
         wantError = false;

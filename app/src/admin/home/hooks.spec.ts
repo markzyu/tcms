@@ -9,6 +9,9 @@ const mockTauriInvoke = vi.hoisted(() => vi.fn().mockImplementation(async (metho
       port: null
     };
   }
+  if (method === "ensure_os_data_dir") {
+    return "./public";
+  }
   return null;
 }));
 vi.mock("@tauri-apps/api/core", () => ({
@@ -16,7 +19,7 @@ vi.mock("@tauri-apps/api/core", () => ({
 }));
 
 describe("useLocalCDNControls", () => {
-  it("exports all fields and start/stop do not crash without awaiting", () => {
+  it("exports all fields and start/stop do not crash without awaiting", async () => {
     const controls = useLocalCDNControls("my-contact-card");
 
     expect(controls.isLocalCDNRunning).toBeDefined();
@@ -29,8 +32,8 @@ describe("useLocalCDNControls", () => {
 
     expect(controls.currentLCDNSlug.value).toBe("my-contact-card");
 
-    controls.startLocalCDN("my-contact-card");
-    controls.stopLocalCDN();
+    await controls.startLocalCDN("my-contact-card");
+    await controls.stopLocalCDN();
 
     expect(mockTauriInvoke).toHaveBeenCalledWith("lcdn_start", expect.anything());
   });
