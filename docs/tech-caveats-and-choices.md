@@ -51,9 +51,13 @@ So instead,
 
 However, this workaround itself is unstable because Android's build tools may eventually decide to change how `*.zip` assets are handled.
 
-For this reason, we have a bash script to verify the assumptions of this workaround: `yarn test:android-apk-assumptions`
+For this reason, we have a bash script to verify the assumptions of this workaround: `yarn android:test-apk`
 
 You can also check the relevant AAPT2 algorithm [here](https://cs.android.com/android/platform/superproject/+/1cdfff555f4a21f71ccc978290e2e212e2f8b168:frameworks/base/tools/aapt2/cmd/Link.cpp;l=335-352). And you can check the relevant list of no-compress extensions [here](https://cs.android.com/android/platform/superproject/+/1cdfff555f4a21f71ccc978290e2e212e2f8b168:frameworks/base/tools/aapt2/cmd/Link.cpp;l=2640-2649). (These links show an old commit instead of the latest one)
+
+## Tauri dev mode does not update Android assets
+
+Please run `yarn android:sync-assets` to sync the assets to the Android app before rebuilding the app.
 
 ## Safari ESM Backfill
 

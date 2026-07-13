@@ -10,7 +10,7 @@
   "packageManager": "yarn@4.17.0",
   "scripts": {
     "prepare": "husky",
-    "build:examples": "echo Building example instances... && mkdir -p $PROJECT_CWD/app/public/instances && mkdir -p $PROJECT_CWD/app/public/templates/@tcms && cd $PROJECT_CWD/app/public/instances/ && zip -r my-contact-card.zip 6fa27a2f-2f1e-413d-a842-424242424242 && echo Done with example instances.",
+    "build:examples": "echo Building example instances... && mkdir -p $PROJECT_CWD/app/public/instances && mkdir -p $PROJECT_CWD/app/public/templates/@tcms && cd $PROJECT_CWD/app/public/instances/6fa27a2f-2f1e-413d-a842-424242424242/ && zip -r ../6fa27a2f-2f1e-413d-a842-424242424242.zip . && echo Done with example instances.",
     "build": "yarn build:examples && yarn workspaces foreach -Ap --include 'packages/*' run build && yarn workspaces foreach -Ap --include 'templates/*' run build && yarn workspace @tcms/app run build",
     "typecheck": "yarn workspaces foreach -Ap --include 'packages/*' run typecheck && yarn workspaces foreach -Ap --include 'templates/*' run typecheck && yarn workspace @tcms/app run typecheck",
     "test": "yarn workspaces foreach -Ap --include 'packages/*' run test && yarn workspaces foreach -Ap --include 'templates/*' run test && yarn workspace @tcms/app run test"

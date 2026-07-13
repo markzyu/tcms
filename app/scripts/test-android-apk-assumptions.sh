@@ -21,7 +21,7 @@ set -euo pipefail
 APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PREFABS_ZIP_PREFIX="assets/prefabs/"
 REQUIRED_ZIPS=(
-  "assets/prefabs/instances/my-contact-card.zip"
+  "assets/prefabs/instances/6fa27a2f-2f1e-413d-a842-424242424242.zip"
   "assets/prefabs/templates/@tcms/template-example-info-card1.zip"
 )
 

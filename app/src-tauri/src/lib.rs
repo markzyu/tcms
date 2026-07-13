@@ -31,30 +31,14 @@ async fn get_prefab_instance_install_dir(
   app_handle: AppHandle,
   instance_id: String,
 ) -> Result<PathBuf, String> {
-  let public_dir_path = compat::ensure_instances_dir(&app_handle, instance_id.clone(), None)?;
-  let content_dir_path = compat::ensure_instances_dir(
+  let instances_dir = compat::ensure_instances_dir(&app_handle)?;
+  let instance_id_dir = instances_dir.join(&instance_id);
+  compat::unzip_app_asset_to_fs(
     &app_handle,
-    instance_id.clone(),
-    Some("content".to_string()),
+    format!("instances/{}.zip", instance_id),
+    &instance_id_dir,
   )?;
-  let assets_dir_path =
-    compat::ensure_instances_dir(&app_handle, instance_id.clone(), Some("assets".to_string()))?;
-  compat::copy_app_asset_to_fs(
-    &app_handle,
-    format!("instances/{}/instance.json", instance_id),
-    &public_dir_path.join("instance.json"),
-  )?;
-  compat::copy_app_asset_to_fs(
-    &app_handle,
-    format!("instances/{}/content/main.en.json", instance_id),
-    &content_dir_path.join("main.en.json"),
-  )?;
-  compat::copy_app_asset_to_fs(
-    &app_handle,
-    format!("instances/{}/assets/hero.jpg", instance_id),
-    &assets_dir_path.join("hero.jpg"),
-  )?;
-  Ok(public_dir_path)
+  Ok(instance_id_dir)
 }
 
 #[tauri::command]

@@ -41,16 +41,9 @@ pub(crate) fn ensure_templates_dir(
   Ok(template_dir)
 }
 
-pub(crate) fn ensure_instances_dir(
-  app_handle: &AppHandle,
-  instance_id: String,
-  relative_path: Option<String>,
-) -> Result<PathBuf, String> {
+pub(crate) fn ensure_instances_dir(app_handle: &AppHandle) -> Result<PathBuf, String> {
   let public_dir = get_compat_os_data_dir(app_handle)?.join("public");
-  let mut instances_dir = public_dir.join("instances").join(instance_id);
-  if let Some(relative_path) = relative_path {
-    instances_dir = instances_dir.join(relative_path);
-  }
+  let instances_dir = public_dir.join("instances");
   if !instances_dir.exists() {
     std::fs::create_dir_all(&instances_dir).map_err(|e| e.to_string())?;
   }
@@ -79,4 +72,23 @@ pub(crate) fn copy_app_asset_to_fs(
 ) -> Result<(), String> {
   let asset_bytes = read_app_asset(app_handle, relative_path)?;
   std::fs::write(&target_path, asset_bytes).map_err(|e| e.to_string())
+}
+
+pub(crate) fn unzip_app_asset_to_fs(
+  app_handle: &AppHandle,
+  relative_path: String,
+  target_path: &PathBuf,
+) -> Result<(), String> {
+  if target_path.exists() {
+    return Err(format!(
+      "Target path already exists: {}",
+      target_path.to_string_lossy()
+    ));
+  }
+
+  let asset_bytes = read_app_asset(app_handle, relative_path)?;
+  let mut zip =
+    zip::ZipArchive::new(std::io::Cursor::new(asset_bytes)).map_err(|e| e.to_string())?;
+  zip.extract(target_path).map_err(|e| e.to_string())?;
+  Ok(())
 }
