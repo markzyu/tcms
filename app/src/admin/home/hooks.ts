@@ -56,6 +56,7 @@ export const useLocalCDNControls = (initSlug: string) => {
   };
   const stopLocalCDN = async () => {
     isLocalCDNStopping.value = true;
+    urlToVisit.value = null;
     try {
       await invoke("lcdn_stop");
     } catch (error) {
