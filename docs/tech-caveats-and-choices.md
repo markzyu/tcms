@@ -15,7 +15,7 @@ This uses Media Queries v4 syntax (media query ranges) as well as Native CSS Nes
 
 Both of these are not supported by older devices. And this project cares about supporting older devices.
 
-## Tauri FS and Path plugins
+## Tauri FS and Path plugin, workaround 1: appDir path
 
 As of the time of project creation, Tauri doesn't have mature support for the App Data folder of mobile OS: https://github.com/tauri-apps/tauri/issues/12276
 
@@ -34,6 +34,26 @@ This workaround has the following assumptions:
 * Each OS should provide a parent folder that the ThorCMS app has +RW-X access to.
 * This folder has a standard path on each OS, which we can deduce based on OS version alone.
 
+## Tauri FS and Path plugin, workaround 2: zipping prefab instances
+
+Templates are supposed to act as a zip file because nothing in it should be modified at runtime.
+
+Instance prefabs were originally supposed to be a real folder. But this doesn't work well on Android:
+
+There is a bug in tauri upstream causing some file extensions to return the entire APK data when queried through tauri-fs plugin, on Android.
+
+(See https://github.com/tauri-apps/tauri/issues/13554 and https://github.com/tauri-apps/plugins-workspace/pull/3204)
+
+So instead,
+
+* We zip the instances into its own zip files.
+* We have to unzip the zip from the app bundle and then unzip it again to the target storage location. (LCDN expects real folders)
+
+However, this workaround itself is unstable because Android's build tools may eventually decide to change how `*.zip` assets are handled.
+
+For this reason, we have a bash script to verify the assumptions of this workaround: `yarn test:android-apk-assumptions`
+
+You can also check the relevant AAPT2 algorithm [here](https://cs.android.com/android/platform/superproject/+/1cdfff555f4a21f71ccc978290e2e212e2f8b168:frameworks/base/tools/aapt2/cmd/Link.cpp;l=335-352). And you can check the relevant list of no-compress extensions [here](https://cs.android.com/android/platform/superproject/+/1cdfff555f4a21f71ccc978290e2e212e2f8b168:frameworks/base/tools/aapt2/cmd/Link.cpp;l=2640-2649). (These links show an old commit instead of the latest one)
 
 ## Safari ESM Backfill
 
