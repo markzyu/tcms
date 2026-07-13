@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
     "lcdn": "CARGO_TARGET_DIR=src-tauri/target/from-yarn cargo run --bin lcdn-standalone",
+    "android:build-arm64": "yarn android:sync-assets && tauri android build --target aarch64 && bash scripts/test-android-apk-assumptions.sh src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk",
     "android:test-apk": "bash scripts/test-android-apk-assumptions.sh",
     "android:sync-assets": "rsync -av public/ src-tauri/gen/android/app/src/main/assets/prefabs/",
     "preview": "vite preview",
