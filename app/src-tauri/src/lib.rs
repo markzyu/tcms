@@ -66,6 +66,11 @@ async fn perform_first_time_setup(app_handle: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
+async fn ensure_os_data_dir(app_handle: AppHandle) -> Result<PathBuf, String> {
+  compat::ensure_os_data_dir(&app_handle)
+}
+
+#[tauri::command]
 async fn lcdn_start(lcdn_config: LcdnConfig, public_content_path: String) -> Result<(), String> {
   let app_state = AppState::from_config(lcdn_config, PathBuf::from(public_content_path))
     .map_err(|e| e.to_string())?;
@@ -103,6 +108,7 @@ pub fn run() {
     .plugin(tauri_plugin_os::init())
     .plugin(tauri_plugin_opener::init())
     .invoke_handler(tauri::generate_handler![
+      ensure_os_data_dir,
       get_prefab_instance_install_dir,
       get_template_install_dir,
       greet,

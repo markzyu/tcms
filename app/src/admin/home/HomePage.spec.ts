@@ -5,7 +5,7 @@ import { screen, waitFor } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
 
 import { clickIonButton, renderTest } from "../../testUtils";
-import { LcdnStatus } from '../lcdn-types.ts';
+import { LcdnStatus } from '../tauri-types.ts';
 import HomePage from "./HomePage.vue";
 
 const INITIAL_SLUG = "my-contact-card";

@@ -1,6 +1,6 @@
 import { ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
-import { invokeWithType, LcdnConfig, LcdnStatusSchema } from "../lcdn-types";
+import { invokeWithType, LcdnConfig, LcdnStatusSchema } from "../tauri-types";
 
 export const useLocalCDNControls = (initSlug: string) => {
   const isLocalCDNRunning = ref(false);
@@ -13,7 +13,6 @@ export const useLocalCDNControls = (initSlug: string) => {
   const updateLocalCDNStatus = async () => {
     try {
       const status = await invokeWithType(LcdnStatusSchema, "lcdn_status");
-      console.log("TESTT", status);
       localCDNHost.value = status.port ? `http://localhost:${status.port}` : null;
       isLocalCDNRunning.value = status.running;
 
@@ -26,7 +25,6 @@ export const useLocalCDNControls = (initSlug: string) => {
       localCDNHost.value = null;
       localCDNError.value = "Failed to get local CDN status: " + error;
       isLocalCDNRunning.value = false;
-      console.error("TESTT", error);
     }
   }
   const startLocalCDN = async (slugToVisit: string) => {
@@ -45,7 +43,6 @@ export const useLocalCDNControls = (initSlug: string) => {
       urlToVisit.value = `http://localhost:${lcdnConfig.port}/${slugToVisit}`;
       currentLCDNSlug.value = slugToVisit;
     } catch (error) {
-      console.error("TESTT", error);
       localCDNError.value = String(error);
     }
     await updateLocalCDNStatus();
@@ -55,7 +52,6 @@ export const useLocalCDNControls = (initSlug: string) => {
     try {
       await invoke("lcdn_stop");
     } catch (error) {
-      console.error("TESTT", error);
       localCDNError.value = String(error);
     }
     await updateLocalCDNStatus();

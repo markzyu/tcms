@@ -9,6 +9,20 @@ vi.mock("@tauri-apps/plugin-os", () => ({
   type: vi.fn(() => "macos"),
 }));
 
+vi.mock("@tauri-apps/plugin-fs", () => ({
+  readTextFile: vi.fn().mockResolvedValue('{"appVersion": "0.0.0"}'),
+  writeTextFile: vi.fn(),
+}));
+
+vi.mock("@tauri-apps/api/core", () => ({
+  invoke: vi.fn().mockImplementation((command) => {
+    if (command === "ensure_os_data_dir") {
+      return Promise.resolve("./public");
+    }
+    return Promise.resolve();
+  }),
+}));
+
 const TAB_NAMES = ["Library", "Home", "Settings"] as const;
 
 async function renderApp() {

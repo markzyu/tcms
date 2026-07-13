@@ -268,7 +268,7 @@ mod tests {
     );
     let body = body_to_string(response.into_body()).await;
     assert!(body.contains("JSON.parse("));
-    assert!(body.contains("caf"));
+    assert!(body.contains("café"));
   }
 
   #[tokio::test]

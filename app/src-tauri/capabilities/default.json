@@ -9,6 +9,18 @@
     "core:default",
     "opener:default",
     "os:default",
-    "fs:default"
+    "fs:default",
+    {
+      "identifier": "fs:allow-read-text-file",
+      "allow": [
+        {"path": "$APPDATA/**/*"}
+      ]
+    },
+    {
+      "identifier": "fs:allow-write-text-file",
+      "allow": [
+        {"path": "$APPDATA/**/*"}
+      ]
+    }
   ]
 }
