@@ -1,6 +1,7 @@
 import { ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { invokeWithType, LcdnConfig, LcdnStatusSchema } from "../tauri-types";
+import { z } from "zod";
 
 export const useLocalCDNControls = (initSlug: string) => {
   const isLocalCDNRunning = ref(false);
@@ -35,11 +36,17 @@ export const useLocalCDNControls = (initSlug: string) => {
         instanceIds: ["6fa27a2f-2f1e-413d-a842-424242424242"],
         sameOriginDomains: ["localhost:8088", "127.0.0.1:8088"],
       };
+
+      const osDataDir = await invokeWithType(z.string(), "ensure_os_data_dir");
+      const publicContentPath = osDataDir + "/public";
+      console.log("publicContentPath", publicContentPath);
+
       const args = {
         lcdnConfig,
-        publicContentPath: "/Users/mark/projects/tcms/app/public",
+        publicContentPath,
       }
       await invoke("lcdn_start", args);
+
       urlToVisit.value = `http://localhost:${lcdnConfig.port}/${slugToVisit}`;
       currentLCDNSlug.value = slugToVisit;
     } catch (error) {
