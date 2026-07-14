@@ -4,19 +4,20 @@ use tauri_plugin_fs::FsExt;
 use tauri_plugin_os::platform;
 
 pub(crate) fn get_compat_os_data_dir(app_handle: &AppHandle) -> Result<PathBuf, String> {
-  let base_dir_desktop = app_handle
+  let base_dir = app_handle
     .path()
     .app_data_dir()
     .map_err(|e| e.to_string())?;
-  let base_dir_android = base_dir_desktop.join("files");
+  let base_dir_android = base_dir.join("files");
   match platform() {
-    "linux" => Ok(base_dir_desktop),
-    "windows" => Ok(base_dir_desktop),
-    "macos" => Ok(base_dir_desktop),
+    "linux" => Ok(base_dir),
+    "windows" => Ok(base_dir),
+    "macos" => Ok(base_dir),
     "android" => Ok(base_dir_android),
+    "ios" => Ok(base_dir),
     _ => Err(format!(
-      "Unsupported operating system for guessing OS data dir: {}",
-      platform()
+      "Unsupported operating system for ThorCMS: {}",
+      platform(),
     )),
   }
 }
