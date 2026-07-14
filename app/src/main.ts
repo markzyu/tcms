@@ -17,7 +17,5 @@ import '@ionic/vue/css/typography.css';
 /* For now, default to show system theme for dark/light mode */
 import '@ionic/vue/css/palettes/dark.system.css';
 
-createApp(App).use(IonicVue).use(router);
-router.isReady().then(() => {
-  createApp(App).use(IonicVue).use(router).mount("#app");
-});
+const app = createApp(App).use(IonicVue).use(router);
+router.isReady().then(() => app.mount("#app"));
