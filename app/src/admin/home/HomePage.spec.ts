@@ -5,7 +5,7 @@ import { screen, waitFor } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
 
 import { clickIonButton, renderTest } from "../../testUtils";
-import { LcdnStatus } from '../tauri-types.ts';
+import { LcdnInstanceConfig, LcdnStatus } from '../tauri-types.ts';
 import HomePage from "./HomePage.vue";
 
 const INITIAL_SLUG = "my-contact-card";
@@ -56,6 +56,28 @@ vi.mock("@tauri-apps/api/core", () => ({
   invoke: mockTauri.mockInvoke,
 }));
 
+vi.mock("@tauri-apps/plugin-fs", () => ({
+  readTextFile: vi.fn().mockImplementation(async (path: string) => {
+    if (path.includes("/instance.json")) {
+      let instanceConfig: LcdnInstanceConfig = {
+        instanceId: "fake-id",
+        slug: "my-contact-card",
+        name: "My Contact Card",
+        templateScope: "default",
+        templateId: "my-contact-card",
+        templateVersion: "1.0.0",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        currentVariant: "default",
+        variants: ["default"],
+      };
+      return JSON.stringify(instanceConfig);
+    }
+    return "";
+  }),
+  writeTextFile: vi.fn().mockResolvedValue(null),
+}));
+
 async function getUrlSlugNativeInput() {
   const ionInputElement = screen.getByTestId("url-slug-input") as unknown as HTMLIonInputElement;
   await waitFor(() => {
@@ -103,8 +125,12 @@ describe("HomePage", () => {
     mockTauri.methods.setWantError(false);
   });
 
-  it("renders all components", () => {
+  it("renders all components", async () => {
     renderTest(HomePage);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId("loading-configs-spinner")).not.toBeInTheDocument();
+    });
 
     expect(screen.getByTestId("home-page-title")).toHaveTextContent("Home");
     expect(screen.getByTestId("preview-iframe")).toBeInTheDocument();

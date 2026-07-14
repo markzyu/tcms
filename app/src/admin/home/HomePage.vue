@@ -107,6 +107,9 @@ import { debounce } from 'lodash';
     </ion-header>
 
     <ion-content>
+      <div v-if="isLoadingConfigs" class="flex h-full w-full items-center justify-center absolute left-0 top-0 z-10 bg-white" data-testid="loading-configs-spinner">
+        <ion-spinner />
+      </div>
       <div class="w-full -lg:flex flex-col px-4 py-6 gap-4 lg:grid lg:grid-cols-[500px_1fr] lg:px-[60px]">
         <ion-card class="w-full mx-auto max-w-[500px]">
           <div class="relative h-[220px] rounded-t-sm overflow-hidden">

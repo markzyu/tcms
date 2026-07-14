@@ -30,11 +30,10 @@ describe("useLocalCDNControls", () => {
     expect(controls.startLocalCDN).toBeTypeOf("function");
     expect(controls.stopLocalCDN).toBeTypeOf("function");
 
-    expect(controls.currentLCDNSlug.value).toBe("my-contact-card");
-
     await controls.startLocalCDN("my-contact-card");
     await controls.stopLocalCDN();
 
     expect(mockTauriInvoke).toHaveBeenCalledWith("lcdn_start", expect.anything());
+    expect(controls.currentLCDNSlug.value).toBe("my-contact-card");
   });
 });
