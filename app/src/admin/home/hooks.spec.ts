@@ -20,7 +20,7 @@ vi.mock("@tauri-apps/api/core", () => ({
 
 describe("useLocalCDNControls", () => {
   it("exports all fields and start/stop do not crash without awaiting", async () => {
-    const controls = useLocalCDNControls("my-contact-card");
+    const controls = useLocalCDNControls();
 
     expect(controls.isLocalCDNRunning).toBeDefined();
     expect(controls.localCDNError).toBeDefined();

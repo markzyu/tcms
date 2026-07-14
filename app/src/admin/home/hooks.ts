@@ -3,11 +3,11 @@ import { invoke } from "@tauri-apps/api/core";
 import { invokeWithType, LcdnConfig, LcdnStatusSchema } from "../tauri-types";
 import { z } from "zod";
 
-export const useLocalCDNControls = (initSlug: string) => {
+export const useLocalCDNControls = () => {
   const isLocalCDNRunning = ref(false);
   const isLocalCDNStarting = ref(false);
   const isLocalCDNStopping = ref(false);
-  const currentLCDNSlug = ref(initSlug);
+  const currentLCDNSlug = ref<string | null>(null);
   const localCDNHost = ref<string | null>(null);
   const localCDNError = ref<string | null>(null);
   const urlToVisit = ref<string | null>(null);

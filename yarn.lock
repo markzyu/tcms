@@ -2234,12 +2234,14 @@ __metadata:
     "@testing-library/jest-dom": "npm:^6.9.1"
     "@testing-library/user-event": "npm:^14.6.1"
     "@testing-library/vue": "npm:^8.1.0"
+    "@types/lodash": "npm:^4"
     "@vitejs/plugin-vue": "npm:^6.0.7"
     "@vitest/coverage-v8": "npm:^4.1.9"
     "@vue/compiler-dom": "npm:^3.5.39"
     "@vue/test-utils": "npm:^2.4.11"
     autoprefixer: "npm:^10.5.2"
     jsdom: "npm:^29.1.1"
+    lodash: "npm:^4.18.1"
     postcss: "npm:^8.5.16"
     rollup-plugin-visualizer: "npm:^7.0.1"
     tailwindcss: "npm:3"
@@ -2570,6 +2572,13 @@ __metadata:
   version: 2.5.1
   resolution: "@types/jsesc@npm:2.5.1"
   checksum: 10c0/12ba7bf5968aeeb36408269f4b5a39718efc6411fa197cf0f5e967ba36ad7b7d555b78787fc480db43ce63ebe6ab0ffe5fd9f64b1ea3b0d073877f0747491b30
+  languageName: node
+  linkType: hard
+
+"@types/lodash@npm:^4":
+  version: 4.17.24
+  resolution: "@types/lodash@npm:4.17.24"
+  checksum: 10c0/b72f60d4daacdad1fa643edb3faba204c02a01eb1ac00a83ff73496a6d236fc55e459c06106e8ced42277dba932d087d8fc090f8de4ef590d3f91e6d6f7ce85a
   languageName: node
   linkType: hard
 
@@ -6467,6 +6476,13 @@ __metadata:
   version: 4.1.2
   resolution: "lodash.memoize@npm:4.1.2"
   checksum: 10c0/c8713e51eccc650422716a14cece1809cfe34bc5ab5e242b7f8b4e2241c2483697b971a604252807689b9dd69bfe3a98852e19a5b89d506b000b4187a1285df8
+  languageName: node
+  linkType: hard
+
+"lodash@npm:^4.18.1":
+  version: 4.18.1
+  resolution: "lodash@npm:4.18.1"
+  checksum: 10c0/757228fc68805c59789e82185135cf85f05d0b2d3d54631d680ca79ec21944ec8314d4533639a14b8bcfbd97a517e78960933041a5af17ecb693ec6eecb99a27
   languageName: node
   linkType: hard
 

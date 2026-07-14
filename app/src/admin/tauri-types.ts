@@ -18,6 +18,21 @@ export const LcdnConfigSchema = z.object({
 
 export type LcdnConfig = z.infer<typeof LcdnConfigSchema>;
 
+export const LcdnInstanceConfigSchema = z.object({
+  instanceId: z.string(),
+  slug: z.string(),
+  name: z.string(),
+  templateScope: z.string(),
+  templateId: z.string(),
+  templateVersion: z.string(),
+  createdAt: z.number().int().positive(),
+  updatedAt: z.number().int().positive(),
+  currentVariant: z.string(),
+  variants: z.array(z.string()),
+});
+
+export type LcdnInstanceConfig = z.infer<typeof LcdnInstanceConfigSchema>;
+
 export const InstallStatusSchema = z.object({
   // The version of the ThorCMS app. (Same as app/package.json)
   appVersion: z.string()
