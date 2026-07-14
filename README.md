@@ -1,19 +1,21 @@
 This is a new project, work in progress.
 
-To get started run:
+To get started, please install nvm, node 22, and yarn 2. Then run:
 ```bash
 cd tcms
 yarn
 yarn prepare
-yarn workspace @tcms/app tauri android init
-yarn workspace @tcms/app tauri ios init
 
-# In order for Android Studio to access yarn, link it to the following directory
+# Setup yarn symlink for Xcode and Android Studio.
 mkdir -p ~/.local/bin
 ln -s $(which yarn) ~/.local/bin/yarn-tcms
+
+# Install Xcode and Android Studio. Then, run:
+yarn workspace @tcms/app tauri android init
+yarn workspace @tcms/app tauri ios init
 ```
 
-Please also make sure you've defined the relevant ANDROID_NDK_HOME environment variables
+Please also make sure you've defined the relevant `ANDROID_NDK_HOME` environment variables
 
 ```
 export ANDROID_HOME="/path/to/your/android/sdk"
