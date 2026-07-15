@@ -18,15 +18,15 @@ export const useLocalCDNControls = (onUrlUpdate: (url: string | null) => void) =
   const localCDNError = ref<string | null>(null);
   const updateLocalCDNStatus = async () => {
     try {
+      isLocalCDNStarting.value = true;
+      isLocalCDNStopping.value = true;
+
       const status = await invokeWithType(LcdnStatusSchema, "lcdn_status");
       localCDNHost.value = status.port ? `http://localhost:${status.port}` : null;
       isLocalCDNRunning.value = status.running;
 
-      if (status.running) {
-        isLocalCDNStarting.value = false;
-      } else {
-        isLocalCDNStopping.value = false;
-      }
+      isLocalCDNStarting.value = false;
+      isLocalCDNStopping.value = false;
     } catch (error) {
       localCDNHost.value = null;
       localCDNError.value = "Failed to get local CDN status: " + error;
@@ -69,6 +69,7 @@ export const useLocalCDNControls = (onUrlUpdate: (url: string | null) => void) =
     }
     await updateLocalCDNStatus();
   };
+  onMounted(updateLocalCDNStatus);
   return {
     isLocalCDNRunning,
     isLocalCDNStarting,
