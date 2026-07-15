@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { IonButton, IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonCard, IonCardContent, IonButtons, IonIcon, IonSpinner, IonList, IonItem, IonInput, IonTextarea } from '@ionic/vue';
-  import { alertCircle, moon, playCircle } from 'ionicons/icons';
+  import { alertCircle, moon, shareSocial } from 'ionicons/icons';
   import { computed, ref, watch } from 'vue';
   import { useEditableInstanceConfigs, useLocalCDNControls } from './hooks';
 
@@ -55,7 +55,7 @@
         </ion-title>
         <ion-buttons slot="end">
           <ion-button>
-            <ion-icon :icon="playCircle" />
+            <ion-icon :icon="shareSocial" />
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
