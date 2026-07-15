@@ -292,12 +292,6 @@ As for the storage of templates vs instances: Templates are stored as zipfiles u
 
 ---
 
----
-
-# STATUS: DRAFT (Phase 2 and beyond, NEED FULL, HUMAN REVIEW. ALSO NEED REVIEW ON SCRUM BOARD)
-
----
-
 ## Phase 2 — Admin shell + Template Editor tool
 
 **Goal:** **Edit | Preview** as a **Tool**, invoked from Admin — not hardwired as the app root.
@@ -318,7 +312,7 @@ In sum, the admin shell only really needs to implement the following:
 * Parsing frontend and backend schemas
 * Defining the workflow schemas (statically, for now)
 * Enabling the frontend tools and backend tools on LCDN so that
-  * the frontend is served and the backend can be invoked.
+  * The frontend is served on LCDN and the backend can be invoked via Tauri commands.
   * LCDN knows not to allowlist a tool for other mini apps.
   * LCDN and Tauri encrypts and authenticates the json exchange with tool pages, over http lcdn API + sandboxed iframe, using a server-side shared RSA key per server instance, as well as a random AES key for each tool instance.
   * From the Frontend tool's perspective,
@@ -332,12 +326,16 @@ In sum, the admin shell only really needs to implement the following:
     * This entire protocol exists to make sure:
       * No outside caller can fetch arbitrary INPUT data from ThorCMS.
       * TCMS Tools can never be used publicly even if accidentally published.
-    * Security assumption:
+    * Security assumptions:
       * All APIs related to tools must require AES-encryption within HTTP post data.
       * Nobody can intercept the AES key without root access to localhost's network interface, LCDN or the ThorCMS webview.
       * ThorCMS app itself won't deliberately open Tools in outside browsers.
+      * ThorCMS app should assign a basic scope for the AES key (like an instance ID)
+      * ThorCMS's configuration of LCDN keys and scopes is done via pure IPC commands, not by editing files on disk.
+      * Tools are disabled for the released LCDN standalone binary. The debug builds include a basic server for development purposes.
 * Displaying a UI consent screen, confirming the list of backend tools invoked by a workflow
 * Executing the workflow by displaying the correct frontend and calling the backend tools with the correct json
+* Handling the workflow state persistence and restoration of Frontend tools.
 
 This architecture design is probably more elaborate than we orignally called out in tech-overview.md. It's meant to bring flexibility to the ThorCMS app so that anyone can define / bring their own tools. For example, if someone enables developer mode and brings their own localhost port, serving their new frontend tool, then we'd serve it from LCDN by a basic redirect to their port, with API key. Their tool runs on their port, with any backend they choose by themselves.
 
@@ -349,60 +347,83 @@ Beyond the MVP scope, we eventually would allow super users to (1) create custom
 
 ### Routing model
 
-Tauri internal routes
+Tauri internal routes:
 
 ```
 /home/                     AdminHome (instance list)
-/tool?wf=new-instance      Entry point / page of all workflows
+/tool?wf=xxxxx&arg1=x&...  Entry point / page of all workflows
 ```
 
-LCDN routes
+The `/tool` route writes all input queries to LCDN's secure storage as the workflow input. Then it simply displays the correct page from LCDN for the current tool in the workflow.
+
+LCDN routes:
 
 ```
-/tools/json-editor         Tool host (query: ?instanceId=…)
+GET  /tools/name1?c=id&s=89ab   Frontend tool. Queries specify (c)hannel and (s)ignature.
+POST /api/tools/input           Reads any config/intermediate json from disk (if within scope)
+POST /api/tools/output          Writes any config/intermediate json to disk (if within scope)
+POST /api/tools/state           Reads the persistent workflow state from LCDN's secure storage
+PUT  /api/tools/state           Writes the persistent workflow state to LCDN's secure storage
 ```
 
-Note: 
+The POST/PUT calls must specify the following in both request body and response body:
+
+```
+{
+  "channelId": "this id identifies the AES key on server side",
+  "data": "the base64 encoding of the AES-encrypted request body",
+  "iv": "the base64 encoding of the AES initialization vector"
+}
+```
+
+Tauri commands and OS APIs (Backend tools)
+
+```
+lcdn_reload_configs()      Reloads the LCDN config from disk.
+ffmpeg_start(config_path)  Starts ffmpeg with the given config file.
+melt_start(config_path)    Starts melt with the given config file.
+...                        ... more backend tools ...
+```
+
+Notes: 
 
 * Workflows share a single URL route. Their steps don't have separate URLs.
-* Workflow states are entirely managed ~~in memory~~ in browser's localStorage.
-  * We want something stronger than memory because phones can kill the view context at any time. So we use localStorage to persist the workflow state.
+* Workflow states are entirely managed ~~in memory~~ in LCDN as a secure file or db, outside the normal `public/` folder.
+  * We want something stronger than memory because phones can kill the view context at any time. So we use LCDN to persist the workflow state.
   * And we use it to store workflow parameters to avoid super long URLs.
-  * This persistence is only unique per workflow name.
+  * This persistence is unique per workflow name. But it contains the original channel ID. And restoration is only possible if Android intent / iOS deep link remembers that ID.
 
 ### Admin shell v0
 
+Beyond a basic secure setup of tools with workflow schemas, with persistent workflow states, the Admin shell needs to actually implement tools for the following features:
+
+- Editing a new/existing instance:
+  - `edit-instance` workflow
+  - `json-editor` frontend tool
+  - `lcdn_reload_configs()` backend tool
+  - A schema that defines how all 3 fit together
+
+And the Admin shell needs to implement the following natively, as admin features and not as tools:
+
 - List instances (even if one seeded initially)
-- “New contact card” → creates instance dir + default `content/main.en.json` (and `instance.json` with `currentVariant: "en"`)
-- Row action **“Edit”** → `navigateTo('/tools/template-editor?instanceId=…')`
+- "New instance" button → creates instance dir + default `content/main.en.json` (and `instance.json` with `currentVariant: "en"`)
+- Row action **“Edit”** → `navigateTo('/tool?wf=edit-instance&instanceId=…')`
 - Shows LCDN status (running / stopped)
+- Displays the full screen preview of the instance
 
 **Also, very importantly:**
 
 !! At this point, the Admin shell would need to support Internationalization (i18n). We should consider either Vue I18n or our own template schema.
 
-### Reusable tool chrome
+We might need both eventually. One solution for loading/managing international versions of contents. The other solution for string templates designed to help i18n (when some strings come from template devs and other strings come from users).
 
-```
-<ToolShell title="Contact Card" onBack="admin">
-  <ToolNav v-model="tab" :tabs="['edit', 'preview']" />
-  <EditView   v-if="tab === 'edit'"    … />
-  <PreviewView v-if="tab === 'preview'" … />
-</ToolShell>
-```
+But, for now, we assume that all strings come from users. And we focus on the user content's i18n structure.
 
-- `**ToolShell**` — header, back to Admin, optional save indicator
-- `**ToolNav**` — two-tab bar; reusable by future tools
-- `**EditView**` — schema-driven form from `content.schema.json` for the active variant
-- `**PreviewView**` — sandboxed iframe → `lcdn_get_preview_url()`
+---
 
-### Save path
+---
 
-1. Edit tab mutates in-memory model for the active variant (`instance.currentVariant`)
-2. Save → Tauri writes `content/main.{variant}.json` + triggers LCDN cache refresh (when HTML snapshot enabled)
-3. Preview tab reloads iframe (or listens for save event)
-
-Future tools (Hosting options, CDN ops, backup) reuse `**ToolShell` + `ToolNav**`; Admin never embeds editor UI inline.
+# STATUS: DRAFT (Phase 3 and beyond, NEED FULL, HUMAN REVIEW.)
 
 ---
 
