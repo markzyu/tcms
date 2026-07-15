@@ -1,82 +1,18 @@
-import { expect, Mock } from 'vitest';
+import "./mocks.ts";
+
 import { flushPromises, type VueWrapper } from "@vue/test-utils";
-import { IonInput } from "@ionic/vue";
 import { screen, waitFor } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
 
 import { clickIonButton, renderTest } from "../../testUtils";
-import { LcdnInstanceConfig, LcdnStatus } from '../tauri-types.ts';
 import HomePage from "./HomePage.vue";
+import {
+  getHomeTestMocks,
+  INITIAL_SLUG,
+  resetHomeTestMocks,
+} from "./mocks.ts";
 
-const INITIAL_SLUG = "my-contact-card";
-const RESTART_HELPER_TEXT = "Please restart the server to apply the new slug";
-
-const mockTauri = vi.hoisted(() => {
-  let wantError = false;
-  let status: LcdnStatus = {
-    running: false,
-    port: null
-  };
-  const methods: Record<string, Mock> = {
-    ensure_os_data_dir: vi.fn().mockResolvedValue("./public"),
-    lcdn_start: vi.fn().mockImplementation(async () => {
-      if (wantError) {
-        wantError = false;
-        status = {
-          running: false,
-          port: null
-        };
-        throw new Error("Test error");
-      }
-      status = {
-        running: true,
-        port: 8088
-      };
-    }),
-    lcdn_stop: vi.fn().mockImplementation(async () => status = {
-      running: false,
-      port: null
-    }),
-    lcdn_status: vi.fn().mockImplementation(async () => status),
-    setWantError: vi.fn().mockImplementation((value: boolean) => wantError = value),
-  };
-  const mockInvoke = vi.fn().mockImplementation((method: string) => {
-    if (method in methods) {
-      return methods[method]();
-    }
-    return Promise.resolve(null);
-  });
-  return {
-    mockInvoke,
-    methods,
-  };
-});
-
-vi.mock("@tauri-apps/api/core", () => ({
-  invoke: mockTauri.mockInvoke,
-}));
-
-vi.mock("@tauri-apps/plugin-fs", () => ({
-  readTextFile: vi.fn().mockImplementation(async (path: string) => {
-    if (path.includes("/instance.json")) {
-      let instanceConfig: LcdnInstanceConfig = {
-        instanceId: "fake-id",
-        slug: "my-contact-card",
-        name: "My Contact Card",
-        templateScope: "default",
-        templateId: "my-contact-card",
-        templateVersion: "1.0.0",
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-        currentVariant: "default",
-        variants: ["default"],
-      };
-      return JSON.stringify(instanceConfig);
-    }
-    return "";
-  }),
-  writeTextFile: vi.fn().mockResolvedValue(null),
-}));
+const { mockFs, mockTauri } = getHomeTestMocks();
 
 async function getUrlSlugNativeInput() {
   const ionInputElement = screen.getByTestId("url-slug-input") as unknown as HTMLIonInputElement;
@@ -86,12 +22,12 @@ async function getUrlSlugNativeInput() {
   return ionInputElement.getInputElement();
 }
 
-function getUrlSlugHelperText(wrapperInstance: VueWrapper) {
-  return wrapperInstance.findComponent(IonInput).props("helperText")?.trim();
-}
-
 function getStatusText() {
   return screen.getByTestId("home-status").textContent.replace(/\s+/g, " ").trim();
+}
+
+function getPreviewIframeSrc() {
+  return (screen.getByTestId("preview-iframe") as HTMLIFrameElement).getAttribute("src");
 }
 
 async function clickStartAndLoadPreview() {
@@ -117,12 +53,22 @@ async function setUrlSlug(slug: string) {
   });
 }
 
+async function setContentJson(_page: VueWrapper, contentJson: string) {
+  const ionTextareaElement = screen.getByTestId("json-data-textarea") as unknown as HTMLIonTextareaElement;
+  await waitFor(() => {
+    expect(ionTextareaElement.classList.contains("hydrated")).toBe(true);
+  });
+  const nativeTextarea = await ionTextareaElement.getInputElement();
+  const user = userEvent.setup();
+  await user.click(nativeTextarea);
+  await user.clear(nativeTextarea);
+  await user.paste(contentJson);
+  await flushPromises();
+}
+
 describe("HomePage", () => {
   beforeEach(() => {
-    mockTauri.methods.lcdn_start.mockClear();
-    mockTauri.methods.lcdn_stop.mockClear();
-    mockTauri.methods.lcdn_status.mockClear();
-    mockTauri.methods.setWantError(false);
+    resetHomeTestMocks();
   });
 
   it("renders all components", async () => {
@@ -189,8 +135,17 @@ describe("HomePage", () => {
     expect(screen.getByTestId("start-cdn-button")).toBeInTheDocument();
   });
 
-  it("shows helper text when editing url slug while server is running", async () => {
-    const page = renderTest(HomePage);
+  it("reads the LCDN status upon page load, when server is running", async () => {
+    mockTauri.methods.setWantToForceStatusAsRunning(true);
+    renderTest(HomePage);
+
+    await waitFor(() => {
+      expect(getStatusText()).toContain("(Running)");
+    });
+  });
+
+  it("updates preview url when editing url slug while server is running", async () => {
+    renderTest(HomePage);
 
     await clickStartAndLoadPreview();
     await waitFor(() => {
@@ -199,13 +154,17 @@ describe("HomePage", () => {
 
     await setUrlSlug("updated-slug");
     await waitFor(() => {
-      expect(getUrlSlugHelperText(page)).toBe(RESTART_HELPER_TEXT);
+      expect(mockFs.writeTextFile).toHaveBeenCalledWith(
+        expect.stringContaining("/instance.json"),
+        expect.stringContaining("\"slug\":\"updated-slug\""),
+      );
     });
+    expect(getPreviewIframeSrc()).toContain("http://localhost:8088/updated-slug?v=");
     expect(getStatusText()).toContain("Test: updated-slug (Running)");
   });
 
-  it("clears helper text after editing url slug and restarting server", async () => {
-    const page = renderTest(HomePage);
+  it("uses updated slug after editing url slug and restarting server", async () => {
+    renderTest(HomePage);
 
     await clickStartAndLoadPreview();
     await waitFor(() => {
@@ -214,7 +173,10 @@ describe("HomePage", () => {
 
     await setUrlSlug("updated-slug");
     await waitFor(() => {
-      expect(getUrlSlugHelperText(page)).toBe(RESTART_HELPER_TEXT);
+      expect(mockFs.writeTextFile).toHaveBeenCalledWith(
+        expect.stringContaining("/instance.json"),
+        expect.stringContaining("\"slug\":\"updated-slug\""),
+      );
     });
 
     await clickIonButton("stop-cdn-button");
@@ -229,16 +191,39 @@ describe("HomePage", () => {
     await waitFor(() => {
       expect(getStatusText()).toContain("Test: updated-slug (Running)");
     });
-    expect(getUrlSlugHelperText(page)).toBe("");
+    expect(getPreviewIframeSrc()).toBe("http://localhost:8088/updated-slug");
   });
 
-  it("does not show helper text when editing url slug while server is stopped", async () => {
-    const page = renderTest(HomePage);
+  it("updates preview url when editing url slug while server is stopped", async () => {
+    renderTest(HomePage);
 
     await setUrlSlug("updated-slug");
     await waitFor(() => {
-      expect(getStatusText()).toContain("Test: updated-slug");
+      expect(mockFs.writeTextFile).toHaveBeenCalledWith(
+        expect.stringContaining("/instance.json"),
+        expect.stringContaining("\"slug\":\"updated-slug\""),
+      );
+      expect(getPreviewIframeSrc()).toContain("http://localhost:8088/updated-slug?v=");
     });
-    expect(getUrlSlugHelperText(page)).toBe("");
+    expect(getStatusText()).toContain("Test: updated-slug");
+  });
+
+  it("updates debug info when editing content json", async () => {
+    const page = renderTest(HomePage);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId("loading-configs-spinner")).not.toBeInTheDocument();
+    });
+
+    const updatedContentJson = '{"title":"updated"}';
+    await setContentJson(page, updatedContentJson);
+
+    await waitFor(() => {
+      expect(mockFs.writeTextFile).toHaveBeenCalledWith(
+        expect.stringContaining("/content/main.en.json"),
+        expect.stringContaining(updatedContentJson),
+      );
+    });
+    expect(getPreviewIframeSrc()).toContain("http://localhost:8088/my-contact-card?v=");
   });
 });

@@ -35,6 +35,7 @@ export const useLocalCDNControls = (onUrlUpdate: (url: string | null) => void) =
   }
   const startLocalCDN = async (slugToVisit: string) => {
     try {
+      isLocalCDNStarting.value = true;
       const lcdnConfig: LcdnConfig = {
         port: 8088,
         startupTimeout: 3000,
