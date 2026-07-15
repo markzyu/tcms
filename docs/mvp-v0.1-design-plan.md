@@ -302,13 +302,73 @@ As for the storage of templates vs instances: Templates are stored as zipfiles u
 
 **Goal:** **Edit | Preview** as a **Tool**, invoked from Admin — not hardwired as the app root.
 
+### Architecture of "Tools"
+
+What we discussed in requirement docs is really the capability of a "tool workflow". But each workflow is technically built from multiple parts. There are two parts to a "tool workflow".
+
+* The backend tool is any Tauri/Rust capability to provide file conversion/manipulation such as ffmpeg, melt, etc. This also includes the basic tauri commands for LCDN configuration and management.
+* The frontend tool is just another mini-app served from LCDN, but specially registered as a tool. Each tool could not start on its own. And the admin shell must call into the tools based on user consent and interaction
+
+The backend tool and frontend tool establish a contract using backend schemas. The backend schemas define what configurations are allowed for its actions. The frontend tool doesn't have permission to call the backend tool directly. It returns a json fitting the backend schema and admin shell invokes the backend tool with the json.
+
+Going further, we will eventually also have frontend schemas, which are contracts between purely frontend tools. And these are really just a way to automate workflows by combining multiple tool UIs. In this case, each frontend tool returns its own json describing its inputs, outputs, and backend dependencies. And Admin shell needs to connect the inputs and outputs between multiple tools to create a UI workflow. 
+
+In sum, the admin shell only really needs to implement the following:
+
+* Parsing frontend and backend schemas
+* Defining the workflow schemas (statically, for now)
+* Enabling the frontend tools and backend tools on LCDN so that
+  * the frontend is served and the backend can be invoked.
+  * LCDN knows not to allowlist a tool for other mini apps.
+  * LCDN and Tauri encrypts and authenticates the json exchange with tool pages, over http lcdn API + sandboxed iframe, using a server-side shared RSA key per server instance, as well as a random AES key for each tool instance.
+  * From the Frontend tool's perspective,
+    * Its entire job is to read the inputs from LCDN, display a UI, and return a transformed output to LCDN.
+    * Upon load,
+      * It gets a channel ID and signature from the URL parameters.
+      * It gets an AES key from its own HTML code, as modified by LCDN.
+      * It queries LCDN for the public key to verify the signature (covering both the AES key and the channel ID)
+    * If the signature is invalid, it means someone other than the admin shell is trying to invoke the tool. It does nothing.
+    * If the signature is valid, it uses this AES for all subsequent communications with LCDN.
+    * This entire protocol exists to make sure:
+      * No outside caller can fetch arbitrary INPUT data from ThorCMS.
+      * TCMS Tools can never be used publicly even if accidentally published.
+    * Security assumption:
+      * All APIs related to tools must require AES-encryption within HTTP post data.
+      * Nobody can intercept the AES key without root access to localhost's network interface, LCDN or the ThorCMS webview.
+      * ThorCMS app itself won't deliberately open Tools in outside browsers.
+* Displaying a UI consent screen, confirming the list of backend tools invoked by a workflow
+* Executing the workflow by displaying the correct frontend and calling the backend tools with the correct json
+
+This architecture design is probably more elaborate than we orignally called out in tech-overview.md. It's meant to bring flexibility to the ThorCMS app so that anyone can define / bring their own tools. For example, if someone enables developer mode and brings their own localhost port, serving their new frontend tool, then we'd serve it from LCDN by a basic redirect to their port, with API key. Their tool runs on their port, with any backend they choose by themselves.
+
+Incidentally, this flexibility should also make the development process of official tools easier.
+
+Developer mode is not part of MVP scope. But the schemas and security designs should be implemented to a basic extent.
+
+Beyond the MVP scope, we eventually would allow super users to (1) create custom workflows and (2) define custom frontend tools using localhost URLs.
+
 ### Routing model
 
+Tauri internal routes
+
 ```
-/                          AdminHome (instance list)
-/instances/new             Admin: create contact card
-/tools/template-editor     Tool host (query: ?instanceId=…)
+/home/                     AdminHome (instance list)
+/tool?wf=new-instance      Entry point / page of all workflows
 ```
+
+LCDN routes
+
+```
+/tools/json-editor         Tool host (query: ?instanceId=…)
+```
+
+Note: 
+
+* Workflows share a single URL route. Their steps don't have separate URLs.
+* Workflow states are entirely managed ~~in memory~~ in browser's localStorage.
+  * We want something stronger than memory because phones can kill the view context at any time. So we use localStorage to persist the workflow state.
+  * And we use it to store workflow parameters to avoid super long URLs.
+  * This persistence is only unique per workflow name.
 
 ### Admin shell v0
 
