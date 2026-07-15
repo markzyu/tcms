@@ -345,6 +345,68 @@ In sum, the admin shell only really needs to implement the following:
 * Executing the workflow by displaying the correct frontend and calling the backend tools with the correct json
 * Handling the workflow state persistence and restoration of Frontend tools.
 
+
+Additional security assumptions:
+
+- Trusted: Admin shell, LCDN tools server (Rust), Tauri backend tools, bundled tool/template artifacts.
+
+- Untrusted: All JS in LCDN iframes; HTTP clients on loopback; copied URLs; persisted workflow handles.
+
+- Out of scope (MVP): Rooted/jailbroken devices; user-installed traffic-intercept VPNs; custom user-supplied tool bundles.
+
+
+# TODO
+
+I'll try to summarize all Security concerns.
+
+Concerns
+
+* Each tools' initial URL is actually a secret. And it should be treated as such.
+* There is no expiration logic for the URLs/signature token/AES keys. They should expire. They should be revocable. (at least by relaunching the app)
+* We don't have a nonce to ensure AEAD and to avoid replay
+* LCDN serves tools on 192/private ip. It can then leak info through unencrypted http inspections.
+* Tools should only have access to trusted bundles of JS and CSS. (Might make sense to serve these specially)
+* Overall it just seems that LCDN needs a separate thread/port for Tools so that we can define all security policies better. (Tools might need their own server logics)
+* User might share the URL of a tool deliberately (The URL for this tool is a GET URL and nobody should be able to copy it out because it contains a token.)
+
+* Missing iframe configuration. (I was just thinking `crendentialless` but probably need more attributes to make sure they work on older webviews)
+
+-----
+
+I think two major patterns emerged
+
+1. The Tools should still be hosted separately by a separate part of LCDN logics, on a separate port. This ensures separate CSP policies, separate middlewares, and separatable ports (release builds won't have tools at all)
+
+2. The handshake is not secure enough. Preferably there should also be a `/api/tools/init` API that replaces the current AES token given in the original URL + sets up the first nonce. Additionally, all channels should expire if ThorCMS app relaunches. 
+
+Additionally for point 2, the caller of tools should specify the token TTL. Then, if ThorCMS app web view's URL fails to load then it must invalidate the entire channel. This kind of removed the need for RSA, if we just pass nonce all the time (?does it?)
+
+```
+Admin shell calls LCDN via IPC to generate a /tool?c=channel&n=nonce link
+This iframe loads and sends a /api/tools/init request to LCDN
+This init call returns an AES key for data encryption only.
+All LCDN tools API calls also return new nonce
+If this iframe encounters any nonce issue, it redirects to a bad url like /__error__/security
+LCDN will invoke any channel that encounters that error
+```
+
+
+
+-----
+
+Missing assumptions:
+
+* iframe isolation and CSP rules + the referrer policies  to protect URL from leaks
+* (Not directly mentioned in assumptions) Secure storage is outside public folder and is not stored on mobile public folders like `/sdcard`
+* Users are informed that any Android intent / deeplink to restart workflow is a sensitive secret. And are given an option to turn off resume by deeplink/intent. (Note: This shouldn't be possible in the first place because the whole thing is loaded into Tauri webview which doesn't reveal URL at all. There is no address bar even for a full page, let alone iframes)
+* Admin never passes tool output to a backend tool without validating against the backend schema and validating config write access with workflow allowlist.
+
+----
+
+Question about "Other apps on the device cannot reach 127.0.0.1": No this isn't true. all apps can access localhost. But my assumption is that no regular mobile app can intercept localhost traffics (even VPNs?).
+
+# END OF TODO
+
 This architecture design is probably more elaborate than we orignally called out in tech-overview.md. It's meant to bring flexibility to the ThorCMS app so that anyone can define / bring their own tools. For example, if someone enables developer mode and brings their own localhost port, serving their new frontend tool, then we'd serve it from LCDN by a basic redirect to their port, with API key. Their tool runs on their port, with any backend they choose by themselves.
 
 Incidentally, this flexibility should also make the development process of official tools easier.
