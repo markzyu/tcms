@@ -1,62 +1,16 @@
 <script setup lang="ts">
-  import { IonButton, IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonCard, IonCardContent, IonButtons, IonIcon, IonSpinner, IonList, IonItem, IonInput, IonTextarea, toastController } from '@ionic/vue';
+  import { IonButton, IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonCard, IonCardContent, IonButtons, IonIcon, IonSpinner, IonList, IonItem, IonInput, IonTextarea } from '@ionic/vue';
   import { alertCircle, moon, playCircle } from 'ionicons/icons';
-  import { computed, onMounted, ref, watch } from 'vue';
-  import { useLocalCDNControls } from './hooks';
-  import { invokeWithType, LcdnInstanceConfig, LcdnInstanceConfigSchema } from '../tauri-types';
-  import { readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
-  import { z } from 'zod';
-import { debounce } from 'lodash';
+  import { computed, ref, watch } from 'vue';
+  import { useEditableInstanceConfigs, useLocalCDNControls } from './hooks';
 
   const cardInstanceId = '6fa27a2f-2f1e-413d-a842-424242424242';
-
-  const isLoadingConfigs = ref(true);
-  const debugInstanceConfig = ref<LcdnInstanceConfig | null>(null);
-  const debugContentJson = ref<string | null>(null);
-  const debugUrlSlug = ref<string>("");
-
-  onMounted(async () => {
-    try {
-      const osDataDir = await invokeWithType(z.string(), 'ensure_os_data_dir');
-      const instanceConfigStr = await readTextFile(osDataDir + '/public/instances/' + cardInstanceId + '/instance.json');
-      const instanceConfig = LcdnInstanceConfigSchema.parse(JSON.parse(instanceConfigStr));
-      debugInstanceConfig.value = instanceConfig;
-      debugUrlSlug.value = instanceConfig.slug;
-
-      const contentJsonStr = await readTextFile(osDataDir + '/public/instances/' + cardInstanceId + '/content/main.en.json');
-      debugContentJson.value = contentJsonStr;
-      isLoadingConfigs.value = false;
-    } catch (error) {
-      const toast = await toastController.create({
-        message: 'Error loading configs: ' + String(error),
-        duration: 5000,
-      });
-      await toast.present();
-    }
-  });
-
-  const updateConfigsOnDisk = debounce(async (slug: string, contentJson: string) => {
-    if (!debugInstanceConfig.value) return;
-
-    const osDataDir = await invokeWithType(z.string(), 'ensure_os_data_dir');
-    const newInstanceConfig: LcdnInstanceConfig = {
-      ...debugInstanceConfig.value,
-      slug,
-    };
-    await writeTextFile(osDataDir + '/public/instances/' + cardInstanceId + '/instance.json', JSON.stringify(newInstanceConfig));
-    await writeTextFile(osDataDir + '/public/instances/' + cardInstanceId + '/content/main.en.json', contentJson);
-    await invokeWithType(z.null(), 'lcdn_reload_configs');
-    urlToVisit.value = "https://picsum.photos/600/400";
-    setTimeout(() => {
-      urlToVisit.value = `http://localhost:8088/${slug}`;
-    }, 100);
-    debugInstanceConfig.value = newInstanceConfig;
-    debugContentJson.value = contentJson;
-  }, 500);
-  watch(([debugUrlSlug, debugContentJson]), ([newUrlSlug, newContentJson]) => {
-    if (newUrlSlug && newContentJson) {
-      updateConfigsOnDisk(newUrlSlug, newContentJson);
-    }
+  const {
+    isLoadingInstanceConfig,
+    contentJson,
+    urlSlug,
+  } = useEditableInstanceConfigs(cardInstanceId, (url) => {
+    urlToVisit.value = url;
   });
 
   const {
@@ -71,7 +25,7 @@ import { debounce } from 'lodash';
   } = useLocalCDNControls();
   const showErrorTooltip = ref(false);
 
-  const isSlugDirty = computed(() => debugUrlSlug.value !== currentLCDNSlug.value);
+  const isSlugDirty = computed(() => urlSlug.value !== currentLCDNSlug.value);
   const iframeSrc = computed(() => urlToVisit.value ?? 'https://picsum.photos/600/400');
   watch(localCDNError, (newVal) => {
     if (newVal) {
@@ -107,7 +61,7 @@ import { debounce } from 'lodash';
     </ion-header>
 
     <ion-content>
-      <div v-if="isLoadingConfigs" class="flex h-full w-full items-center justify-center absolute left-0 top-0 z-10 bg-white" data-testid="loading-configs-spinner">
+      <div v-if="isLoadingInstanceConfig" class="flex h-full w-full items-center justify-center absolute left-0 top-0 z-10 bg-white" data-testid="loading-configs-spinner">
         <ion-spinner />
       </div>
       <div class="w-full -lg:flex flex-col px-4 py-6 gap-4 lg:grid lg:grid-cols-[500px_1fr] lg:px-[60px]">
@@ -116,10 +70,10 @@ import { debounce } from 'lodash';
             <iframe data-testid="preview-iframe" class="absolute left-0 top-0 w-full object-cover max-w-none h-full -z-10" :src="iframeSrc" alt="Random image" referrerpolicy="no-referrer" />
           </div>
           <ion-card-content class="-mb-2" data-testid="home-status">
-            Test: {{ debugUrlSlug }} {{ isLocalCDNRunning ? '(Running)' : '' }} {{ localCDNError ? '(Error)' : '' }}
+            Test: {{ urlSlug }} {{ isLocalCDNRunning ? '(Running)' : '' }} {{ localCDNError ? '(Error)' : '' }}
           </ion-card-content>
           <div class="flex justify-end gap-2">
-            <ion-button size="small" fill="clear" data-testid="start-cdn-button" @click="debugUrlSlug && startLocalCDN(debugUrlSlug)" v-if="!isLocalCDNRunning">
+            <ion-button size="small" fill="clear" data-testid="start-cdn-button" @click="urlSlug && startLocalCDN(urlSlug)" v-if="!isLocalCDNRunning">
               <ion-spinner class="w-4 h-4 mr-2" v-if="isLocalCDNStarting"></ion-spinner>
               <ion-icon class="w-4 h-4 mr-1 fill-red-600" :icon="alertCircle" v-if="localCDNError"></ion-icon>
               Start
@@ -141,10 +95,10 @@ import { debounce } from 'lodash';
           </ion-card-content>
           <ion-list>
             <ion-item>
-              <ion-input type="text" label="URL Slug" data-testid="url-slug-input" v-model="debugUrlSlug" :helper-text="isSlugDirty && isLocalCDNRunning ? 'Please restart the server to apply the new slug' : ''"></ion-input>
+              <ion-input type="text" label="URL Slug" data-testid="url-slug-input" v-model="urlSlug" :helper-text="isSlugDirty && isLocalCDNRunning ? 'Please restart the server to apply the new slug' : ''"></ion-input>
             </ion-item>
             <ion-item>
-              <ion-textarea label="JSON Data" data-testid="json-data-textarea" v-model="debugContentJson"></ion-textarea>
+              <ion-textarea label="JSON Data" data-testid="json-data-textarea" v-model="contentJson"></ion-textarea>
             </ion-item>
           </ion-list>
         </ion-card>
