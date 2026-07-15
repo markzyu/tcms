@@ -6,14 +6,16 @@ import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { toastController } from "@ionic/vue";
 import { debounce } from "lodash";
 
-export const useLocalCDNControls = () => {
+/**
+ * @param onUrlUpdate Callback to update the URL to visit. url is null when the local CDN is stopped.
+ * @returns 
+ */
+export const useLocalCDNControls = (onUrlUpdate: (url: string | null) => void) => {
   const isLocalCDNRunning = ref(false);
   const isLocalCDNStarting = ref(false);
   const isLocalCDNStopping = ref(false);
-  const currentLCDNSlug = ref<string | null>(null);
   const localCDNHost = ref<string | null>(null);
   const localCDNError = ref<string | null>(null);
-  const urlToVisit = ref<string | null>(null);
   const updateLocalCDNStatus = async () => {
     try {
       const status = await invokeWithType(LcdnStatusSchema, "lcdn_status");
@@ -50,8 +52,7 @@ export const useLocalCDNControls = () => {
       }
       await invoke("lcdn_start", args);
 
-      urlToVisit.value = `http://localhost:${lcdnConfig.port}/${slugToVisit}`;
-      currentLCDNSlug.value = slugToVisit;
+      onUrlUpdate(`http://localhost:${lcdnConfig.port}/${slugToVisit}`);
     } catch (error) {
       localCDNError.value = String(error);
     }
@@ -59,7 +60,7 @@ export const useLocalCDNControls = () => {
   };
   const stopLocalCDN = async () => {
     isLocalCDNStopping.value = true;
-    urlToVisit.value = null;
+    onUrlUpdate(null);
     try {
       await invoke("lcdn_stop");
     } catch (error) {
@@ -71,12 +72,10 @@ export const useLocalCDNControls = () => {
     isLocalCDNRunning,
     isLocalCDNStarting,
     isLocalCDNStopping,
-    currentLCDNSlug,
     localCDNHost,
     localCDNError,
     startLocalCDN,
     stopLocalCDN,
-    urlToVisit,
   };
 };
 

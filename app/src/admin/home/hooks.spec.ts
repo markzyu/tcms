@@ -19,21 +19,23 @@ vi.mock("@tauri-apps/api/core", () => ({
 }));
 
 describe("useLocalCDNControls", () => {
-  it("exports all fields and start/stop do not crash without awaiting", async () => {
-    const controls = useLocalCDNControls();
+  it("exports all fields and start/stop do not crash", async () => {
+    const onUrlUpdate = vi.fn();
+    const controls = useLocalCDNControls(onUrlUpdate);
 
     expect(controls.isLocalCDNRunning).toBeDefined();
     expect(controls.localCDNError).toBeDefined();
     expect(controls.isLocalCDNStarting).toBeDefined();
     expect(controls.isLocalCDNStopping).toBeDefined();
-    expect(controls.currentLCDNSlug).toBeDefined();
     expect(controls.startLocalCDN).toBeTypeOf("function");
     expect(controls.stopLocalCDN).toBeTypeOf("function");
 
     await controls.startLocalCDN("my-contact-card");
+    expect(onUrlUpdate).toHaveBeenCalledWith("http://localhost:8088/my-contact-card");
+
     await controls.stopLocalCDN();
+    expect(onUrlUpdate).toHaveBeenCalledWith(null);
 
     expect(mockTauriInvoke).toHaveBeenCalledWith("lcdn_start", expect.anything());
-    expect(controls.currentLCDNSlug.value).toBe("my-contact-card");
   });
 });

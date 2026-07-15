@@ -4,6 +4,20 @@
   import { computed, ref, watch } from 'vue';
   import { useEditableInstanceConfigs, useLocalCDNControls } from './hooks';
 
+  const showErrorTooltip = ref(false);
+  const urlToVisit = ref<string | null>(null);
+
+  const {
+    isLocalCDNRunning,
+    isLocalCDNStarting,
+    isLocalCDNStopping,
+    localCDNError,
+    startLocalCDN,
+    stopLocalCDN,
+  } = useLocalCDNControls((url) => {
+    urlToVisit.value = url;
+  });
+
   const cardInstanceId = '6fa27a2f-2f1e-413d-a842-424242424242';
   const {
     isLoadingInstanceConfig,
@@ -13,19 +27,6 @@
     urlToVisit.value = url;
   });
 
-  const {
-    isLocalCDNRunning,
-    isLocalCDNStarting,
-    isLocalCDNStopping,
-    currentLCDNSlug,
-    localCDNError,
-    startLocalCDN,
-    stopLocalCDN,
-    urlToVisit,
-  } = useLocalCDNControls();
-  const showErrorTooltip = ref(false);
-
-  const isSlugDirty = computed(() => urlSlug.value !== currentLCDNSlug.value);
   const iframeSrc = computed(() => urlToVisit.value ?? 'https://picsum.photos/600/400');
   watch(localCDNError, (newVal) => {
     if (newVal) {
@@ -95,7 +96,7 @@
           </ion-card-content>
           <ion-list>
             <ion-item>
-              <ion-input type="text" label="URL Slug" data-testid="url-slug-input" v-model="urlSlug" :helper-text="isSlugDirty && isLocalCDNRunning ? 'Please restart the server to apply the new slug' : ''"></ion-input>
+              <ion-input type="text" label="URL Slug" data-testid="url-slug-input" v-model="urlSlug"></ion-input>
             </ion-item>
             <ion-item>
               <ion-textarea label="JSON Data" data-testid="json-data-textarea" v-model="contentJson"></ion-textarea>
