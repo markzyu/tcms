@@ -1,4 +1,4 @@
-mod compat;
+mod lcdnfs;
 
 use std::path::PathBuf;
 
@@ -17,10 +17,10 @@ async fn get_template_install_dir(
   template_scope: &str,
   template_name: &str,
 ) -> Result<PathBuf, String> {
-  let public_path = compat::ensure_templates_dir(&app_handle, template_scope)?;
+  let public_path = lcdnfs::ensure_templates_dir(&app_handle, template_scope)?;
   let public_path = public_path.join(format!("{}.zip", template_name));
   let template_asset_path = format!("templates/{}/{}.zip", template_scope, template_name);
-  compat::copy_app_asset_to_fs(&app_handle, template_asset_path, &public_path)?;
+  lcdnfs::copy_app_asset_to_fs(&app_handle, template_asset_path, &public_path)?;
   Ok(public_path)
 }
 
@@ -31,9 +31,9 @@ async fn get_prefab_instance_install_dir(
   app_handle: AppHandle,
   instance_id: String,
 ) -> Result<PathBuf, String> {
-  let instances_dir = compat::ensure_instances_dir(&app_handle)?;
+  let instances_dir = lcdnfs::ensure_instances_dir(&app_handle)?;
   let instance_id_dir = instances_dir.join(&instance_id);
-  compat::unzip_app_asset_to_fs(
+  lcdnfs::unzip_app_asset_to_fs(
     &app_handle,
     format!("instances/{}.zip", instance_id),
     &instance_id_dir,
@@ -43,7 +43,7 @@ async fn get_prefab_instance_install_dir(
 
 #[tauri::command]
 async fn perform_first_time_setup(app_handle: AppHandle) -> Result<(), String> {
-  compat::ensure_os_data_dir(&app_handle)?;
+  lcdnfs::ensure_os_data_dir(&app_handle)?;
   get_template_install_dir(app_handle.clone(), "@tcms", "template-example-info-card1").await?;
   get_prefab_instance_install_dir(app_handle, EXAMPLE_INSTANCE_ID.to_string()).await?;
   Ok(())
@@ -51,7 +51,7 @@ async fn perform_first_time_setup(app_handle: AppHandle) -> Result<(), String> {
 
 #[tauri::command]
 async fn ensure_os_data_dir(app_handle: AppHandle) -> Result<PathBuf, String> {
-  compat::ensure_os_data_dir(&app_handle)
+  lcdnfs::ensure_os_data_dir(&app_handle)
 }
 
 #[tauri::command]
