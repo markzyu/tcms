@@ -294,7 +294,15 @@ As for the storage of templates vs instances: Templates are stored as zipfiles u
 
 ## Phase 2 — Admin shell + Template Editor tool
 
-**Goal:** **Edit | Preview** as a **Tool**, invoked from Admin — not hardwired as the app root.
+**Goals:** 
+
+* Content Editing as a **Tool**, invoked from Admin Shell — not hardwired as the app root.
+* Each tool is served from LCDN and can be built separately from both mini apps and admin shell.
+
+Correction of tech-requirements.md:
+
+* Tools are not actually "hosted separately" from the mini apps in the strictest sense. They are both served from LCDN.
+* However, Tools are subject to more security constraints. And they are served from different routes with different headers and access controls.
 
 ### Architecture of "Tools"
 
