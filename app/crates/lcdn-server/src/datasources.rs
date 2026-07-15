@@ -43,6 +43,10 @@ pub(crate) async fn serve_template_from_zip(
   response
     .headers_mut()
     .insert(header::CONTENT_TYPE, mime_header_value);
+  response.headers_mut().insert(
+    header::REFERRER_POLICY,
+    HeaderValue::from_static("same-origin"),
+  );
   Ok(response)
 }
 
@@ -104,6 +108,10 @@ pub(crate) async fn serve_query_cdn_bridge(
   response.headers_mut().insert(
     header::CONTENT_TYPE,
     HeaderValue::from_static("application/javascript"),
+  );
+  response.headers_mut().insert(
+    header::CACHE_CONTROL,
+    HeaderValue::from_static("no-cache"),
   );
   Ok(response)
 }
