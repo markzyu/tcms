@@ -109,10 +109,9 @@ pub(crate) async fn serve_query_cdn_bridge(
     header::CONTENT_TYPE,
     HeaderValue::from_static("application/javascript"),
   );
-  response.headers_mut().insert(
-    header::CACHE_CONTROL,
-    HeaderValue::from_static("no-cache"),
-  );
+  response
+    .headers_mut()
+    .insert(header::CACHE_CONTROL, HeaderValue::from_static("no-cache"));
   Ok(response)
 }
 
