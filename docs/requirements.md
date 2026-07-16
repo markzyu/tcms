@@ -49,7 +49,7 @@ We won't implement the following
 - Each template is a **standard web app** served over **local HTTP** on the device. They don't have access to Tauri or OS APIs besides what the prebundled http backend logics exposes.
 - These apps should support both CSR and SSR, depending on user configuration. However SSR will be a basic implementation that might do a full page refresh. This means entirely new HTML based on the content provided by the users. It might help for templates that don't need JS interactions, to make a smaller bundle. So **CSR will be the default**. For CSR v0.1, templates load **React** client-side with a content JSON; **Vue mini-apps are deferred**. For SSR, real html content exists but will be re-rendered. Mini apps simply need to serve the static content on a randomly assigned port. And the local CDN will cache that and serve the page properly
 - Example template: Restaurant menus with external iframes for sign-in and ordering. The template **manifest lists allowed domains** for those flows (possibly multiple choices); users must use only listed sites. (Ordering logic won't be on the phone.)
-- Example template: Any prebuilt open source single binary web apps that can run on arm64.
+- Example template: Any prebuilt open source "single binary" web apps that can run on arm64 in a way that's bundled into a Rust binary.
 
 ### Developer mode
 

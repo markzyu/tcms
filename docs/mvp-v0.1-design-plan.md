@@ -1,6 +1,6 @@
 # TCMS — MVP v0.1 Design Plan
 
-# STATUS: PARTIAL DRAFT (Phases 0-1 are reviewed)
+# STATUS: PARTIAL DRAFT (Phases 0-2 are reviewed)
 
 High-level project map and phased delivery plan for the first vertical slice: **contact card** template proving the TCMS spine.
 
@@ -22,7 +22,7 @@ TCMS is **6 projects** that can ship independently but share contracts:
 | #      | Project                      | Owns                                                                      | Defers                                                                     |
 | ------ | ---------------------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
 | **P1** | **Runtime shell**            | Tauri app, routing, Admin ↔ Tool navigation, Tauri commands for lifecycle | Multiple templates, pack drop                                              |
-| **P2** | **Local CDN (LCDN)**         | Single entry point, serves static files, routes instances                 | Reversed CDN, framework cache, CSP polish, non-static backends, proxy_pass |
+| **P2** | **Local CDN (LCDN)**         | Single entry point, serves static files, routes instances                 | Reversed CDN, framework cache, CSP polish, non-static backends             |
 | **P3** | **Instance & config schema** | Mini-app instance model, on-disk layout, template manifest contract       | CAS, signed packs, merge                                                   |
 | **P4** | **Template: example-info-card1**   | React CSR mini-app + content model                                        | SSR, iframes, arrays, Vue mini-apps                                        |
 | **P5** | **Tool: template editor**    | Reusable Edit/Preview chrome, schema-driven form, preview iframe          | AI assist, version history UI                                              |
@@ -37,7 +37,7 @@ Admin shell (P1)          Tools (P5)                   Mini apps (P4)
 • instance list      →    • TemplateEditor tool   →    • is a CSR mini-app
 • "New contact card"      • Edit tab (schema form)     • serves template
 • "Edit" / "Preview"      • Preview tab (iframe)       • bound 127.0.0.1
-• start/stop LCDN         • reusable ToolNav           • served via LCDN
+• start/stop LCDN         • editor UI schemas          • served via LCDN
 ```
 
 Mini apps are **never** opened as Tauri routes. Preview tab loads **LCDN URL in sandboxed iframe**.
@@ -266,7 +266,7 @@ As for the storage of templates vs instances: Templates are stored as zipfiles u
 ### Tauri commands (minimal)
 
 - `lcdn_start()` / `lcdn_stop()` / `lcdn_status()`
-- `lcdn_sync_instances()` → reads existing list of instances again. renames instance slug if needed (only if the ids stay the same)
+- `lcdn_reload_configs()` → reads existing list of instances again. renames instance slug if needed (only if the ids stay the same)
 - `lcdn_get_preview_url(instanceId)` → for Preview tab
 
 ### Out of scope for LCDN v0
@@ -276,7 +276,7 @@ As for the storage of templates vs instances: Templates are stored as zipfiles u
 - CSP enforcement (stub only)
 - Reversed CDN upload
 - Screensaver (stub “serving” state in UI only)
-- Simulation of nginx `proxy_pass` to other backend types
+- Non-static custom backend modes (Simulation of nginx `proxy_pass` to other backend types)
 
 ### Success criteria
 
@@ -299,24 +299,28 @@ As for the storage of templates vs instances: Templates are stored as zipfiles u
 * Implement the Admin shell with ability to edit and preview instances.
 * Formalize the architecture of Tools as mere Vue components.
 
+We do not import any premade websites as tools for now. But this design should make it possible to eventually include premade rust-native servers and any website hosted on it, into the ThorCMS app. And shipping additional binaries on the phone is out of the question for MVP v0.1
+
 ### Formalizing the Architecture of "Tools"
 
-I've arrived at this conclusion that Tools are meant to be just a simple reusable Vue component. They are:
+I've arrived at this conclusion that v1 Tools are meant to be just a simple reusable Vue component. They are:
 
 * Not a page in the Vue Router.
-* Not a complex workflow, separated into backend and frontend parts. That's too complex to manage.
+* Not a complex workflow, separated into backend and frontend parts with their own contracts. That's too complex to manage.
 * Not meant to be so flexible that we can dynamically import a new tool on the phone.
 
-Tools are meant to be modularized, however.
-* They should be organized into their parent parent folder on Vue frontend and, and into their own crate in Rust backend.
+We can always import complicated, better Tools in the future, especially when we want to fully support custom backends and premade websites.
+
+Tools are still meant to be modularized, however.
+* They should be organized into their parent folder in Vue `src/tools/` folder.
 * Their component Props interface should not change too often over time.
 * They should be reusable in different ways (A JSON editor can be used to edit content, but also to edit LCDN settings, given a json path and schema)
-* Ideally, there should be a dev script setup that brings up only a debug app containing only the tools, and some example files to edit.
+* Ideally, there should be a storybook setup that showcases the two json editor tools.
 
 This simplifies things so that, the admin shell only really needs to implement the following:
 
-* Defining the folder structure of tools on both Vue frontend and Rust backend
-* Creating the basic development setup for tools
+* Implementing basic frontend components as tools
+* Creating the basic storybook setup for tools
 * Implementing the Preview and Edit tools with a reusable prop interface
 * Connecting tools to the admin shell
 
@@ -336,27 +340,50 @@ Requirements:
   - This scenario covers anything that's not an object of object, not a flat object, and not a flat array of objects.
   - This UI shows two levels of lists. The inner level shows the item names of the leaf array. The outer level shows the path from root to the leaf array.
 - Both `json-objects-editor` and `json-arrays-editor` can be called with new root objects or arrays.
+- Both of these Tools would not use Tauri commands directly. They transform a json data that is given to them. This is a v0.1 limitation. In later versions we can discuss what "backend tools" look like. But v0.1 explores a frontend-only tool approach for now.
+
+Note: These two editors together are known as the "Template Editor". In MVP v0.1 and v1, we don't have a way to group and organize tools into parts. But essentially the idea of a template editor is to use these two different UIs to facilitate user when accessing different json shapes
+
+Note: The contact card template we created at the end of phase 0, can only really demo `json-objects-editor`. We could either create a second template to demo `json-arrays-editor`, or just build a custom storybook only for now.
 
 ### Admin shell Requirements
 
 And the Admin shell needs to implement the following natively, as admin features and not as tools:
 
+- Call the correct json editor for each content/template json.
+  - Full original json along with the schema that defines the json shape, and the editor UI schema that defines editor features.
+  - Path to the array / object that the editor is showing at its root level
+- Track the history of previous edit paths so user can go back to the previous editor.
+- Store the edited json data back to disk.
+- Call `lcdn_reload_configs()`, refresh iframes to apply the latest jsons.
 - List instances (even if one seeded initially)
 - "New instance" button → creates instance dir + default `content/main.en.json` (and `instance.json` with `currentVariant: "en"`)
-- Row action **“Edit”** → `navigateTo('/tool?wf=edit-instance&instanceId=…')`
-- Shows LCDN status (running / stopped)
-- Displays the full screen preview of the instance
-- `lcdn_reload_configs()` backend tool
+- Add an Edit button to each instance card
+- Show Preview tool upon clicking instance preview image
+- Show LCDN status (running / stopped)
+- The buttons/UI entry points for creating and deleting instances
+- Implement the hosting/sharing button to restart lcdn on private IP (LAN)
+- Implement the screensaver mode to display a basic black screen with a moving clock and message.
+
+After all of these are ready, Admin shell should also remove the debug UI we created in Phase 1.
+
+Note: For compliance and security reasons, MVP v0.1 will not support fully public hosting options. We will only support private IP (LAN) hosting. It's not that far away from fully public hosting. The user can fill this gap for now if they know to use Reverse Proxies or port forwarding.
 
 **Also, very importantly: Internationalization (i18n)**
 
 At this point, both the Admin shell, the Tools, and the mini apps, would need to support Internationalization (i18n). But as mentioned in requirements, we don't need to serve multiple languages at once. We just need to provide a way to define multiple variants of the same content.
 
+Additionally, there won't be a full UI for managing all languages just yet. But we should at least provide a global language selector, in the ThorCMS app's settings menu, to switch the language choice of Admin Shell + Tools + Mini Apps Content Jsons at the same time. (MVP v0.1 does not support editing English mini app json while the app language is in Spanish, for example.)
+
 All 3 areas need to use ICU MessageFormat to store the i18n strings. However, we are going to use different libraries for different areas.
 
 For Mini Apps, 
 
-We can just call `intl-messageformat` directly to format the strings before passing them to the mini app context. This library can work with any frontend framework.
+Template content jsons should contain all strings, including user facing content as well as reusable labels in the resulting website. But normally a user should only need to supply the user facing content. And the internal labels could be optional fields.
+
+But because the templates might interpolate user content inside the UI labels, and because some template authors might not provide all languages, we need to discuss how to handle this.
+
+We can make sure that all template codebases call `intl-messageformat` directly to format the strings before displaying them via React or Vue. And LCDN must pass the correct language/variant of them to the mini app via LCDN `__query__` API + PageContentProvider.
 
 And we can rely on the variant name of the content jsons to determine the language. Currently the variant name is just the language code, so English is `en`, Spanish is `es`, etc.
 
@@ -390,13 +417,13 @@ Also: asset picker for hero image, HTML cache on save, persist backend port in `
 
 ---
 
-## Design decisions (lock early)
+## Design decisions (pending reviews)
 
 1. **Content authority:** `content/main.{variant}.json` in instance dir is source of truth; LCDN serves it; mini-app reads via LCDN URL (not Tauri).
-2. **Tool invocation contract:** Admin passes `instanceId` + `toolId`; tool loads schema from template bundle.
-3. **Preview always via LCDN:** Preview tab never points iframe at mini-app port directly.
+2. **Tool invocation contract:** MVP v0.1 and v1 would see Tools as simple Vue components. So admin shell can call tools directly for now. Further architectural changes would depend on how custom backends work at all, on iOS and android.
+3. **Preview always via LCDN:** Preview tab never points iframe at custom backend port directly. (This is a given for MVP v0.1, because we don't ship any other backends)
 4. **CSR default:** Contact card needs no SSR for v0; SSR toggle deferred until template 2 (see [futures-looking.md](./futures-looking.md)).
-5. **Port strategy:** Serving on a hardcoded static port for now. This can be configurable later.
+5. **Port strategy:** Serving on a hardcoded static port for now. It is configurable in lcdn config but it's not changeable at runtime.
 ---
 
 ## Repo structure
@@ -408,12 +435,11 @@ tcms/
     crates/        # Local CDN + any template backend
       common/      # Common types such as the schema for Instance, LCDN config, etc.
       lcdn-server/
-    src-tauri/     # Tauri commands. Consumes LCDN types.
+      tools/       # This is a placeholder. json editors don't need it.
+    src-tauri/     # Tauri commands to bind with lcdn/tools crates
     src/           # Tauri + Vue Admin + Tools
       admin/
       tools/
-        common/ToolShell.vue, ToolNav.vue
-        template-editor/
   packages/
     mini-app-*/    # See naming scheme in ops-pkg-and-versions.md
     tool-*/
@@ -431,7 +457,7 @@ Ordered list of work **after** the four epics; not all are v0.1 scope.
 
 ### v0.2 — “Show someone”
 
-1. LCDN LAN binding for board demo
+1. Public hosting options and reversed CDN implementation
 2. Asset picker for hero image (Tauri → `assets/`)
 3. HTML cache on save (CSR snapshot in `cache/`)
 4. Pack export v0 (zip shape from motivation doc)
@@ -439,7 +465,7 @@ Ordered list of work **after** the four epics; not all are v0.1 scope.
 ### Later
 
 1. Second template (restaurant menu — arrays + iframe manifest)
-2. JSON editor tool (generic, power users)
+2. Customizable tooling with "workflow"-like schemas (generic, power users)
 3. CDN ops tool
 4. Reversed CDN providers (separate integrations)
 5. SSR mode toggle per instance

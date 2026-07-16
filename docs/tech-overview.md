@@ -14,36 +14,35 @@ In prose, keep **app** when describing the installable product (e.g. “the Thor
 **Thor CMS** is delivered by the **ThorCMS** native mobile app, which has multiple different Frontend parts, split into security levels:
 
 1. **Admin shell** — the main UI of the ThorCMS app, able to configure and launch hosted apps, able to launch tools as part of the configuration workflows; all privileged OS operations (starting http servers, etc).
-2. **Tools** — premade websites meant as productivity tools, that users can utilize to author CMS templates, and do basic OPS work on the phone; scoped OS features (opening files and storing them for mini app assets, but not starting http servers).
+2. **Tools** — In MVP and v1, these are just helper components used by the Admin shell. In later versions they can be more modular and customizable, including even premade websites meant as productivity tools, that users can utilize to author CMS templates, and do basic OPS work on the phone; scoped OS features (opening files and storing them for mini app assets, but not starting http servers).
 3. **Mini app(s)** — one or more real **HTTP servers** on `127.0.0.1` serving CMS templates; rendered in a **sandboxed iframe** (no Tauri runtime).
 
 Admin shell and Tools are hosted separately from the mini apps, on separate backends with completely separate security and trust boundaries.
 
 * Admin shell and Tools are standard Tauri pages, and they can invoke Tauri commands for OS interactions (opening files, running binaries, etc).
-* Mini web apps are **standard web servers** whose backends **bind to localhost only**; visitors reach them via Local CDN's `proxy_pass` on **localhost or private IPs**. OS integration with the Android/iOS/Desktop host would not go through the webview. Instead they must use their own backend implementations (either none by default, or through a separate server binary).
+* Mini web apps are served from Local CDN directly, which also provides the necessary json content and assets for the mini app. Mini web apps normally would not have access to the OS. But we might be able to bundle some special server modes into Rust if they are available as prebuilt crates or easily-linkable libraries. Those will be referred to as custom backends.
 
 But there is one more hidden backend component: Local CDN (LCDN)
 
 ### Local CDN
 
-In terms of security boundaries, Local CDN is a hidden mini app. It is a separate binary that just reads configurations and hosts static files. It runs in the **foreground** whenever there is at least one running mini app. On iOS, keeping servers alive requires the app to stay foregrounded; the ThorCMS app shows a **fullscreen screensaver** while serving (not shown in Developer Mode; see below).
+In terms of security boundaries, Local CDN is a custom http server, implemented as part of the Tauri Rust binary. It just reads configurations and hosts static files. It runs in the **foreground** whenever there is at least one running mini app. On iOS, keeping servers alive requires the app to stay foregrounded; the ThorCMS app shows a **fullscreen screensaver** while serving (not shown in Developer Mode; see below).
 
-Local CDN serves for other mini apps:
+Local CDN has two separate modes, static serving and custom backends.
+
+For both static and custom backend modes, Local CDN serves the following:
 
 * The authored contents (text)
 * The relevant assets (images and files)
 * JS framework, locally cached. Configurable to use remote CDN if needed.
-* Any cache of another mini app's HTML (SSR or CSR)
-* A proxy, on the backend, from a Local CDN URL to the mini apps (on a different port). This is not a redirect. It's an nginx proxy_pass.
 
-Local CDN is the **single entry point** for mini apps: all traffic goes through its port via `proxy_pass`, not the mini app server ports directly. When a user runs multiple mini apps and visits one of them:
+For static mode, Local CDN also serves the actual HTML and template JS codes.
 
-* We either provide a URL to the cached HTML content of the mini app (SSR or CSR)
-* Or, we provide a URL to the mini app server on a subdomain of the mini app (to generate a new HTML upon request)
+For custom backend, Local CDN doesn't have the HTML or template JS codes. It redirects to the request to the custom backend server in a way similar to nginx's `proxy_pass`. And it may be configured to cache the results.
+
+Local CDN is the **single entry point** for mini apps: all traffic goes through its address, usually.
 
 Local CDN should enforce CSP policies to only allow access from its own domain. Users should never have to visit the mini app's own server port.
-
-As a result, the final URL for each mini app isn't actually the address to the mini app servers. They are all just visiting the Local CDN server.
 
 Local CDN is optimized for **local preview** inside Thor CMS. It is a poor fit for **public traffic** when the user publishes from the phone—even on WiFi, pushing all static assets through the handset is slow and fragile.
 
@@ -97,7 +96,7 @@ Mini apps servers, and Local CDN are served on insecure HTTP. User must bring th
 
 When in the ThorCMS app, Mini apps URLs and Local CDN URLs must always be opened from a sandboxed iframe, which does not have access to Tauri runtime.
 
-Mini app servers must open port on localhost only. Mini app servers would run with the same Filesystem/OS permssions as the app binary itself. Bundled backends only: each trusted server is **shipped with the app** as a static, codesigned binary (on iOS, may run in-process as a thread rather than a separate process). They serve **predefined template schemas only**, not arbitrary user-supplied server logic. Optional on-demand download bundles (see requirements) are still author-signed splits of the same trusted binaries—not user-defined custom servers.
+Mini apps' (LCDN or custom backend) server must open port on localhost only. Mini app servers would run with the same Filesystem/OS permssions as the app binary itself. Bundled backends only: each trusted server is **shipped with the app** as a single, static, codesigned binary (on iOS, may run in-process as a thread rather than a separate process). They serve **predefined template schemas only**, not arbitrary user-supplied server logic. Optional on-demand download bundles (see requirements) are still author-signed splits of the same trusted binaries—not user-defined custom servers.
 
 Local CDN servers must open port on localhost and private networks only.
 
@@ -129,6 +128,6 @@ For tools, we can just store in the Android/iOS app home folder
 But for mini apps, we should
 
 - Persist user data via **app sandbox** and/or WebView storage where appropriate.
-- Allow the backend binary to store a database in mobile app, but these are considered server data, and should be in very limited forms. It shouldn't allow arbitary data.
+- Allow the custom backend libraries to store a database in mobile app, but these are considered server data, and should be in very limited forms. It shouldn't allow arbitary data.
 - Assume **WebView process death** on iOS; templates and shell should tolerate reload and restore from storage.
 - Support backup/restore story for power users (zip + metadata).
