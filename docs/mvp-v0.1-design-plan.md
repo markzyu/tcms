@@ -297,123 +297,32 @@ As for the storage of templates vs instances: Templates are stored as zipfiles u
 **Goals:** 
 
 * Content Editing as a **Tool**, invoked from Admin Shell — not hardwired as the app root.
-* Each tool is served from LCDN and can be built separately from both mini apps and admin shell.
+* Each tool is served from Tauri and must be built as a Vue page.
 
-Correction of tech-requirements.md:
+### Formalizing the Architecture of "Tools"
 
-* Tools are not actually "hosted separately" from the mini apps in the strictest sense. They are both served from LCDN.
-* However, Tools are subject to more security constraints. And they are served from different routes with different headers and access controls.
+We would define a "tool" as a part of the "tool workflow".
 
-### Architecture of "Tools"
-
-What we discussed in requirement docs is really the capability of a "tool workflow". But each workflow is technically built from multiple parts. There are two parts to a "tool workflow".
+What we discussed in requirement docs is really the capability of a "tool workflow", not a tool. And each workflow, technically, can be built from multiple tools. There are two kinds of tools in a "tool workflow".
 
 * The backend tool is any Tauri/Rust capability to provide file conversion/manipulation such as ffmpeg, melt, etc. This also includes the basic tauri commands for LCDN configuration and management.
-* The frontend tool is just another mini-app served from LCDN, but specially registered as a tool. Each tool could not start on its own. And the admin shell must call into the tools based on user consent and interaction
+* The frontend tool is just Vue page in the frontend, similar to an admin page. Each tool should not start by its own. And the admin shell must call into the tools based on user consent and interaction
 
-The backend tool and frontend tool establish a contract using backend schemas. The backend schemas define what configurations are allowed for its actions. The frontend tool doesn't have permission to call the backend tool directly. It returns a json fitting the backend schema and admin shell invokes the backend tool with the json.
+There are also two types of schemas:
 
-Going further, we will eventually also have frontend schemas, which are contracts between purely frontend tools. And these are really just a way to automate workflows by combining multiple tool UIs. In this case, each frontend tool returns its own json describing its inputs, outputs, and backend dependencies. And Admin shell needs to connect the inputs and outputs between multiple tools to create a UI workflow. 
+A backend tool and a frontend tool should establish a contract using "backend schemas". The backend schemas define what configurations are allowed for backend tool's actions. The frontend tool doesn't have permission to call the backend tool directly. It returns a json fitting the backend schema and admin shell invokes the backend tool with the json.
+
+Separately, we can also have "frontend schemas", which are contracts between purely frontend tools. And these are really just a way to automate workflows by combining multiple tool UIs. In this case, each frontend tool returns its own json describing its inputs, outputs, and backend dependencies. And Admin shell needs to connect the inputs and outputs between multiple tools to create a UI workflow. 
 
 In sum, the admin shell only really needs to implement the following:
 
-* Parsing frontend and backend schemas
-* Defining the workflow schemas (statically, for now)
-* Enabling the frontend tools and backend tools on LCDN so that
-  * The frontend is served on LCDN and the backend can be invoked via Tauri commands.
-  * LCDN knows not to allowlist a tool for other mini apps.
-  * LCDN and Tauri encrypts and authenticates the json exchange with tool pages, over http lcdn API + sandboxed iframe, using a server-side shared RSA key per server instance, as well as a random AES key for each tool instance.
-  * From the Frontend tool's perspective,
-    * Its entire job is to read the inputs from LCDN, display a UI, and return a transformed output to LCDN.
-    * Upon load,
-      * It gets a channel ID and signature from the URL parameters.
-      * It gets an AES key from its own HTML code, as modified by LCDN.
-      * It queries LCDN for the public key to verify the signature (covering both the AES key and the channel ID)
-    * If the signature is invalid, it means someone other than the admin shell is trying to invoke the tool. It does nothing.
-    * If the signature is valid, it uses this AES for all subsequent communications with LCDN.
-    * This entire protocol exists to make sure:
-      * No outside caller can fetch arbitrary INPUT data from ThorCMS.
-      * TCMS Tools can never be used publicly even if accidentally published.
-    * Security assumptions:
-      * All APIs related to tools must require AES-encryption within HTTP post data.
-      * Nobody can intercept the AES key without root access to localhost's network interface, LCDN or the ThorCMS webview.
-      * ThorCMS app itself won't deliberately open Tools in outside browsers.
-      * ThorCMS app should assign a basic scope for the AES key (like an instance ID)
-      * ThorCMS's configuration of LCDN keys and scopes is done via pure IPC commands, not by editing files on disk.
-      * Tools are disabled for the released LCDN standalone binary. The debug builds include a basic server for development purposes.
+* Parsing frontend schemas, backend schemas, and workflow schemas
+* Enabling and calling the frontend tools and backend tools
 * Displaying a UI consent screen, confirming the list of backend tools invoked by a workflow
 * Executing the workflow by displaying the correct frontend and calling the backend tools with the correct json
-* Handling the workflow state persistence and restoration of Frontend tools.
+* Handling the workflow state persistence, in case frontend webview context expires while backend runs
 
-
-Additional security assumptions:
-
-- Trusted: Admin shell, LCDN tools server (Rust), Tauri backend tools, bundled tool/template artifacts.
-
-- Untrusted: All JS in LCDN iframes; HTTP clients on loopback; copied URLs; persisted workflow handles.
-
-- Out of scope (MVP): Rooted/jailbroken devices; user-installed traffic-intercept VPNs; custom user-supplied tool bundles.
-
-
-# TODO
-
-I'll try to summarize all Security concerns.
-
-Concerns
-
-* Each tools' initial URL is actually a secret. And it should be treated as such.
-* There is no expiration logic for the URLs/signature token/AES keys. They should expire. They should be revocable. (at least by relaunching the app)
-* We don't have a nonce to ensure AEAD and to avoid replay
-* LCDN serves tools on 192/private ip. It can then leak info through unencrypted http inspections.
-* Tools should only have access to trusted bundles of JS and CSS. (Might make sense to serve these specially)
-* Overall it just seems that LCDN needs a separate thread/port for Tools so that we can define all security policies better. (Tools might need their own server logics)
-* User might share the URL of a tool deliberately (The URL for this tool is a GET URL and nobody should be able to copy it out because it contains a token.)
-
-* Missing iframe configuration. (I was just thinking `crendentialless` but probably need more attributes to make sure they work on older webviews)
-
------
-
-I think two major patterns emerged
-
-1. The Tools should still be hosted separately by a separate part of LCDN logics, on a separate port. This ensures separate CSP policies, separate middlewares, and separatable ports (release builds won't have tools at all)
-
-2. The handshake is not secure enough. Preferably there should also be a `/api/tools/init` API that replaces the current AES token given in the original URL + sets up the first nonce. Additionally, all channels should expire if ThorCMS app relaunches. 
-
-Additionally for point 2, the caller of tools should specify the token TTL. Then, if ThorCMS app web view's URL fails to load then it must invalidate the entire channel. This kind of removed the need for RSA, if we just pass nonce all the time (?does it?)
-
-```
-Admin shell calls LCDN via IPC to generate a /tool?c=channel&n=nonce link
-This iframe loads and sends a /api/tools/init request to LCDN
-This init call returns an AES key for data encryption only.
-All LCDN tools API calls also return new nonce
-If this iframe encounters any nonce issue, it redirects to a bad url like /__error__/security
-LCDN will invoke any channel that encounters that error
-```
-
-
-
------
-
-Missing assumptions:
-
-* iframe isolation and CSP rules + the referrer policies  to protect URL from leaks
-* (Not directly mentioned in assumptions) Secure storage is outside public folder and is not stored on mobile public folders like `/sdcard`
-* Users are informed that any Android intent / deeplink to restart workflow is a sensitive secret. And are given an option to turn off resume by deeplink/intent. (Note: This shouldn't be possible in the first place because the whole thing is loaded into Tauri webview which doesn't reveal URL at all. There is no address bar even for a full page, let alone iframes)
-* Admin never passes tool output to a backend tool without validating against the backend schema and validating config write access with workflow allowlist.
-
-----
-
-Question about "Other apps on the device cannot reach 127.0.0.1": No this isn't true. all apps can access localhost. But my assumption is that no regular mobile app can intercept localhost traffics (even VPNs?).
-
-# END OF TODO
-
-This architecture design is probably more elaborate than we orignally called out in tech-overview.md. It's meant to bring flexibility to the ThorCMS app so that anyone can define / bring their own tools. For example, if someone enables developer mode and brings their own localhost port, serving their new frontend tool, then we'd serve it from LCDN by a basic redirect to their port, with API key. Their tool runs on their port, with any backend they choose by themselves.
-
-Incidentally, this flexibility should also make the development process of official tools easier.
-
-Developer mode is not part of MVP scope. But the schemas and security designs should be implemented to a basic extent.
-
-Beyond the MVP scope, we eventually would allow super users to (1) create custom workflows and (2) define custom frontend tools using localhost URLs.
+Beyond the MVP scope, we might support creating custom workflows out of composable tools that are builtin to the ThorCMS app. But there is something we would never support: Developer mode would not allow registration of new, custom tools. As a workaround, we could provide a custom "developer tool" which is just a pre-bundled UI to issue arbitrary http calls to any custom backend on the developer's phone.
 
 ### Routing model
 
@@ -421,30 +330,12 @@ Tauri internal routes:
 
 ```
 /home/                     AdminHome (instance list)
-/tool?wf=xxxxx&arg1=x&...  Entry point / page of all workflows
+/tool/xxx                  Entry point of tools
 ```
 
-The `/tool` route writes all input queries to LCDN's secure storage as the workflow input. Then it simply displays the correct page from LCDN for the current tool in the workflow.
+Each frontend tool is registered as a route in Vue Router. They do not communicate via URL parameters. Instead, admin shell stores all workflow states in Rust backend through IPC commands.
 
-LCDN routes:
-
-```
-GET  /tools/name1?c=id&s=89ab   Frontend tool. Queries specify (c)hannel and (s)ignature.
-POST /api/tools/input           Reads any config/intermediate json from disk (if within scope)
-POST /api/tools/output          Writes any config/intermediate json to disk (if within scope)
-POST /api/tools/state           Reads the persistent workflow state from LCDN's secure storage
-PUT  /api/tools/state           Writes the persistent workflow state to LCDN's secure storage
-```
-
-The POST/PUT calls must specify the following in both request body and response body:
-
-```
-{
-  "channelId": "this id identifies the AES key on server side",
-  "data": "the base64 encoding of the AES-encrypted request body",
-  "iv": "the base64 encoding of the AES initialization vector"
-}
-```
+> Special tauri commands for Workflow states: `workflow_start(wf_name)`, `workflow_next_step()`, `workflow_end()`, `workflow_get_step_name()`, `workflow_get_step_state(step_name)`, `workflow_set_step_state(step_name, state)`
 
 Tauri commands and OS APIs (Backend tools)
 
@@ -457,21 +348,27 @@ melt_start(config_path)    Starts melt with the given config file.
 
 Notes: 
 
-* Workflows share a single URL route. Their steps don't have separate URLs.
-* Workflow states are entirely managed ~~in memory~~ in LCDN as a secure file or db, outside the normal `public/` folder.
-  * We want something stronger than memory because phones can kill the view context at any time. So we use LCDN to persist the workflow state.
-  * And we use it to store workflow parameters to avoid super long URLs.
-  * This persistence is unique per workflow name. But it contains the original channel ID. And restoration is only possible if Android intent / iOS deep link remembers that ID.
+* Workflows don't have a URL. The frontend tools have Vue Router URLs.
+* Workflow states are entirely managed in Rust memory through IPC commands.
+  * Though the phone can kill the webview context at any time, we don't need to persist workflow state beyond the lifetime of Rust backend.
+  * This in-memory state is basically a singleton for the "current" workflow.
 
 ### Admin shell v0
 
 Beyond a basic secure setup of tools with workflow schemas, with persistent workflow states, the Admin shell needs to actually implement tools for the following features:
 
-- Editing a new/existing instance:
-  - `edit-instance` workflow
-  - `json-editor` frontend tool
-  - `lcdn_reload_configs()` backend tool
-  - A schema that defines how all 3 fit together
+- `edit-instance` workflow: Editing a new or existing instance.
+  - Assumption: Content schema would never define object fields dynamically. For those use cases, they would always define the dynamic content as an array of objects.
+  - Caveat: Each dynamic array in Content schema should define a key field. Otherwise, we default to the index, and it's not ideal.
+- `json-objects-editor` frontend tool, for editing either objects, objects of objects, and top level, flat arrays of objects
+  - For objects that do not nest arrays, we can essentially display each leaf object in a new section, titled by its full parent path.
+  - For objects that contain a flat array, we can display each object in a new section, titled by the array path + the item's key field.
+- `json-arrays-editor` frontend tool, for navigating nested arrays of objects, while relying on `json-objects-editor` to edit the objects
+  - This scenario covers anything that's not an object of object, not a flat object, and not a flat array of objects.
+  - This UI shows two levels of lists. The inner level shows the item names of the leaf array. The outer level shows the path from root to the leaf array.
+- Both `json-objects-editor` and `json-arrays-editor` can be called with new root objects or arrays.
+
+**Reminder**: Frontend tools cannot directly call backend. They return jsons. And the workflow schemas specify what backend tools can be called. Admin shell performs that call on its behalf.
 
 And the Admin shell needs to implement the following natively, as admin features and not as tools:
 
@@ -480,8 +377,16 @@ And the Admin shell needs to implement the following natively, as admin features
 - Row action **“Edit”** → `navigateTo('/tool?wf=edit-instance&instanceId=…')`
 - Shows LCDN status (running / stopped)
 - Displays the full screen preview of the instance
+- `lcdn_reload_configs()` backend tool
 
-**Also, very importantly:**
+As for the schemas, we should focus more on the backend schemas than frontend or workflow schemas.
+* The workflow schemas would only list the frontend and backend tools for now. It's used to decide what to show on the consent screen. It's also used to determine the permissions / scope that backend tools can run at.
+* The frontend schemas can be missing for now.
+* In the long run, we eventually could also define the output of `json-objects-editor` as (the new JSON + a new path to edit + or a boolean indicating edit completion), and define the output of `json-arrays-editor` as the path to the chosen array item. And we could define both to take root json + a relative path as the input. This would allow workflows to eventually define multiple jq queries to actually route the edited JSONs.
+
+This schema design would eventually allow users to create their own custom workflows. But it would start mostly as a stub.
+
+**Also, very importantly: Internationalization (i18n)**
 
 !! At this point, the Admin shell would need to support Internationalization (i18n). We should consider either Vue I18n or our own template schema.
 
