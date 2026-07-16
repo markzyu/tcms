@@ -350,11 +350,19 @@ And the Admin shell needs to implement the following natively, as admin features
 
 **Also, very importantly: Internationalization (i18n)**
 
-!! At this point, the Admin shell would need to support Internationalization (i18n). We should consider either Vue I18n or our own template schema.
+At this point, both the Admin shell, the Tools, and the mini apps, would need to support Internationalization (i18n). But as mentioned in requirements, we don't need to serve multiple languages at once. We just need to provide a way to define multiple variants of the same content.
 
-We might need both eventually. One solution for loading/managing international versions of contents. The other solution for string templates designed to help i18n (when some strings come from template devs and other strings come from users).
+All 3 areas need to use ICU MessageFormat to store the i18n strings. However, we are going to use different libraries for different areas.
 
-But, for now, we assume that all strings come from users. And we focus on the user content's i18n structure.
+For Mini Apps, 
+
+We can just call `intl-messageformat` directly to format the strings before passing them to the mini app context. This library can work with any frontend framework.
+
+And we can rely on the variant name of the content jsons to determine the language. Currently the variant name is just the language code, so English is `en`, Spanish is `es`, etc.
+
+In the future, we could support variants with more fields, for example `mainPage.<language>.<edition>.json`. But language field is always required and listed first.
+
+For Admin shell and Tools, we need more functionalities than just formatting the strings. And `vue-i18n` provides better tooling for a Vue frontend. But we must configure it to use the ICU MessageFormat instead of its traditional custom "Intlify" syntax.
 
 ---
 
