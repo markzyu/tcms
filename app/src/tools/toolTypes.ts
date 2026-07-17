@@ -1,4 +1,5 @@
 import { EditorUiSchemaJsonSchema } from "@tcms/mini-app-common";
+import { Component } from "vue";
 import { z } from "zod";
 
 // Definitions:
@@ -172,5 +173,8 @@ export const ToolSchema = z.object({
   id: z.string(),
   inputType: ToolInputTypesSchema,
 });
-export const ToolRegistrySchema = z.record(z.string(), ToolSchema);
-export type ToolRegistry = z.infer<typeof ToolRegistrySchema>;
+export interface Tool<TInput extends ToolInputTypes = any> extends z.infer<typeof ToolSchema> {
+  inputType: TInput;
+  component: Component<ToolProps<TInput>>;
+}
+export type ToolRegistry = Record<string, Tool>;

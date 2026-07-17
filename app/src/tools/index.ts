@@ -2,9 +2,10 @@ import { ToolProps, ToolRegistry } from "./toolTypes";
 import { WorkflowRegistry } from "./workflowTypes";
 
 export const toolRegistry: ToolRegistry = {
+  /**
   "json-objects-editor": {
     id: "json-objects-editor",
-    inputType: "jsonWithSchema",
+    inputType: "jsonWithSchema" as const,
   },
   "json-arrays-editor": {
     id: "json-arrays-editor",
@@ -19,9 +20,11 @@ export const toolRegistry: ToolRegistry = {
     id: "floating-json-field-editor",
     inputType: "jsonWithSchema",
   }
+  **/
 };
 
 export const workflowRegistry: WorkflowRegistry = {
+  /**
   "template-editor": {
     id: "template-editor",
     toolIds: ["json-objects-editor", "json-arrays-editor"],
@@ -33,6 +36,7 @@ export const workflowRegistry: WorkflowRegistry = {
     toolIds: ["preview-instance", "floating-json-field-editor"],
     inputType: "miniAppInstance",
   }
+  **/
 };
 
 export type TestToolProps1 = ToolProps<"jsonWithSchema">["input"]["editorUiSchema"];
