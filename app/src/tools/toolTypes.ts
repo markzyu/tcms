@@ -169,6 +169,28 @@ export type ToolProps<TInput extends ToolInputTypes = any> = {
   onAction: (action: ToolAction) => Promise<void>;
 }
 
+export type ToolOnLoadContext<TInput extends ToolInputTypes = any> = {
+  /** The list of all tool ids that we will try to load. */
+  toolIds: string[];
+
+  /** The index of the current tool that we are trying to load. */
+  toolIndex: number;
+
+  /** The action that caused this tool to be loaded. If not set, then this is the manual start of a new workflow. */
+  invokedByAction?: ToolAction;
+
+  /** Some tools care about whether they are invoked internally (in the same workflow) by another tool. */
+  invokedInternallyByToolId?: string;
+
+  /**
+   * The props that we are trying to load this tool with.
+   * 
+   * Please note that this is provided for the sake of determine loading order only.
+   * The actual component should read props through standard Vue props.
+   */
+  props: ToolProps<TInput>;
+}
+
 export const ToolSchema = z.object({
   id: z.string(),
   inputType: ToolInputTypesSchema,
@@ -184,6 +206,6 @@ export interface Tool<TInput extends ToolInputTypes = any> extends z.infer<typeo
    * for the input props. If unsuitable, the implementaton must reject the promise. And TCMS will
    * try the next tool in the workflow until it exhausts all available tools.
    */
-  onLoad: (props: ToolProps<TInput>) => Promise<Component<ToolProps<TInput>>>;
+  onLoad: (context: ToolOnLoadContext<TInput>) => Promise<Component<ToolProps<TInput>>>;
 }
 export type ToolRegistry = Record<string, Tool>;
