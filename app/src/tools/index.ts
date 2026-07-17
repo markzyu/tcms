@@ -1,4 +1,4 @@
-import { ToolRegistry } from "./toolTypes";
+import { ToolProps, ToolRegistry } from "./toolTypes";
 import { WorkflowRegistry } from "./workflowTypes";
 
 export const toolRegistry: ToolRegistry = {
@@ -19,3 +19,7 @@ export const workflowRegistry: WorkflowRegistry = {
     inputType: "jsonWithSchema",
   },
 };
+
+export type TestToolProps1 = ToolProps<"jsonWithSchema">["input"]["editorUiSchema"];
+export type TestToolProps2 = ToolProps<"miniAppInstance">["input"]["instanceId"];
+export type TestToolProps3 = ToolProps;

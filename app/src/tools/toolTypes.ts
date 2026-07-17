@@ -11,7 +11,16 @@ export const ToolJsonWithSchemaInputSchema = z.object({
   editorUiSchema: EditorUiSchemaJsonSchema,
 });
 
-export const ToolInputSchema = z.union([ToolJsonWithSchemaInputSchema]);
+/** Input as a mini app instance id */
+export const ToolMiniAppInstanceInputSchema = z.object({
+  type: z.literal("miniAppInstance"),
+  instanceId: z.string(),
+});
+
+export const ToolInputSchema = z.union([
+  ToolJsonWithSchemaInputSchema, 
+  ToolMiniAppInstanceInputSchema,
+]);
 export type ToolInput = z.infer<typeof ToolInputSchema>;
 
 export const ToolInputTypesSchema = z.union(ToolInputSchema.options.map((option) => option.shape.type));
@@ -54,8 +63,8 @@ export const ToolActionTypesSchema = z.union(ToolActionSchema.options.map((optio
 export type ToolActionTypes = z.infer<typeof ToolActionTypesSchema>;
 
 /** All individual tools must receive at least these props. */
-export type ToolProps = {
-  input: ToolInput;
+export type ToolProps<TInput extends ToolInputTypes = any> = {
+  input: Extract<ToolInput, { type: TInput }>;
   /**
    * Tools can send multiple actions to the admin shell, through the parent workflow.
    * 
