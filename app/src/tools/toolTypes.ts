@@ -1,12 +1,14 @@
-import { PageContentSchemaJsonSchema } from "@tcms/mini-app-common";
+import { EditorUiSchemaJsonSchema } from "@tcms/mini-app-common";
 import { z } from "zod";
 
 /** Input as a JSON object with a corresponding schema. */
 export const ToolJsonWithSchemaInputSchema = z.object({
   type: z.literal("jsonWithSchema"),
   json: z.object({}),
+  /** The Path relative to the json that is being edited */
   jsonPath: z.string().optional(),
-  schema: PageContentSchemaJsonSchema,
+  jsonSchema: z.object<Record<string, unknown>>(),
+  editorUiSchema: EditorUiSchemaJsonSchema,
 });
 
 export const ToolInputSchema = z.union([ToolJsonWithSchemaInputSchema]);
