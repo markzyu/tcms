@@ -10,6 +10,10 @@ export const toolRegistry: ToolRegistry = {
     id: "json-arrays-editor",
     inputType: "jsonWithSchema",
   },
+  "preview-instance": {
+    id: "preview-instance",
+    inputType: "miniAppInstance",
+  }
 };
 
 export const workflowRegistry: WorkflowRegistry = {
@@ -18,6 +22,12 @@ export const workflowRegistry: WorkflowRegistry = {
     toolIds: ["json-objects-editor", "json-arrays-editor"],
     inputType: "jsonWithSchema",
   },
+  "preview-instance": {
+    id: "preview-instance",
+    // In Phase 2, we don't implement the edit-while-preview features yet. But they'll be added here, later.
+    toolIds: ["preview-instance"],
+    inputType: "miniAppInstance",
+  }
 };
 
 export type TestToolProps1 = ToolProps<"jsonWithSchema">["input"]["editorUiSchema"];
