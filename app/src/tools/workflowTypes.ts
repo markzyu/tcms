@@ -18,7 +18,7 @@ export const WorkflowSchema = z.object({
    * then the workflow will fail to start.
    * 
    * Note for v1: We might also provide override options like `allowAllTools` and
-   * `overrideToolOrders` to allow using arbitrary tools while overriding the loading order.
+   * `overrideLoadingOrder` to allow using arbitrary tools while overriding the loading order.
    */
   toolIds: z.array(z.string()),
   inputType: ToolInputTypesSchema,
