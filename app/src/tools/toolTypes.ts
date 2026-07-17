@@ -175,6 +175,15 @@ export const ToolSchema = z.object({
 });
 export interface Tool<TInput extends ToolInputTypes = any> extends z.infer<typeof ToolSchema> {
   inputType: TInput;
-  component: Component<ToolProps<TInput>>;
+  /**
+   * This is the implementation of the tool. It must return a Vue component upon successful loading.
+   * 
+   * This function is asynchronous to allow potential dynamic loading of tools, in later TCMS versions.
+   * 
+   * The onLoad logic is also used to determine whether the current tool in the workflow is suitable
+   * for the input props. If unsuitable, the implementaton must reject the promise. And TCMS will
+   * try the next tool in the workflow until it exhausts all available tools.
+   */
+  onLoad: (props: ToolProps<TInput>) => Promise<Component<ToolProps<TInput>>>;
 }
 export type ToolRegistry = Record<string, Tool>;
