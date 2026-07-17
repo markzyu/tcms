@@ -13,6 +13,11 @@ export const toolRegistry: ToolRegistry = {
   "preview-instance": {
     id: "preview-instance",
     inputType: "miniAppInstance",
+  },
+  "floating-json-field-editor": {
+    // In Phase 2, we don't implement the this feature yet.
+    id: "floating-json-field-editor",
+    inputType: "jsonWithSchema",
   }
 };
 
@@ -24,8 +29,8 @@ export const workflowRegistry: WorkflowRegistry = {
   },
   "preview-instance": {
     id: "preview-instance",
-    // In Phase 2, we don't implement the edit-while-preview features yet. But they'll be added here, later.
-    toolIds: ["preview-instance"],
+    // In Phase 2, we don't implement the floating json field editor feature yet.
+    toolIds: ["preview-instance", "floating-json-field-editor"],
     inputType: "miniAppInstance",
   }
 };

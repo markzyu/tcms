@@ -135,10 +135,20 @@ export const ToolCloseWorkflowActionSchema = z.object({
   type: z.literal("closeWorkflow"),
 });
 
+/** Replace the current tooling workflow with another */
+export const ToolReplaceWorkflowActionSchema = z.object({
+  type: z.literal("replaceWorkflow"),
+  workflowId: z.string(),
+  inputJson: ToolInputSchema,
+  /** Using a proxy to update some of the inputJson fields using data from admin shell */
+  inputByProxy: ToolInputProxySchema.optional(),
+});
+
 export const ToolActionSchema = z.union([
   ToolCloseWorkflowActionSchema,
   ToolOpenToolActionSchema,
   ToolReloadLcdnConfigsActionSchema,
+  ToolReplaceWorkflowActionSchema,
   ToolSaveTextActionSchema,
 ]);
 export type ToolAction = z.infer<typeof ToolActionSchema>;
