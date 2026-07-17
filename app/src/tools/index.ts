@@ -15,7 +15,7 @@ export const toolRegistry: ToolRegistry = {
 export const workflowRegistry: WorkflowRegistry = {
   "template-editor": {
     id: "template-editor",
-    toolsIds: ["json-objects-editor", "json-arrays-editor"],
+    toolIds: ["json-objects-editor", "json-arrays-editor"],
     inputType: "jsonWithSchema",
   },
 };

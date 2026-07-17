@@ -3,7 +3,7 @@ import { ToolInputTypesSchema } from "./toolTypes";
 
 export const WorkflowSchema = z.object({
   id: z.string(),
-  toolsIds: z.array(z.string()),
+  toolIds: z.array(z.string()),
   inputType: ToolInputTypesSchema,
 });
 

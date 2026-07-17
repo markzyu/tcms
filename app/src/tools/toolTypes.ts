@@ -2,16 +2,25 @@ import { EditorUiSchemaJsonSchema } from "@tcms/mini-app-common";
 import { z } from "zod";
 
 // Definitions:
-//   - Json Path: (Experimental) This refers to an abstract path within a json object. There is no generic, stable schema for this.
-//   - File Path: (Backwards compatible) This refers to a path to a file on disk.
-//   - Input Proxy: (Semi-Experimental) This is a method to bring data from admin shell to a tool without breaking the modularity of the tooling system.
-//   - Tool Input: (Semi-Experimental) This refers to any valid input to a tool.
+//   - Json Path: (Experimental) This refers to an abstract path within a json or a js object. For now, this is just lodash JSON path.
+//   - File Path: (Backwards compatible) This refers to a URL / soft reference to a file on disk. But it's not guaranteed to be an OS Path.
+//   - Tool Input: (Semi-Experimental) This refers to a union of known schemas regulating tool input types.
+//   - Tool Input Proxy: (Semi-Experimental) This is a method to bring JSON data from admin shell to a tool without allowing tools to directly access OS.
 //   - Tool Action: (Experimental) This refers to any admin shell action that can be taken by a tool.
 
 // Naming rules:
-//   - Outside of the FilePath types, please always differentiate between "filePath" and "jsonPath". Never use the unspecific "path" name.
-//   - Implicit Generic naming: For a generic schema union object named `FooBarSchema`, its union member "option one" should be named `FooOptionOneBarSchema`.
-//   - Explicit Generic naming: For a generic schema union object named `GenericFooBarSchema`, its union member "option one" should be named `OptionOneFooBarSchema`.
+//   - Do not use "path" in variable names without qualifiers. Doc strings are fine.
+//       - Specify as /^filePath$/, /^jsonPath$/, or /.*FilePath$/ or /.*JsonPath$/.
+//       - The last suffix determines the type of the path. For example, "jsonFilePath" is a file's path (related to a json).
+//       - Or, for internal implementation of Paths themselves, use underscores + data type: /^_pathAs.*$/
+//   - Implicit Generic naming:
+//       For a generic schema union object named `PrefixKeywordSchema` where Prefix can be multiple words,
+//       its union member "option one" should be named `PrefixOptionOneKeywordSchema`.
+//   - Explicit Generic naming:
+//       For a generic schema union object named `GenericSomethingSchema`,
+//       its union member "option one" should be named `OptionOneSomethingSchema`.
+//   - Explicit naming takes precedence over implicit naming.
+//   - Lastly but optionally, Typescript types like `FooBar` should have a `FooBarSchema` which is a Zod schema object.
 
 // ------- Tool Input Types -------
 
@@ -46,10 +55,23 @@ export type ToolInputTypes = z.infer<typeof ToolInputTypesSchema>;
 export const MiniAppContentFilePathSchema = z.object({
   type: z.literal("miniAppContent"),
   instanceId: z.string(),
-  /** This will be a URL /path/to/file, resolved in the same way as LCDN instance_url_sanitization_layer */
-  path: z.string(),
+  /**
+   * This will be specified as a LCDN URL /path/to/file, to be resolved to a file on disk,
+   *   in the same way as how LCDN resolves URLs with instance_url_sanitization_layer
+   * 
+   * Examples:
+   * 
+   * /content/main.en.json -> {dataDir}/public/instances/{instanceId}/content/main.en.json
+   * /assets/some-image.png -> {dataDir}/public/instances/{instanceId}/assets/some-image.png
+   */
+  _pathAsUrl: z.string(),
 });
 
+/**
+ * GenericFilePath variants provide different ways to describe a file path.
+ * 
+ * This data alone does not guarantee file formats or content schemas. Type checking of file data is always required.
+ */
 export const GenericFilePathSchema = z.union([
   MiniAppContentFilePathSchema,
 ]);
@@ -61,21 +83,21 @@ export type GenericFilePath = z.infer<typeof GenericFilePathSchema>;
  * This would allow us to fetch the input data needed to invoke one tool from another tool,
  * without having access to arbitrary data on disk.
  */
-export const InputProxyByJsonFilePathSchema = z.object({
-  type: z.literal("fromInstanceId"),
+export const ToolInputByJsonFileProxySchema = z.object({
+  type: z.literal("byJsonFile"),
   jsonFilePath: GenericFilePathSchema,
   transformV0: z.array(z.object({
     /** The path within the json object that is being referenced */
     fromJsonPath: z.string(),
-    /** The path within the ToolInput json that is being updated */
+    /** The path within an `inputJson` object, as a whole `ToolInput` meta type, that is being updated */
     toJsonPath: z.string(),
   })),
 });
 
-export const InputProxySchema = z.union([
-  InputProxyByJsonFilePathSchema,
+export const ToolInputProxySchema = z.union([
+  ToolInputByJsonFileProxySchema,
 ]);
-export type InputProxy = z.infer<typeof InputProxySchema>;
+export type ToolInputProxy = z.infer<typeof ToolInputProxySchema>;
 
 // ------- Tool Action Types -------
 
@@ -94,7 +116,7 @@ export const ToolReloadLcdnConfigsActionSchema = z.object({
 /** Open another tool, from this tool */
 export const ToolOpenToolActionSchema = z.object({
   type: z.literal("openTool"),
-  /** This ID must be within the scope of the workflow / in the toolsIds array */
+  /** This ID must be within the scope of the workflow / in the toolIds array */
   toolId: z.string(),
   presentation: z.union([
     // Drawer is good for opening editor while keeping the preview tool visible
@@ -102,10 +124,10 @@ export const ToolOpenToolActionSchema = z.object({
     // Full screen is good for opening a full screen editor to replace the current tool
     z.literal("fullScreen"),
   ]),
-  /** Using raw json data as input. This is always required. */
-  inputRaw: ToolInputSchema,
-  /** Using a proxy to update some of the inputRaw fields using data from admin shell */
-  inputByProxy: InputProxySchema.optional(),
+  /** Using json data as input. This is always required. */
+  inputJson: ToolInputSchema,
+  /** Using a proxy to update some of the inputJson fields using data from admin shell */
+  inputByProxy: ToolInputProxySchema.optional(),
 });
 
 /** Close the entire tooling workflow */
