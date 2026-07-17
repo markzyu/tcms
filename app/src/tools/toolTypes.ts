@@ -8,6 +8,11 @@ import { z } from "zod";
 //   - Tool Input: (Semi-Experimental) This refers to any valid input to a tool.
 //   - Tool Action: (Experimental) This refers to any admin shell action that can be taken by a tool.
 
+// Naming rules:
+//   - Outside of the FilePath types, please always differentiate between "filePath" and "jsonPath". Never use the unspecific "path" name.
+//   - Implicit Generic naming: For a generic schema union object named `FooBarSchema`, its union member "option one" should be named `FooOptionOneBarSchema`.
+//   - Explicit Generic naming: For a generic schema union object named `GenericFooBarSchema`, its union member "option one" should be named `OptionOneFooBarSchema`.
+
 // ------- Tool Input Types -------
 
 /** Input as a JSON object with a corresponding schema. */
@@ -41,7 +46,7 @@ export type ToolInputTypes = z.infer<typeof ToolInputTypesSchema>;
 export const MiniAppContentFilePathSchema = z.object({
   type: z.literal("miniAppContent"),
   instanceId: z.string(),
-  /** This will be a URL path, resolved in the same way as LCDN instance_url_sanitization_layer */
+  /** This will be a URL /path/to/file, resolved in the same way as LCDN instance_url_sanitization_layer */
   path: z.string(),
 });
 
@@ -77,7 +82,7 @@ export type InputProxy = z.infer<typeof InputProxySchema>;
 /** Save the result to a text file on disk */
 export const ToolSaveTextActionSchema = z.object({
   type: z.literal("saveText"),
-  path: GenericFilePathSchema,
+  filePath: GenericFilePathSchema,
   text: z.string(),
 });
 
