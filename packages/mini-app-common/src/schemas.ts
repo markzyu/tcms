@@ -1,4 +1,4 @@
-import type { ZodObject } from "zod";
+import { z, type ZodObject } from "zod";
 
 // @ts-ignore: Node.js types are not available in the browser.
 const IS_NODE = typeof process !== "undefined" && Boolean(process?.versions?.node);
@@ -6,22 +6,32 @@ const IS_NODE = typeof process !== "undefined" && Boolean(process?.versions?.nod
 // @ts-ignore: Node.js types are not available in the browser.
 const WORKDIR = IS_NODE ? process.cwd() : "";
 
-export type EditorUiFieldGroup = {
-  name?: string;
-  paths: string[];
-  isSingleton?: boolean;
-  isSingleField?: boolean;
-};
+export const EditorUiFieldGroupSchema = z.object({
+  name: z.string().optional(),
+  paths: z.array(z.string()),
+  isSingleton: z.boolean().optional(),
+  isSingleField: z.boolean().optional(),
+});
 
-export type EditorUiSchema = {
-  fieldGroups: EditorUiFieldGroup[];
-};
+export const EditorUiSchemaJsonSchema = z.object({
+  fieldGroups: z.array(EditorUiFieldGroupSchema),
+});
+
+export type EditorUiSchemaJson = z.infer<typeof EditorUiSchemaJsonSchema>;
+
+export const PageContentSchemaJsonSchema = z.object({
+  schemaVersion: z.string(),
+  editorUiSchema: EditorUiSchemaJsonSchema,
+  jsonSchema: z.object<Record<string, unknown>>(),
+});
+
+export type PageContentSchemaJson = z.infer<typeof PageContentSchemaJsonSchema>;
 
 export type DefinePageContentSchemaProps = {
   schema: ZodObject<any>;
   schemaName: string;
   schemaVersion: string;
-  editorUiSchema: EditorUiSchema;
+  editorUiSchema: EditorUiSchemaJson;
 };
 
 export type DefineRootManifestPageProps = {
@@ -55,7 +65,7 @@ export const definePageContentSchema = async (props: DefinePageContentSchemaProp
 
   await mkdir(outputDir, { recursive: true });
 
-  const schemaDefinition = {
+  const schemaDefinition: PageContentSchemaJson = {
     schemaVersion,
     editorUiSchema,
     jsonSchema: z.toJSONSchema(schema, { io: "input" }),
