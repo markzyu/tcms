@@ -1,5 +1,5 @@
 import { EditorUiSchemaJsonSchema } from "@tcms/mini-app-common";
-import { Component } from "vue";
+import type { Component } from "vue";
 import { z } from "zod";
 
 // Definitions:
@@ -28,7 +28,7 @@ import { z } from "zod";
 /** Input as a JSON object with a corresponding schema. */
 export const ToolJsonWithSchemaInputSchema = z.object({
   type: z.literal("jsonWithSchema"),
-  json: z.object({}),
+  json: z.any(),
   /** The path within the json object that is being edited */
   jsonPath: z.string().optional(),
   jsonSchema: z.object<Record<string, unknown>>(),
@@ -114,7 +114,7 @@ export const ToolReloadLcdnConfigsActionSchema = z.object({
   type: z.literal("reloadLcdnConfigs"),
 });
 
-/** Open another tool, from this tool */
+/** Open another tool, from this tool. But both tools must be within the same workflow. */
 export const ToolOpenToolActionSchema = z.object({
   type: z.literal("openTool"),
   /** This ID must be within the scope of the workflow / in the toolIds array */
@@ -134,6 +134,8 @@ export const ToolOpenToolActionSchema = z.object({
 /** Close the entire tooling workflow */
 export const ToolCloseWorkflowActionSchema = z.object({
   type: z.literal("closeWorkflow"),
+  /** If the workflow encountered an error, this will be set. */
+  errorMessage: z.string().optional(),
 });
 
 /** Replace the current tooling workflow with another */
