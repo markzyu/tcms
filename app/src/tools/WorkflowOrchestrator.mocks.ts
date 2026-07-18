@@ -1,4 +1,4 @@
-import { defineComponent, PropType } from "vue";
+import { computed, defineComponent, PropType } from "vue";
 import { ToolAction, ToolInput, ToolInputTypes, ToolRegistry } from "./toolTypes";
 import { WorkflowRegistry } from "./workflowTypes";
 import { EditorUiSchemaJson } from "@tcms/mini-app-common";
@@ -17,12 +17,20 @@ export const mockToolRegistry: ToolRegistry = {
       }
       return defineComponent({
         name: 'JsonObjectsEditor',
-        setup() {
-          console.log("TESTT JsonObjectsEditor");
+        props: {
+          input: {
+            type: Object,
+            required: true,
+          }
+        },
+        setup(props) {
+          return {
+            input: props.input,
+          }
         },
         template: `
           <div data-testid="json-objects-editor">
-            JSON Objects Editor
+            JSON Objects Editor: {{ input.json }}
           </div>
         `,
       });
@@ -39,12 +47,20 @@ export const mockToolRegistry: ToolRegistry = {
       }
       return defineComponent({
           name: 'JsonArraysEditor',
-          setup() {
-            console.log("TESTT JsonArraysEditor");
+          props: {
+            input: {
+              type: Object,
+              required: true,
+            }
+          },
+          setup(props) {
+            return {
+              input: props.input,
+            }
           },
           template: `
             <div data-testid="json-arrays-editor">
-              JSON Arrays Editor
+              JSON Arrays Editor: {{ input.json }}
             </div>
           `,
       });
@@ -76,19 +92,18 @@ export const MockOrchestratorWrapper = defineComponent({
     },
   },
   setup(props) {
-    const toolIds = props.workflowToolIds.split(',');
-    const workflowRegistry: WorkflowRegistry = {
+    const workflowRegistry = computed<WorkflowRegistry>(() => ({
       "mock-workflow": {
         id: "mock-workflow",
-        toolIds,
+        toolIds: props.workflowToolIds.split(','),
         inputType: props.inputType,
       },
-    };
+    }));
     const editorUiSchema: EditorUiSchemaJson = {
       fieldGroups: [
       ],
     };
-    const input: ToolInput = props.inputType === "jsonWithSchema" ? {
+    const input = computed<ToolInput>(() => props.inputType === "jsonWithSchema" ? {
       type: "jsonWithSchema",
       json: props.inputJson,
       jsonSchema: props.inputJsonSchema,
@@ -97,7 +112,7 @@ export const MockOrchestratorWrapper = defineComponent({
       type: "miniAppInstance",
       instanceId: props.inputJson.instanceId,
       instanceUrl: `https://mock.instance.url/${props.inputJson.instanceId}`,
-    };
+    });
     return {
       workflowId: "mock-workflow",
       workflowRegistry,

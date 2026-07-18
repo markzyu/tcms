@@ -40,14 +40,6 @@ const onAction = async (action: ToolAction) => {
   }
 }
 
-const logAndExit = async (errorMessage: string) => {
-  console.error(errorMessage);
-  await props.onAction({
-    type: "closeWorkflow",
-    errorMessage,
-  });
-}
-
 const defaultComponent = defineComponent({
   name: 'DefaultComponent',
   setup() {
@@ -59,30 +51,34 @@ const defaultComponent = defineComponent({
   `,
 });
 
+const logAndExit = (errorMessage: string) => {
+  console.error(errorMessage);
+  props.onAction({
+    type: "closeWorkflow",
+    errorMessage,
+  });
+  return defaultComponent;
+}
+
 const isLoadingTool = computed(() => currentToolId.value === null);
 
 // TODO: pull most of this stuff out of defineAsyncComponent because right now, computed doesn't know which dependencies are needed to re-run the function
-const currentComponent = computed(() => defineAsyncComponent(async () => {
-  console.log("TESTT currentComponent");
+const currentComponent = computed(() => {
   // Check if the input value is valid
   try {
     if (workflow.value?.inputType !== props.input.type) {
-      await logAndExit(`Workflow input type mismatch: ${workflow.value?.inputType} !== ${props.input.type}`);
-      return defaultComponent;
+      return logAndExit(`Workflow input type mismatch: ${workflow.value?.inputType} !== ${props.input.type}`);
     }
     if (props.input.type === "jsonWithSchema") {
       const schema = convertJsonSchemaToZod(props.input.jsonSchema);
       const result = schema.safeParse(props.input.json);
       if (!result.success) {
-        await logAndExit(`jsonWithSchema is invalid: ${result.error.message}`);
-        return defaultComponent;
+        return logAndExit(`jsonWithSchema is invalid: ${result.error.message}`);
       }
     }
   } catch (error) {
-    await logAndExit(`Failed to validate workflow input: ${error instanceof Error ? error.message : String(error)}`);
+    return logAndExit(`Failed to validate workflow input: ${error instanceof Error ? error.message : String(error)}`);
   }
-
-  console.log("TESTT toolsToLoad", toolsToLoad.value);
 
   // Start loading tools
   const toolIds = [...toolsToLoad.value];
@@ -96,7 +92,7 @@ const currentComponent = computed(() => defineAsyncComponent(async () => {
       if (tool.inputType !== toolInput.type) {
         continue;
       }
-      const toolComponent = await tool.onLoad({
+      const toolComponentPromise = tool.onLoad({
         toolIds,
         toolIndex: toolsToLoad.value.indexOf(toolId),
         props: {
@@ -104,15 +100,14 @@ const currentComponent = computed(() => defineAsyncComponent(async () => {
           onAction,
         }
       });
-      console.log("TESTT toolComponent", tool.id);
       currentToolId.value = toolId;
-      return toolComponent;
+      return defineAsyncComponent(async () => await toolComponentPromise);
     } catch (error: unknown) {
-      await logAndExit(`Failed to load tool ${toolId}: ${error instanceof Error ? error.message : String(error)}`);
+      logAndExit(`Failed to load tool ${toolId}: ${error instanceof Error ? error.message : String(error)}`);
       break;
     }
   }
 
-  return defaultComponent;
-}));
+  return logAndExit("All tools in workflow failed to load");
+});
 </script>

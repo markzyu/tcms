@@ -205,8 +205,11 @@ export interface Tool<TInput extends ToolInputTypes = any> extends z.infer<typeo
    * This function is asynchronous to allow potential dynamic loading of tools, in later TCMS versions.
    * 
    * The onLoad logic is also used to determine whether the current tool in the workflow is suitable
-   * for the input props. If unsuitable, the implementaton must reject the promise. And TCMS will
-   * try the next tool in the workflow until it exhausts all available tools.
+   * for the input props. If unsuitable, the implementaton must throw an error, instead of returning a promise.
+   * And TCMS will try the next tool in the workflow until it exhausts all available tools.
+   * 
+   * However, the loading suitability determination is not asynchronous: This must be implemented
+   * as a synchronous function which returns a promise so that unsuitable tools throw an error immediately.
    */
   onLoad: (context: ToolOnLoadContext<TInput>) => Promise<Component<ToolProps<TInput>>>;
 }
