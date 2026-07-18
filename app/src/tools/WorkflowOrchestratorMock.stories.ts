@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import { MockOrchestratorWrapper } from './WorkflowOrchestrator.mocks'
 
 const meta = {
-  title: 'Tools/WorkflowOrchestrator',
+  title: 'Tools/WorkflowOrchestratorWithMockedTools',
   component: MockOrchestratorWrapper,
   argTypes: {
     workflowToolIds: {
@@ -50,5 +50,5 @@ const meta = {
 
 export default meta
 type Story = StoryObj<typeof meta>
-export const Primary: Story = {
+export const BasicTemplateEditor: Story = {
 }
