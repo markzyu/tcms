@@ -2,7 +2,7 @@
   <div v-if="isLoadingTool" class="flex flex-col items-center justify-center h-full" data-testid="loading-workflow">
     Loading Workflow: {{ workflowId }}...
   </div>
-  <component :is="currentComponent" :input="props.input" :onAction="onAction" />
+  <component :is="currentComponent" :input="props.input" :onAction="onAction" :errorMessage="errorMessage" />
 </template>
 
 <script setup lang="ts">
@@ -22,6 +22,7 @@ const props = defineProps<WorkflowOrchestratorProps>();
 const workflow = computed(() => props.workflowRegistry[props.workflowId] ?? null);
 const toolsToLoad = computed(() => workflow.value?.toolIds ?? []);
 const currentToolId = ref<string | null>(null);
+const errorMessage = ref<string | null>(null);
 
 const onAction = async (action: ToolAction) => {
   switch (action.type) {
@@ -42,25 +43,30 @@ const onAction = async (action: ToolAction) => {
 
 const defaultComponent = defineComponent({
   name: 'DefaultComponent',
-  setup() {
+  props: {
+    errorMessage: {
+      type: String,
+      required: true,
+    },
   },
   template: `
-    <div data-testid="default-component">
-      Default Component
+    <div data-testid="default-component" class="hidden">
+      {{ errorMessage }}
     </div>
   `,
 });
 
-const logAndExit = (errorMessage: string) => {
-  console.error(errorMessage);
+const logAndExit = (message: string) => {
+  console.error(message);
+  errorMessage.value = message;
   props.onAction({
     type: "closeWorkflow",
-    errorMessage,
+    errorMessage: message,
   });
   return defaultComponent;
 }
 
-const isLoadingTool = computed(() => currentToolId.value === null);
+const isLoadingTool = computed(() => currentToolId.value === null && errorMessage.value === null);
 
 // TODO: pull most of this stuff out of defineAsyncComponent because right now, computed doesn't know which dependencies are needed to re-run the function
 const currentComponent = computed(() => {
@@ -83,6 +89,7 @@ const currentComponent = computed(() => {
   // Start loading tools
   const toolIds = [...toolsToLoad.value];
   const toolInput = props.input;
+  let finalErrorMessage = "There was no eligible tool to load";
   for (const toolId of toolIds) {
     try {
       const tool = props.toolRegistry[toolId];
@@ -109,11 +116,11 @@ const currentComponent = computed(() => {
         }
       });
     } catch (error: unknown) {
-      logAndExit(`Failed to load tool ${toolId}: ${error instanceof Error ? error.message : String(error)}`);
-      break;
+      finalErrorMessage = `Failed to load tool ${toolId}: ${error instanceof Error ? error.message : String(error)}`;
+      continue;
     }
   }
 
-  return logAndExit("All tools in workflow failed to load");
+  return logAndExit(finalErrorMessage);
 });
 </script>

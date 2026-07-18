@@ -1,0 +1,3 @@
+.hidden [data-testid="default-component"] {
+  display: auto !important;
+}

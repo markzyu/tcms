@@ -5,7 +5,7 @@ export const toolRegistry: ToolRegistry = {
   /**
   "json-objects-editor": {
     id: "json-objects-editor",
-    inputType: "jsonWithSchema" as const,
+    inputType: "jsonWithSchema",
   },
   "json-arrays-editor": {
     id: "json-arrays-editor",
@@ -21,6 +21,13 @@ export const toolRegistry: ToolRegistry = {
     inputType: "jsonWithSchema",
   }
   **/
+ /**
+  // Ideally we also need a tool to show json schema errors.
+  "json-schema-error-viewer": {
+    id: "json-schema-error-viewer",
+    inputType: "jsonSchemaError",
+  },
+  */
 };
 
 export const workflowRegistry: WorkflowRegistry = {
