@@ -193,6 +193,13 @@ export type ToolOnLoadContext<TInput extends ToolInputTypes = any> = {
   props: ToolProps<TInput>;
 }
 
+export type ToolOnLoadResult<TInput extends ToolInputTypes = any> = {
+  /** If set, the current tool will be skipped and the next tool will be tried. */
+  skipReason?: string;
+  /** If set, and if skipReason is not set, the workflow must use this loader */
+  loader?: Promise<Component<ToolProps<TInput>>>;
+}
+
 export const ToolSchema = z.object({
   id: z.string(),
   inputType: ToolInputTypesSchema,
@@ -204,6 +211,10 @@ export interface Tool<TInput extends ToolInputTypes = any> extends z.infer<typeo
    * 
    * This function is asynchronous to allow potential dynamic loading of tools, in later TCMS versions.
    * 
+   * **Caveat:** Asynchronous rejection of the `ToolOnLoadResult.loader` promise will be
+   * **treated as a failure to load the whole workflow.** To skip loading a tool, use the
+   * `ToolOnLoadResult.skipReason` field instead of returning a promise.
+   * 
    * The onLoad logic is also used to determine whether the current tool in the workflow is suitable
    * for the input props. If unsuitable, the implementaton must throw an error, instead of returning a promise.
    * And TCMS will try the next tool in the workflow until it exhausts all available tools.
@@ -211,6 +222,6 @@ export interface Tool<TInput extends ToolInputTypes = any> extends z.infer<typeo
    * However, the loading suitability determination is not asynchronous: This must be implemented
    * as a synchronous function which returns a promise so that unsuitable tools throw an error immediately.
    */
-  onLoad: (context: ToolOnLoadContext<TInput>) => Promise<Component<ToolProps<TInput>>>;
+  onLoad: (context: ToolOnLoadContext<TInput>) => ToolOnLoadResult<TInput>;
 }
 export type ToolRegistry = Record<string, Tool>;

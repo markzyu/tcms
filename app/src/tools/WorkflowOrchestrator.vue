@@ -89,17 +89,20 @@ const currentComponent = computed(() => {
   // Start loading tools
   const toolIds = [...toolsToLoad.value];
   const toolInput = props.input;
-  let finalErrorMessage = "There was no eligible tool to load";
+  const toolSkipErrors: string[] = [];
   for (const toolId of toolIds) {
     try {
       const tool = props.toolRegistry[toolId];
       if (!tool) {
+        toolSkipErrors.push(`Tried ${toolId}: There is no such tool.`);
         continue;
       }
       if (tool.inputType !== toolInput.type) {
+        toolSkipErrors.push(`Tried ${toolId}: Input type mismatch: ${tool.inputType} !== ${toolInput.type}.`);
         continue;
       }
-      const toolComponentPromise = tool.onLoad({
+
+      const loadResult = tool.onLoad({
         toolIds,
         toolIndex: toolsToLoad.value.indexOf(toolId),
         props: {
@@ -107,20 +110,28 @@ const currentComponent = computed(() => {
           onAction,
         }
       });
+
+      // Typescript linter would complain if we assert on `loadResult.loader` directly
+      const loadPromise = loadResult.loader;
+      if (loadResult.skipReason || !loadPromise) {
+        toolSkipErrors.push(loadResult.skipReason ? `Tried ${toolId}: ${loadResult.skipReason}.` : `Tool ${toolId} did not provide a loader.`);
+        continue;
+      }
+
       currentToolId.value = toolId;
       return defineAsyncComponent(async () => {
         try {
-          return await toolComponentPromise;
+          return await loadPromise;
         } catch (error) {
-          return logAndExit(`Failed to load tool ${toolId}: ${error instanceof Error ? error.message : String(error)}`);
+          return logAndExit(`Failed to load required tool ${toolId}: ${error instanceof Error ? error.message : String(error)}`);
         }
       });
     } catch (error: unknown) {
-      finalErrorMessage = `Failed to load tool ${toolId}: ${error instanceof Error ? error.message : String(error)}`;
+      toolSkipErrors.push(`Tried ${toolId}: ${error instanceof Error ? error.message : String(error)}.`);
       continue;
     }
   }
 
-  return logAndExit(finalErrorMessage);
+  return logAndExit(`There was no eligible tool to load. ${toolSkipErrors.join(" ")}`);
 });
 </script>

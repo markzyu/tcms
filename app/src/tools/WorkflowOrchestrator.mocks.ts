@@ -1,5 +1,5 @@
 import { computed, defineComponent, PropType } from "vue";
-import { ToolAction, ToolInput, ToolInputTypes, ToolRegistry } from "./toolTypes";
+import { ToolAction, ToolInput, ToolInputTypes, ToolProps, ToolRegistry } from "./toolTypes";
 import { WorkflowRegistry } from "./workflowTypes";
 import { EditorUiSchemaJson } from "@tcms/mini-app-common";
 import WorkflowOrchestrator from "./WorkflowOrchestrator.vue";
@@ -9,13 +9,15 @@ export const mockToolRegistry: ToolRegistry = {
   "json-objects-editor": {
     id: "json-objects-editor",
     inputType: "jsonWithSchema",
-    onLoad: async ({ props }) => {
+    onLoad: ({ props }) => {
       if (props.input.type === "jsonWithSchema") {
         if (typeof props.input.json !== "object" || Array.isArray(props.input.json)) {
-          throw new Error("Skipping json-objects-editor because input is not an object");
+          return {
+            skipReason: "Skipping json-objects-editor because input is not an object",
+          };
         }
       }
-      return defineComponent({
+      const component = defineComponent<ToolProps<"jsonWithSchema">>({
         name: 'JsonObjectsEditor',
         props: {
           input: {
@@ -34,18 +36,23 @@ export const mockToolRegistry: ToolRegistry = {
           </div>
         `,
       });
+      return {
+        loader: Promise.resolve(component),
+      };
     },
   },
   "json-arrays-editor": {
     id: "json-arrays-editor",
     inputType: "jsonWithSchema",
-    onLoad: async ({ props }) => {
+    onLoad: ({ props }) => {
       if (props.input.type === "jsonWithSchema") {
         if (!Array.isArray(props.input.json)) {
-          throw new Error("Skipping json-arrays-editor because input is not an array");
+          return {
+            skipReason: "Skipping json-arrays-editor because input is not an array",
+          };
         }
       }
-      return defineComponent({
+      const component = defineComponent<ToolProps<"jsonWithSchema">>({
           name: 'JsonArraysEditor',
           props: {
             input: {
@@ -64,6 +71,9 @@ export const mockToolRegistry: ToolRegistry = {
             </div>
           `,
       });
+      return {
+        loader: Promise.resolve(component),
+      };
     },
   },
 };
