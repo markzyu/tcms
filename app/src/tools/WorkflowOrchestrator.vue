@@ -61,6 +61,7 @@ const defaultComponent = defineComponent({
 
 const isLoadingTool = computed(() => currentToolId.value === null);
 
+// TODO: pull most of this stuff out of defineAsyncComponent because right now, computed doesn't know which dependencies are needed to re-run the function
 const currentComponent = computed(() => defineAsyncComponent(async () => {
   console.log("TESTT currentComponent");
   // Check if the input value is valid
