@@ -76,6 +76,15 @@ export const mockToolRegistry: ToolRegistry = {
       };
     },
   },
+  "mock-crash-during-load": {
+    id: "mock-crash-during-load",
+    inputType: "jsonWithSchema",
+    onLoad: () => {
+      return {
+        loader: Promise.reject(new Error("Mock crash during load")),
+      };
+    },
+  },
 };
 
 export const MockOrchestratorWrapper = defineComponent({
