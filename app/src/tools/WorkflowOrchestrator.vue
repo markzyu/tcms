@@ -101,7 +101,13 @@ const currentComponent = computed(() => {
         }
       });
       currentToolId.value = toolId;
-      return defineAsyncComponent(async () => await toolComponentPromise);
+      return defineAsyncComponent(async () => {
+        try {
+          return await toolComponentPromise;
+        } catch (error) {
+          return logAndExit(`Failed to load tool ${toolId}: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      });
     } catch (error: unknown) {
       logAndExit(`Failed to load tool ${toolId}: ${error instanceof Error ? error.message : String(error)}`);
       break;
