@@ -105,7 +105,7 @@ export const MockOrchestratorWrapper = defineComponent({
     const workflowRegistry = computed<WorkflowRegistry>(() => ({
       "mock-workflow": {
         id: "mock-workflow",
-        toolIds: props.workflowToolIds.split(','),
+        toolIds: props.workflowToolIds ? props.workflowToolIds.split(',') : [],
         inputType: props.inputType,
       },
     }));
