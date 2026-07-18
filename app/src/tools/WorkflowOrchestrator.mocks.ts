@@ -109,6 +109,10 @@ export const MockOrchestratorWrapper = defineComponent({
       type: Object,
       required: true,
     },
+    onAction: {
+      type: Function as PropType<(action: ToolAction) => Promise<void>>,
+      required: false,
+    },
   },
   setup(props) {
     const workflowRegistry = computed<WorkflowRegistry>(() => ({
@@ -137,9 +141,9 @@ export const MockOrchestratorWrapper = defineComponent({
       workflowRegistry,
       toolRegistry: mockToolRegistry,
       input,
-      onAction: async (action: ToolAction) => {
+      onAction: props.onAction ?? (async (action: ToolAction) => {
         console.log(action);
-      }
+      }),
     };
   },
   template: `
