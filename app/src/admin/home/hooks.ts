@@ -1,6 +1,7 @@
 import { onMounted, ref, watch } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { invokeWithType, LcdnConfig, LcdnInstanceConfig, LcdnInstanceConfigSchema, LcdnStatusSchema } from "../tauri-types";
+import { join } from "@tauri-apps/api/path";
 import { z } from "zod";
 import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { toastController } from "@ionic/vue";
@@ -90,12 +91,14 @@ export const useEditableInstanceConfigs = (instanceId: string, onUrlUpdate: (url
   onMounted(async () => {
     try {
       const osDataDir = await invokeWithType(z.string(), 'ensure_os_data_dir');
-      const instanceConfigStr = await readTextFile(osDataDir + '/public/instances/' + instanceId + '/instance.json');
+      const instanceConfigPath = await join(osDataDir, 'public', 'instances', instanceId, 'instance.json');
+      const instanceConfigStr = await readTextFile(instanceConfigPath);
       const config = LcdnInstanceConfigSchema.parse(JSON.parse(instanceConfigStr));
       instanceConfig.value = config;
       urlSlug.value = config.slug;
 
-      const contentJsonStr = await readTextFile(osDataDir + '/public/instances/' + instanceId + '/content/main.en.json');
+      const contentJsonPath = await join(osDataDir, 'public', 'instances', instanceId, 'content', 'main.en.json');
+      const contentJsonStr = await readTextFile(contentJsonPath);
       contentJson.value = contentJsonStr;
       isLoadingInstanceConfig.value = false;
     } catch (error) {
@@ -115,8 +118,10 @@ export const useEditableInstanceConfigs = (instanceId: string, onUrlUpdate: (url
       ...instanceConfig.value,
       slug,
     };
-    await writeTextFile(osDataDir + '/public/instances/' + instanceId + '/instance.json', JSON.stringify(newInstanceConfig));
-    await writeTextFile(osDataDir + '/public/instances/' + instanceId + '/content/main.en.json', rawContentJson);
+    const writeConfigPath = await join(osDataDir, 'public', 'instances', instanceId, 'instance.json');
+    const writeContentPath = await join(osDataDir, 'public', 'instances', instanceId, 'content', 'main.en.json');
+    await writeTextFile(writeConfigPath, JSON.stringify(newInstanceConfig));
+    await writeTextFile(writeContentPath, rawContentJson);
     await invokeWithType(z.null(), 'lcdn_reload_configs');
     onUrlUpdate(`http://localhost:8088/${slug}?v=${Date.now()}`);
     instanceConfig.value = newInstanceConfig;

@@ -7,6 +7,7 @@ import { InstallStatus, InstallStatusSchema, invokeWithType } from './admin/taur
 import { z } from 'zod';
 import { readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
 import { invoke } from '@tauri-apps/api/core';
+import { join } from '@tauri-apps/api/path';
 
 const mobileOsTypes: OsType[] = ["android", "ios"];
 const isMobile = computed(() => {
@@ -21,7 +22,7 @@ const isMobile = computed(() => {
 const checkInstallStatus = async () => {
   try {
     let osDataDir = await invokeWithType(z.string(), 'ensure_os_data_dir');
-    let installStatusJsonPath = osDataDir + "/install-status.json";
+    let installStatusJsonPath = await join(osDataDir, 'install-status.json');
     let installStatusJsonText = await readTextFile(installStatusJsonPath);
     let installStatus = InstallStatusSchema.parse(JSON.parse(installStatusJsonText));
     return installStatus.appVersion === packageJson.version;
@@ -33,7 +34,7 @@ const checkInstallStatus = async () => {
 
 const updateInstallStatus = async () => {
   let osDataDir = await invokeWithType(z.string(), 'ensure_os_data_dir');
-  let installStatusJsonPath = osDataDir + "/install-status.json";
+  let installStatusJsonPath = await join(osDataDir, 'install-status.json');
   let installStatus: InstallStatus = {
     appVersion: packageJson.version,
   };
@@ -46,11 +47,13 @@ onMounted(async () => {
   let isInstalled = await checkInstallStatus();
   if (!isInstalled) {
     isInstalling.value = true;
-    console.log('Installing latest templates/prefabs...');
+    console.log('Templates and prefabs are not installed');
     try {
       await updateInstallStatus();
+      console.log('Installing latest templates/prefabs...');
       await invoke('perform_first_time_setup');
     } catch (error) {
+      console.error('Error installing latest templates/prefabs', error);
       const toast = await toastController.create({
         message: 'Error installing latest templates/prefabs: ' + String(error),
         duration: 5000,

@@ -19,8 +19,10 @@ async fn get_template_install_dir(
 ) -> Result<PathBuf, String> {
   let public_path = lcdnfs::ensure_templates_dir(&app_handle, template_scope)?;
   let public_path = public_path.join(format!("{}.zip", template_name));
-  let template_asset_path = format!("templates/{}/{}.zip", template_scope, template_name);
-  lcdnfs::copy_app_asset_to_fs(&app_handle, template_asset_path, &public_path)?;
+  let mut template_asset_path = PathBuf::from("templates"); 
+  template_asset_path.push(template_scope);
+  template_asset_path.push(format!("{}.zip", template_name));
+  lcdnfs::copy_app_asset_to_fs(&app_handle, &template_asset_path, &public_path)?;
   Ok(public_path)
 }
 
@@ -33,9 +35,11 @@ async fn get_prefab_instance_install_dir(
 ) -> Result<PathBuf, String> {
   let instances_dir = lcdnfs::ensure_instances_dir(&app_handle)?;
   let instance_id_dir = instances_dir.join(&instance_id);
+  let mut instance_asset_path = PathBuf::from("instances");
+  instance_asset_path.push(format!("{}.zip", instance_id));
   lcdnfs::unzip_app_asset_to_fs(
     &app_handle,
-    format!("instances/{}.zip", instance_id),
+    &instance_asset_path,
     &instance_id_dir,
   )?;
   Ok(instance_id_dir)
