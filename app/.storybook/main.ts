@@ -4,6 +4,9 @@ const config: StorybookConfig = {
   stories: ['../src/tools/**/*.mdx', '../src/tools/**/*.stories.@(js|jsx|ts|tsx)'],
   staticDirs: ['../public'],
   addons: [],
+  core: {
+    disableTelemetry: true,
+  },
   framework: {
     name: '@storybook/vue3-vite',
     options: {}
