@@ -88,8 +88,10 @@ pub(crate) fn unzip_app_asset_to_fs(
   }
 
   let asset_bytes = read_app_asset(app_handle, relative_path)?;
-  let mut zip =
-    zip::ZipArchive::new(std::io::Cursor::new(asset_bytes)).map_err(|e| format!("unzip_app_asset_to_fs: {}", e))?;
-  zip.extract(target_path).map_err(|e| format!("unzip_app_asset_to_fs: {}", e))?;
+  let mut zip = zip::ZipArchive::new(std::io::Cursor::new(asset_bytes))
+    .map_err(|e| format!("unzip_app_asset_to_fs: {}", e))?;
+  zip
+    .extract(target_path)
+    .map_err(|e| format!("unzip_app_asset_to_fs: {}", e))?;
   Ok(())
 }

@@ -8,6 +8,7 @@ use std::{
   path::{Component, PathBuf},
   str::FromStr,
 };
+use url::Url;
 
 use crate::{InstanceConfig, types::AppState};
 
@@ -101,43 +102,67 @@ pub(crate) fn map_external_uri_path_to_internal(
   //     - "/slug/...": map to "templates/{template_scope}/{template_id}/{path_without_slug}"
   //     - "/slug": map to "templates/{template_scope}/{template_id}/index.html"
   //     - "/slug/__query__/...": map to "queries/by_slug/{slug}/..."
-  let orig_uri_path_buf = PathBuf::from(external_uri_path.clone());
-  let path_without_slug = orig_uri_path_buf
-    .components()
-    .skip(1)
-    .collect::<PathBuf>()
-    .to_string_lossy()
-    .to_string();
-  let path_first_component = orig_uri_path_buf.components().nth(0);
-  let path_second_component = orig_uri_path_buf
-    .components()
-    .nth(1)
-    .map(|c| c.as_os_str().to_string_lossy().to_string());
-  let path_third_and_rest = orig_uri_path_buf
-    .components()
-    .skip(2)
-    .collect::<PathBuf>()
-    .to_string_lossy()
-    .to_string();
-  let path_components_count = orig_uri_path_buf.components().count();
+  let external_uri_str = format!("http://localhost/{}", external_uri_path);
+  let Ok(orig_uri) = Url::parse(&external_uri_str) else {
+    return external_uri_path;
+  };
+  let Some(mut orig_uri_path_segs) = orig_uri.path_segments() else {
+    return "/".to_string();
+  };
+
+  let path_first_component = orig_uri_path_segs.next();
+  let path_second_component = orig_uri_path_segs.next();
+  let Some(slug) = path_first_component else {
+    return "/".to_string();
+  };
+
+  let slug_base_url_str = format!("http://localhost/{}", slug);
+  let Ok(slug_base_url) = Url::parse(&slug_base_url_str) else {
+    return "/".to_string();
+  };
+  let maybe_path_without_slug = slug_base_url.make_relative(&orig_uri).and_then(|path| {
+    if !path.starts_with("../") && !path.is_empty() {
+      Some(path)
+    } else {
+      None
+    }
+  });
+
+  let maybe_path_third_and_rest = path_second_component.and_then(|path| {
+    let path_with_slug_and_second_component = format!("{}/{}", slug, path);
+    let mut base_url = orig_uri.clone();
+    base_url.set_path(&path_with_slug_and_second_component);
+
+    if let Some(path) = base_url.make_relative(&orig_uri) {
+      if !path.starts_with("../") && !path.is_empty() {
+        return Some(path);
+      }
+    }
+    None
+  });
+
+  eprintln!(
+    "external_uri_path: {}, slug: {}, maybe_path_without_slug: {:?}, maybe_path_third_and_rest: {:?}",
+    external_uri_path, slug, &maybe_path_without_slug, maybe_path_third_and_rest
+  );
+
   match (
-    path_first_component,
-    path_second_component.as_deref(),
-    path_components_count,
+    path_second_component,
+    maybe_path_without_slug,
+    maybe_path_third_and_rest,
   ) {
-    (_, _, 0) => "/".to_string(),
-    (Some(Component::Normal(_)), None, 1) => format!(
+    (None, _, _) => format!(
       "templates/{}/{}/index.html",
       instance_config.template_scope, instance_config.template_id
     ),
-    (Some(Component::Normal(_)), Some("assets"), _) => format!(
+    (Some("assets"), Some(path_without_slug), _) => format!(
       "instances/{}/{}",
       instance_config.instance_id, path_without_slug
     ),
-    (Some(Component::Normal(_)), Some("__query__"), _) => {
+    (Some("__query__"), _, Some(path_third_and_rest)) => {
       format!("queries/by_slug/{}/{}", slug, path_third_and_rest)
     }
-    (Some(Component::Normal(_)), _, _) => format!(
+    (Some(_), Some(path_without_slug), _) => format!(
       "templates/{}/{}/{}",
       instance_config.template_scope, instance_config.template_id, path_without_slug
     ),

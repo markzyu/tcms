@@ -45,7 +45,7 @@ export const useLocalCDNControls = (onUrlUpdate: (url: string | null) => void) =
       };
 
       const osDataDir = await invokeWithType(z.string(), "ensure_os_data_dir");
-      const publicContentPath = osDataDir + "/public";
+      const publicContentPath = await join(osDataDir, "public");
       console.log("publicContentPath", publicContentPath);
 
       const args = {
