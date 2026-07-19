@@ -10,7 +10,9 @@ async fn main() {
   setup_rustls();
 
   // read config from public/lcdn-config.json
-  let Ok(config_file) = std::fs::read_to_string("public/lcdn-config.json") else {
+  let public_content_path = PathBuf::from("public");
+  let config_path = public_content_path.join("lcdn-config.json");
+  let Ok(config_file) = std::fs::read_to_string(config_path) else {
     eprintln!("Failed to read config file: public/lcdn-config.json");
     std::process::exit(1);
   };
@@ -22,7 +24,7 @@ async fn main() {
 
   println!("Starting LCDN server...");
 
-  let app_state = AppState::from_config(config, PathBuf::from("public"));
+  let app_state = AppState::from_config(config, public_content_path);
   let app_state_copy = if let Ok(app_state) = app_state {
     start_lcdn_server(app_state.clone())
       .await

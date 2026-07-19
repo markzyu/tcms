@@ -123,8 +123,9 @@ impl AppState {
   ) -> Result<Self, LcdnError> {
     let mut instance_configs: Vec<InstanceConfig> = Vec::new();
     for instance_id in lcdn_config.instance_ids.iter() {
-      let config_path =
-        public_content_path.join(format!("instances/{}/instance.json", instance_id));
+      let mut config_path = public_content_path.join("instances");
+      config_path.push(instance_id);
+      config_path.push("instance.json");
       let config_file = File::open(config_path)
         .map_err(|_| LcdnError::InstanceConfigNotFound(instance_id.clone()))?;
       let config = serde_json::from_reader::<File, InstanceConfig>(config_file)
