@@ -6,7 +6,7 @@
     "build:css": "tailwindcss -i ./src/main.css -o ./dist/app.css --minify",
     "build:js": "tsx esbuild.config.mts",
     "build:schemas": "tsx src/content/rootManifest.mts",
-    "build:zip": "zip -rv $PROJECT_CWD/app/public/templates/$npm_package_name.zip index.html dist",
+    "build:zip": "zip -r $PROJECT_CWD/app/public/templates/$npm_package_name.zip index.html dist",
     "build": "yarn build:schemas && yarn build:css && yarn build:js && yarn build:zip",
     "dev:css": "tailwindcss -i ./src/main.css -o ./dist/app.css --watch",
     "dev:js": "tsx esbuild.config.mts --watch",

@@ -1,5 +1,7 @@
 This is a new project, work in progress.
 
+### Prerequisites
+
 To get started, please install nvm, node 22, and yarn 2. Then run:
 ```bash
 cd tcms
@@ -11,7 +13,7 @@ mkdir -p ~/.local/bin
 ln -s $(which yarn) ~/.local/bin/yarn-tcms
 ```
 
-Please also make sure you've defined the relevant `ANDROID_NDK_HOME` environment variables
+For Android development, please also make sure you've defined the relevant `ANDROID_NDK_HOME` environment variables
 
 ```
 export ANDROID_HOME="/path/to/your/android/sdk"
@@ -19,6 +21,17 @@ export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/$(ls -1 $ANDROID_HOME/ndk)"
 export PATH="$PATH":$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin:"$ANDROID_HOME"/platform-tools:"$HOME"/.local/bin
 export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 ```
+
+For Windows development, please also make sure you have a basic `zip` binary. You can create one based on `7z` by adding a batch file `zip.bat` to your path with the following content:
+
+```batch
+@echo off
+7z a %*
+
+REM You can also use the commandline version of zip called 7za, instead of 7z.
+```
+
+### Development
 
 To verify the baseline correctness of all packages, templates, and the app, run:
 ```bash

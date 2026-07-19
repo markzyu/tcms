@@ -97,7 +97,9 @@ export const defineRootManifest = async (props: DefineRootManifestProps) => {
 
   await mkdir(outputDir, { recursive: true });
 
-  const packageJson = await import(path.join(WORKDIR, "package.json"));
+  const { pathToFileURL } = await import("node:url");
+  const packageJsonUrl = pathToFileURL(path.join(WORKDIR, "package.json"));
+  const packageJson = await import(packageJsonUrl.toString());
   const packageDependencies = packageJson.dependencies || {};
   const dependencies = Object.entries(packageDependencies)
     .filter(([name]) => !name.startsWith("@tcms/"))
@@ -136,4 +138,5 @@ export const cleanUpSchemaDirectory = async () => {
 export const NODE_MODULES_USED_BY_BUILD_SCHEMA_STEP = [
   "path",
   "fs/promises",
+  "node:url",
 ];
