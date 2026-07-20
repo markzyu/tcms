@@ -4,11 +4,7 @@ use axum::{
   response::Response,
 };
 use http::{StatusCode, Uri, header, uri::PathAndQuery};
-use std::{
-  path::{Component, PathBuf},
-  str::FromStr,
-};
-use url::Url;
+use std::str::FromStr;
 
 use crate::{InstanceConfig, types::AppState};
 
@@ -90,83 +86,60 @@ pub(crate) fn get_referer_as_uri(req: &Request, same_origin_domains: &Vec<String
     })
 }
 
-// Change only the uri path based on slug and instance config
+/// Change only the path part of the URI based on slug and instance config.
+/// 
+/// `external_uri_path` is assumed to come from a normalized URI.
+/// (Basically, this function doesn't normalize it. A path with double
+/// slashes is treated differently from a path with a single slash.)
+/// 
+/// `expected_slug` must match the slug in the URI path.
+/// 
+/// Desired URI path mappings:
+///     - `Invalid string`: keep as is
+///     - `/slug/assets/...`: map to `instances/{instance_id}/{path_without_slug}`
+///     - `/slug/...`: map to `templates/{template_scope}/{template_id}/{path_without_slug}`
+///     - `/slug`: map to `templates/{template_scope}/{template_id}/index.html`
+///     - `/slug/__query__/...`: map to `queries/by_slug/{slug}/...`
 pub(crate) fn map_external_uri_path_to_internal(
   external_uri_path: String,
-  slug: String,
+  expected_slug: String,
   instance_config: &InstanceConfig,
 ) -> String {
-  // Desired URI path mappings:
-  //     - "Invalid string": keep as is or use /
-  //     - "/slug/assets/...": map to "instances/{instance_id}/{path_without_slug}"
-  //     - "/slug/...": map to "templates/{template_scope}/{template_id}/{path_without_slug}"
-  //     - "/slug": map to "templates/{template_scope}/{template_id}/index.html"
-  //     - "/slug/__query__/...": map to "queries/by_slug/{slug}/..."
-  let external_uri_str = format!("http://localhost/{}", external_uri_path);
-  let Ok(orig_uri) = Url::parse(&external_uri_str) else {
+  let path_components: Vec<_> = external_uri_path.split('/').collect();
+
+  let path_first_component = path_components.get(0).map(|s| *s);
+  let path_second_component = path_components.get(1).map(|s| *s);
+  let Some(slug) = path_first_component else {
     return external_uri_path;
   };
-  let Some(mut orig_uri_path_segs) = orig_uri.path_segments() else {
-    return "/".to_string();
-  };
+  if slug != expected_slug {
+    return external_uri_path;
+  }
 
-  let path_first_component = orig_uri_path_segs.next();
-  let path_second_component = orig_uri_path_segs.next();
-  let Some(slug) = path_first_component else {
-    return "/".to_string();
-  };
-
-  let slug_base_url_str = format!("http://localhost/{}", slug);
-  let Ok(slug_base_url) = Url::parse(&slug_base_url_str) else {
-    return "/".to_string();
-  };
-  let maybe_path_without_slug = slug_base_url.make_relative(&orig_uri).and_then(|path| {
-    if !path.starts_with("../") && !path.is_empty() {
-      Some(path)
-    } else {
-      None
-    }
-  });
-
-  let maybe_path_third_and_rest = path_second_component.and_then(|path| {
-    let path_with_slug_and_second_component = format!("{}/{}", slug, path);
-    let mut base_url = orig_uri.clone();
-    base_url.set_path(&path_with_slug_and_second_component);
-
-    if let Some(path) = base_url.make_relative(&orig_uri) {
-      if !path.starts_with("../") && !path.is_empty() {
-        return Some(path);
-      }
-    }
-    None
-  });
+  let path_without_slug = path_components.iter().skip(1).map(|s| *s).collect::<Vec<_>>().join("/");
+  let path_third_and_rest = path_components.iter().skip(2).map(|s| *s).collect::<Vec<_>>().join("/");
 
   eprintln!(
-    "external_uri_path: {}, slug: {}, maybe_path_without_slug: {:?}, maybe_path_third_and_rest: {:?}",
-    external_uri_path, slug, &maybe_path_without_slug, maybe_path_third_and_rest
+    "external_uri_path: {}, slug: {}, path_without_slug: {}, path_third_and_rest: {}",
+    external_uri_path, slug, path_without_slug, path_third_and_rest
   );
 
-  match (
-    path_second_component,
-    maybe_path_without_slug,
-    maybe_path_third_and_rest,
-  ) {
-    (None, _, _) => format!(
+  match path_second_component {
+    None => format!(
       "templates/{}/{}/index.html",
       instance_config.template_scope, instance_config.template_id
     ),
-    (Some("assets"), Some(path_without_slug), _) => format!(
+    Some("assets") => format!(
       "instances/{}/{}",
       instance_config.instance_id, path_without_slug
     ),
-    (Some("__query__"), _, Some(path_third_and_rest)) => {
+    Some("__query__") => {
       format!("queries/by_slug/{}/{}", slug, path_third_and_rest)
     }
-    (Some(_), Some(path_without_slug), _) => format!(
+    Some(_) => format!(
       "templates/{}/{}/{}",
       instance_config.template_scope, instance_config.template_id, path_without_slug
     ),
-    _ => external_uri_path,
   }
 }
 
@@ -258,7 +231,7 @@ mod tests {
     let instance = test_instance();
     assert_eq!(
       map_external_uri_path_to_internal(String::new(), TEST_SLUG.to_string(), &instance),
-      "/"
+      ""
     );
   }
 
