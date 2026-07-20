@@ -42,10 +42,38 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          # glib-2.0 headers + pkg-config (see README prerequisites)
-          sudo apt-get install -y libglib2.0-dev pkg-config
+          # Tauri 2 Debian prerequisites: https://v2.tauri.app/start/prerequisites/
+          # (libgtk-3-dev provides gdk-3.0; webkit2gtk pulls most of the rest)
+          sudo apt-get install -y \
+            build-essential \
+            pkg-config \
+            libglib2.0-dev \
+            libgtk-3-dev \
+            libwebkit2gtk-4.1-dev \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev
           if [ "${{ matrix.rust_target }}" = "x86_64-unknown-linux-musl" ]; then
             sudo apt-get install -y musl-tools
+          fi
+
+      - name: Verify Linux pkg-config modules
+        if: runner.os == 'Linux'
+        run: |
+          # Fail early with a clear list instead of mid-cargo. Extend this when a new .pc shows up.
+          missing=0
+          for pc in glib-2.0 gdk-3.0 gtk+-3.0 webkit2gtk-4.1 openssl; do
+            if pkg-config --exists "$pc"; then
+              echo "ok: $pc ($(pkg-config --modversion "$pc"))"
+            else
+              echo "missing: $pc"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            echo "Install the matching -dev packages (see Tauri Linux prerequisites), then re-run."
+            exit 1
           fi
 
       - name: Install MinGW (windows-gnu)
@@ -78,7 +106,7 @@ jobs:
         if: matrix.rust_target == 'x86_64-pc-windows-gnu'
         run: |
           mkdir -p "$USERPROFILE/.cargo"
-          printf '\n[target.x86_64-pc-windows-gnu]\nlinker = "rust-lld"\n\n[profile.dev.package."*"]\nopt-level = 3\n' >> "$USERPROFILE/.cargo/config.toml"
+          printf '\n[profile.dev.package."*"]\nopt-level = 3\n' >> "$USERPROFILE/.cargo/config.toml"
 
       - name: Cache Rust build
         uses: Swatinem/rust-cache@v2

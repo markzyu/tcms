@@ -22,16 +22,30 @@ export PATH="$PATH":$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin
 export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 ```
 
-For Linux development, please install the libraries, headers, and pkg-configs for the following packages: `glib-2.0`
+For Linux development, install the [Tauri 2 Linux prerequisites](https://v2.tauri.app/start/prerequisites/) (Debian/Ubuntu):
+
+```sh
+sudo apt update
+sudo apt install libwebkit2gtk-4.1-dev \
+  build-essential \
+  curl \
+  wget \
+  file \
+  libxdo-dev \
+  libssl-dev \
+  libayatana-appindicator3-dev \
+  librsvg2-dev
+```
+
+For Linux development, please also make sure to install `pkg-config`, `libglib2.0-dev`, and `libgtk-3-dev` (provides `gdk-3.0`), if they are not already pulled in as dependencies:
+
+```sh
+sudo apt install pkg-config libglib2.0-dev libgtk-3-dev
+```
 
 For Windows development, you would need to configure `%USERPROFILE%\.cargo\config.toml` to use the following configs because Windows limits the maximum number of exported symbols:
 
 ```toml
-[target.x86_64-pc-windows-gnu]
-linker = "rust-lld"
-
-# Enable high optimizations for dependencies (including Bevy/GUI engines) 
-# while keeping your own local code fast to compile in debug.
 [profile.dev.package."*"]
 opt-level = 3
 ```
