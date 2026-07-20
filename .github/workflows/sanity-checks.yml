@@ -38,11 +38,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install musl tools
-        if: matrix.rust_target == 'x86_64-unknown-linux-musl'
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y musl-tools
+          # glib-2.0 headers + pkg-config (see README prerequisites)
+          sudo apt-get install -y libglib2.0-dev pkg-config
+          if [ "${{ matrix.rust_target }}" = "x86_64-unknown-linux-musl" ]; then
+            sudo apt-get install -y musl-tools
+          fi
 
       - name: Install MinGW (windows-gnu)
         if: matrix.rust_target == 'x86_64-pc-windows-gnu'
@@ -68,6 +72,13 @@ jobs:
         with:
           targets: ${{ matrix.rust_target }}
           components: rustfmt
+
+      # Windows export-symbol limit workaround (see README prerequisites)
+      - name: Configure Cargo linker for Windows (rust-lld)
+        if: matrix.rust_target == 'x86_64-pc-windows-gnu'
+        run: |
+          mkdir -p "$USERPROFILE/.cargo"
+          printf '\n[target.x86_64-pc-windows-gnu]\nlinker = "rust-lld"\n\n[profile.dev.package."*"]\nopt-level = 3\n' >> "$USERPROFILE/.cargo/config.toml"
 
       - name: Cache Rust build
         uses: Swatinem/rust-cache@v2

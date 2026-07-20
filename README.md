@@ -22,6 +22,20 @@ export PATH="$PATH":$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin
 export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 ```
 
+For Linux development, please install the libraries, headers, and pkg-configs for the following packages: `glib-2.0`
+
+For Windows development, you would need to configure `%USERPROFILE%\.cargo\config.toml` to use the following configs because Windows limits the maximum number of exported symbols:
+
+```toml
+[target.x86_64-pc-windows-gnu]
+linker = "rust-lld"
+
+# Enable high optimizations for dependencies (including Bevy/GUI engines) 
+# while keeping your own local code fast to compile in debug.
+[profile.dev.package."*"]
+opt-level = 3
+```
+
 For Windows development, please also make sure you have a basic `zip` binary. You can create one based on `7z` by adding a batch file `zip.bat` to your path with the following content:
 
 ```batch
