@@ -1,0 +1,92 @@
+name: Sanity checks
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+concurrency:
+  group: sanity-checks-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  prepush:
+    name: yarn prepush (${{ matrix.rust_target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            rust_target: x86_64-apple-darwin
+          - os: windows-latest
+            rust_target: x86_64-pc-windows-gnu
+          - os: ubuntu-latest
+            rust_target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            rust_target: x86_64-unknown-linux-musl
+
+    defaults:
+      run:
+        # Bash so Unix-style scripts in package.json (e.g. CARGO_TARGET_DIR=...) work on Windows too.
+        shell: bash
+
+    env:
+      CARGO_BUILD_TARGET: ${{ matrix.rust_target }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install musl tools
+        if: matrix.rust_target == 'x86_64-unknown-linux-musl'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+
+      - name: Install MinGW (windows-gnu)
+        if: matrix.rust_target == 'x86_64-pc-windows-gnu'
+        shell: pwsh
+        run: |
+          choco install mingw -y --no-progress
+          $mingwBins = @(
+            'C:\ProgramData\mingw64\mingw64\bin',
+            'C:\tools\mingw64\bin'
+          ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $mingwBins) {
+            throw 'MinGW bin directory not found after chocolatey install'
+          }
+          Add-Content -Path $env:GITHUB_PATH -Value $mingwBins
+
+      - name: Install zip (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: choco install zip -y --no-progress
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust_target }}
+          components: rustfmt
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: ${{ matrix.rust_target }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+
+      - name: Enable Corepack (Yarn)
+        run: |
+          npm install -g corepack@latest --force
+          corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run yarn prepush
+        run: yarn prepush
