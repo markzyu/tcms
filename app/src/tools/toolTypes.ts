@@ -114,7 +114,13 @@ export const ToolReloadLcdnConfigsActionSchema = z.object({
   type: z.literal("reloadLcdnConfigs"),
 });
 
-/** Open another tool, from this tool. But both tools must be within the same workflow. */
+/**
+ * Open another tool, from this tool. But both tools must be within the same workflow.
+ * 
+ * **Note:** The main difference between `openTool` and `startWorkflow` is that,
+ * `openTool` will not manage the navigation history between tools, while `startWorkflow` will.
+ * (Back buttons navigation, browser history, etc will preserve workflows only, not individual tools.)
+ */
 export const ToolOpenToolActionSchema = z.object({
   type: z.literal("openTool"),
   /** This ID must be within the scope of the workflow / in the toolIds array */
@@ -138,9 +144,15 @@ export const ToolCloseWorkflowActionSchema = z.object({
   errorMessage: z.string().optional(),
 });
 
-/** Replace the current tooling workflow with another */
-export const ToolReplaceWorkflowActionSchema = z.object({
-  type: z.literal("replaceWorkflow"),
+/**
+ * Start a new tooling workflow from an existing one.
+ * 
+ * **Note:** The main difference between `startWorkflow` and `openTool` is that,
+ * `startWorkflow` will manage the navigation history between tools, while `openTool` will not.
+ * (Back buttons navigation, browser history, etc will preserve workflows only, not individual tools.)
+ */
+export const ToolStartWorkflowActionSchema = z.object({
+  type: z.literal("startWorkflow"),
   workflowId: z.string(),
   inputJson: ToolInputSchema,
   /** Using a proxy to update some of the inputJson fields using data from admin shell */
@@ -151,7 +163,7 @@ export const ToolActionSchema = z.union([
   ToolCloseWorkflowActionSchema,
   ToolOpenToolActionSchema,
   ToolReloadLcdnConfigsActionSchema,
-  ToolReplaceWorkflowActionSchema,
+  ToolStartWorkflowActionSchema,
   ToolSaveTextActionSchema,
 ]);
 export type ToolAction = z.infer<typeof ToolActionSchema>;

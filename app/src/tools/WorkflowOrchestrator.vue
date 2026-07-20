@@ -28,7 +28,7 @@ const onAction = async (action: ToolAction) => {
   switch (action.type) {
     case "closeWorkflow":
     case "reloadLcdnConfigs":
-    case "replaceWorkflow":
+    case "startWorkflow":
     case "saveText":
       await props.onAction(action);
       break;
