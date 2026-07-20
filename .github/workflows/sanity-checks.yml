@@ -84,6 +84,8 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           shared-key: ${{ matrix.rust_target }}
+          # Matches .cargo/config.toml target-dir (do not change the target dir itself)
+          workspaces: ". -> app/src-tauri/target"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
