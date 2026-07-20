@@ -1,14 +1,17 @@
 <template>
   <div>
-    <div class="hidden">Debug: {{ jsonData }}</div>
+    <div class="hidden py-10" data-testid="debug-json-data">Debug: {{ jsonData }}</div>
     <div v-for="fieldGroup in fieldGroupDescriptors" :key="fieldGroup.name">
       <div>
-        <div>{{ fieldGroup.name }}</div>
+        <div class="mx-5">{{ fieldGroup.name }}</div>
       </div>
-      <div v-for="field in fieldGroup.fields" :key="field.name">
-        <div class="field-name">{{ field.name }}</div>
-        <input type="text" :value="get(jsonData, field.fullPath)" @input="updateField(field.fullPath, $event)" />
-      </div>
+      <ion-list class="rounded-md border-0 border-gray-300 p-2">
+        <div v-for="field in fieldGroup.fields" :key="field.name">
+          <ion-item>
+            <ion-input :label="field.name" type="text" :value="get(jsonData, field.fullPath)" @input="updateField(field.fullPath, $event)" />
+          </ion-item>
+        </div>
+      </ion-list>
     </div>
   </div>
 </template>
@@ -17,6 +20,7 @@
 import { computed, ref } from 'vue';
 import { ToolProps } from './toolTypes';
 import { get, has, set } from 'lodash';
+import { IonInput, IonItem, IonList } from '@ionic/vue';
 
 const props = defineProps<ToolProps<"jsonWithSchema">>();
 const jsonData = ref<any>(props.input.json);
