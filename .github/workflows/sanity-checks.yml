@@ -78,12 +78,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-          cache: yarn
 
-      - name: Enable Corepack (Yarn)
+      - name: Enable Corepack (Yarn 4)
         run: |
-          npm install -g corepack@latest --force
           corepack enable
+          corepack prepare --activate
+          yarn --version
 
       - name: Install dependencies
         run: yarn install --immutable
