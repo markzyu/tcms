@@ -43,7 +43,7 @@ For Linux development, please also make sure to install `pkg-config`, `libglib2.
 sudo apt install pkg-config libglib2.0-dev libgtk-3-dev
 ```
 
-For Windows development, you would need to configure `%USERPROFILE%\.cargo\config.toml` to use the following configs because Windows limits the maximum number of exported symbols:
+For Windows development, use a windows-gnu host Rust toolchain (not the default windows-msvc host) plus a MinGW-w64 toolchain on `PATH` (e.g. [w64devkit](https://github.com/skeeto/w64devkit)). Then configure `%USERPROFILE%\.cargo\config.toml` as follows — `rust-lld` needs the gnu host's bundled self-contained MinGW import libs, and is required because Windows limits the maximum number of exported symbols:
 
 ```toml
 [target.x86_64-pc-windows-gnu]

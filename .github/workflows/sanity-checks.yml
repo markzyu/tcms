@@ -19,10 +19,17 @@ jobs:
         include:
           - os: macos-latest
             rust_target: x86_64-apple-darwin
+            rust_toolchain: stable
           - os: windows-latest
             rust_target: x86_64-pc-windows-gnu
+            # Must be a gnu *host* toolchain so rust-lld can use the bundled
+            # self-contained MinGW import libs (libkernel32.a, etc.). The default
+            # windows-msvc host does not ship those, which yields
+            # "unable to find library -lkernel32" when linker = rust-lld.
+            rust_toolchain: stable-x86_64-pc-windows-gnu
           - os: ubuntu-latest
             rust_target: x86_64-unknown-linux-gnu
+            rust_toolchain: stable
 
     defaults:
       run:
@@ -96,15 +103,26 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
+          toolchain: ${{ matrix.rust_toolchain }}
           targets: ${{ matrix.rust_target }}
           components: rustfmt
 
-      # Windows export-symbol limit workaround (see README prerequisites)
+      # Windows export-symbol limit workaround (see README prerequisites).
+      # rust-lld relies on the gnu-host self-contained MinGW libs (see matrix note).
       - name: Configure Cargo linker for Windows (rust-lld)
         if: matrix.rust_target == 'x86_64-pc-windows-gnu'
         run: |
           mkdir -p "$USERPROFILE/.cargo"
           printf '\n[target.x86_64-pc-windows-gnu]\nlinker = "rust-lld"\n\n[profile.dev.package."*"]\nopt-level = 3\n' >> "$USERPROFILE/.cargo/config.toml"
+          # Fail early if the toolchain is missing self-contained import libs.
+          sysroot="$(rustc --print sysroot | tr '\\' '/')"
+          sc="${sysroot}/lib/rustlib/x86_64-pc-windows-gnu/lib/self-contained"
+          if [ ! -f "${sc}/libkernel32.a" ]; then
+            echo "Missing ${sc}/libkernel32.a — install a windows-gnu host toolchain."
+            rustc -vV
+            exit 1
+          fi
+          echo "ok: rust-lld self-contained mingw at ${sc}"
 
       - name: Cache Rust build
         uses: Swatinem/rust-cache@v2
