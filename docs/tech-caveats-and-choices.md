@@ -1,3 +1,13 @@
+## OS compatibility and Production Release readiness
+
+For Windows, we are using the `x86_64-pc-windows-gnu` target for now. But this target is not suitable for actual releases, and it is not supported by Tauri. What's worse, The MingW bindings for webview2 is unstable and might not work on all Windows versions.
+
+For Linux, we only support the `x86_64-unknown-linux-gnu` target for now. I have not tested this against musl distributions such as Alpine Linux.
+
+Although designed to support older versions of Android and iOS, I have not tested the release packages on a wide range of actual devices.
+
+In general, this project is currently configured for ease of development setup but it's not ready for production releases.
+
 ## Tailwind
 
 We cannot use Tailwind CSS v4 because it is not compatible with older devices (Android 6, macOS 12, etc).

@@ -46,6 +46,9 @@ sudo apt install pkg-config libglib2.0-dev libgtk-3-dev
 For Windows development, you would need to configure `%USERPROFILE%\.cargo\config.toml` to use the following configs because Windows limits the maximum number of exported symbols:
 
 ```toml
+[target.x86_64-pc-windows-gnu]
+linker = "rust-lld"
+
 [profile.dev.package."*"]
 opt-level = 3
 ```
@@ -63,7 +66,7 @@ REM You can also use the commandline version of zip called 7za, instead of 7z.
 
 To verify the baseline correctness of all packages, templates, and the app, run:
 ```bash
-yarn typecheck && yarn build && yarn test && echo '[tcms] all baseline correctness checks passed.'
+yarn prepush
 ```
 
 Meanwhile, you can start the development server for the ThorCMS app:
