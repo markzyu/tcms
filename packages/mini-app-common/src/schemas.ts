@@ -97,6 +97,7 @@ export const defineRootManifest = async (props: DefineRootManifestProps) => {
 
   await mkdir(outputDir, { recursive: true });
 
+  // @ts-ignore: Node.js types are not available in the browser.
   const { pathToFileURL } = await import("node:url");
   const packageJsonUrl = pathToFileURL(path.join(WORKDIR, "package.json"));
   const packageJson = await import(packageJsonUrl.toString());

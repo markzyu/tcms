@@ -23,6 +23,10 @@ vi.mock("@tauri-apps/api/core", () => ({
   }),
 }));
 
+vi.mock("@tauri-apps/api/path", () => ({
+  join: async (...args: unknown[]) => args.map(String).join("/"),
+}));
+
 const TAB_NAMES = ["Library", "Home", "Settings"] as const;
 
 async function renderApp() {

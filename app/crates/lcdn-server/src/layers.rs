@@ -87,13 +87,13 @@ pub(crate) fn get_referer_as_uri(req: &Request, same_origin_domains: &Vec<String
 }
 
 /// Change only the path part of the URI based on slug and instance config.
-/// 
+///
 /// `external_uri_path` is assumed to come from a normalized URI.
 /// (Basically, this function doesn't normalize it. A path with double
 /// slashes is treated differently from a path with a single slash.)
-/// 
+///
 /// `expected_slug` must match the slug in the URI path.
-/// 
+///
 /// Desired URI path mappings:
 ///     - `Invalid string`: keep as is
 ///     - `/slug/assets/...`: map to `instances/{instance_id}/{path_without_slug}`
@@ -116,8 +116,18 @@ pub(crate) fn map_external_uri_path_to_internal(
     return external_uri_path;
   }
 
-  let path_without_slug = path_components.iter().skip(1).map(|s| *s).collect::<Vec<_>>().join("/");
-  let path_third_and_rest = path_components.iter().skip(2).map(|s| *s).collect::<Vec<_>>().join("/");
+  let path_without_slug = path_components
+    .iter()
+    .skip(1)
+    .map(|s| *s)
+    .collect::<Vec<_>>()
+    .join("/");
+  let path_third_and_rest = path_components
+    .iter()
+    .skip(2)
+    .map(|s| *s)
+    .collect::<Vec<_>>()
+    .join("/");
 
   eprintln!(
     "external_uri_path: {}, slug: {}, path_without_slug: {}, path_third_and_rest: {}",

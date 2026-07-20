@@ -165,9 +165,12 @@ vi.mock("@tauri-apps/api/core", () => ({
 }));
 
 vi.mock("@tauri-apps/plugin-fs", () => ({
-  join: (...args: unknown[]) => args.map(String).join('/'),
   readTextFile: (...args: unknown[]) => homeTestMocks.mockFs.readTextFile(...args),
   writeTextFile: (...args: unknown[]) => homeTestMocks.mockFs.writeTextFile(...args),
+}));
+
+vi.mock("@tauri-apps/api/path", () => ({
+  join: async (...args: unknown[]) => args.map(String).join("/"),
 }));
 
 vi.mock("@ionic/vue", async (importOriginal) => {

@@ -70,7 +70,7 @@ onMounted(async () => {
     <ion-router-outlet v-if="!isInstalling" />
     <div v-else class="mx-auto flex flex-col items-center justify-center h-screen">
       <ion-spinner name="crescent" />
-      <p>Installing latest templates/prefabs...</p>
+      <p data-testid="install-screen-message">Installing latest templates/prefabs...</p>
     </div>
   </ion-app>
 </template>
