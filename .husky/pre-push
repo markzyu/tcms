@@ -11,4 +11,4 @@ echo "[tcms] Running pre-push checks..."
 grep "aws" "$GIT_ROOT/Cargo.lock" && echo '[rust] Remove AWS SSL certs from your dependency, please (likely aws-lc-rs).' && exit 1
 
 # Run tests, build checks, or linters
-(cd "$GIT_ROOT" && yarn typecheck && yarn build && yarn test && echo '[tcms] all baseline correctness checks passed.')
+(cd "$GIT_ROOT" && yarn prepush)
