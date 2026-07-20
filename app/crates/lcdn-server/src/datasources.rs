@@ -21,11 +21,9 @@ pub(crate) async fn serve_template_from_zip(
     "serve_template_from_zip: template: {}/{}, path: {}",
     &template_scope, &template_id, &path
   );
-  let mut zip_path = app_state.public_content_path.to_path_buf();
-  zip_path.push("templates");
-  zip_path.push(&template_scope);
-  zip_path.push(&format!("{}.zip", template_id));
-
+  let public_content_path = app_state.public_content_path.as_path();
+  let zip_path =
+    public_content_path.join(format!("templates/{}/{}.zip", template_scope, template_id));
   let zip_file = File::open(zip_path).map_err(|_| StatusCode::NOT_FOUND)?;
   let zip_reader = BufReader::new(zip_file);
   let mut zip = ZipArchive::new(zip_reader).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
@@ -67,11 +65,11 @@ pub(crate) async fn serve_query_cdn_bridge(
     eprintln!("serve_query_cdn_bridge: no instance configs");
     return Err(StatusCode::NOT_FOUND);
   };
-  let mut content_json_path = app_state.public_content_path.to_path_buf();
-  content_json_path.push("instances");
-  content_json_path.push(&instance_config.instance_id);
-  content_json_path.push("content");
-  content_json_path.push(&format!("main.{}.json", instance_config.current_variant));
+  let public_content_path = app_state.public_content_path.as_path();
+  let content_json_path = public_content_path.join(format!(
+    "instances/{}/content/main.{}.json",
+    instance_config.instance_id, instance_config.current_variant
+  ));
   let origin_url = format!("http://localhost:{}", lcdn_config.port);
   let origin_url =
     serde_json::to_string(&origin_url).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
@@ -189,10 +187,9 @@ mod tests {
   #[tokio::test]
   async fn serve_template_from_zip_corrupt_zip() {
     let dir = tempdir().unwrap();
-    let mut zip_path = dir.path().to_path_buf();
-    zip_path.push("templates");
-    zip_path.push(TEST_TEMPLATE_SCOPE);
-    zip_path.push(&format!("{}.zip", TEST_TEMPLATE_ID));
+    let zip_path = dir.path().join(format!(
+      "templates/{TEST_TEMPLATE_SCOPE}/{TEST_TEMPLATE_ID}.zip"
+    ));
     write_bytes(&zip_path, b"this is not a zip file");
     let state = app_state_with_instance(dir.path());
     let err = serve_template_from_zip(

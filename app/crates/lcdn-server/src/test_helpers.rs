@@ -50,9 +50,7 @@ pub fn write_zip(
   template_id: &str,
   entries: &[(&str, &[u8])],
 ) -> PathBuf {
-  let mut zip_dir = public_content_path.to_path_buf();
-  zip_dir.push("templates");
-  zip_dir.push(template_scope);
+  let zip_dir = public_content_path.join(format!("templates/{template_scope}"));
   fs::create_dir_all(&zip_dir).expect("create template dir");
   let zip_path = zip_dir.join(format!("{template_id}.zip"));
   let file = File::create(&zip_path).expect("create zip file");
@@ -79,11 +77,9 @@ pub fn write_instance_content(
   variant: &str,
   json: &str,
 ) -> PathBuf {
-  let mut path = public_content_path.to_path_buf();
-  path.push("instances");
-  path.push(instance_id);
-  path.push("content");
-  path.push(&format!("main.{variant}.json"));
+  let path = public_content_path.join(format!(
+    "instances/{instance_id}/content/main.{variant}.json"
+  ));
   write_bytes(&path, json.as_bytes());
   path
 }
@@ -94,10 +90,7 @@ pub fn write_instance_asset(
   rel_path: &str,
   content: &[u8],
 ) -> PathBuf {
-  let mut path = public_content_path.to_path_buf();
-  path.push("instances");
-  path.push(instance_id);
-  path.push(rel_path);
+  let path = public_content_path.join(format!("instances/{instance_id}/{rel_path}"));
   write_bytes(&path, content);
   path
 }

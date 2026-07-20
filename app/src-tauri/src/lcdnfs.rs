@@ -53,7 +53,7 @@ pub(crate) fn ensure_instances_dir(app_handle: &AppHandle) -> Result<PathBuf, St
 
 pub(crate) fn read_app_asset(
   app_handle: &AppHandle,
-  relative_path: &PathBuf,
+  relative_path: String,
 ) -> Result<Vec<u8>, String> {
   let resource_dir_uri = app_handle
     .path()
@@ -68,7 +68,7 @@ pub(crate) fn read_app_asset(
 
 pub(crate) fn copy_app_asset_to_fs(
   app_handle: &AppHandle,
-  relative_path: &PathBuf,
+  relative_path: String,
   target_path: &PathBuf,
 ) -> Result<(), String> {
   let asset_bytes = read_app_asset(app_handle, relative_path)?;
@@ -77,7 +77,7 @@ pub(crate) fn copy_app_asset_to_fs(
 
 pub(crate) fn unzip_app_asset_to_fs(
   app_handle: &AppHandle,
-  relative_path: &PathBuf,
+  relative_path: String,
   target_path: &PathBuf,
 ) -> Result<(), String> {
   if target_path.exists() {
