@@ -28,6 +28,10 @@ const meta = {
       },
       editorUiSchema: {
         fieldGroups: [
+          {
+            name: "Basic Information",
+            paths: ["name"],
+          }
         ],
       },
     },

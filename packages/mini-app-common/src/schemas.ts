@@ -17,6 +17,7 @@ export const EditorUiSchemaJsonSchema = z.object({
   fieldGroups: z.array(EditorUiFieldGroupSchema),
 });
 
+export type EditorUiFieldGroup = z.infer<typeof EditorUiFieldGroupSchema>;
 export type EditorUiSchemaJson = z.infer<typeof EditorUiSchemaJsonSchema>;
 
 export const PageContentSchemaJsonSchema = z.object({
