@@ -125,6 +125,10 @@ export const MockOrchestratorWrapper = defineComponent({
     const editorUiSchema: EditorUiSchemaJson = {
       fieldGroups: [
       ],
+      fieldLabels: {
+        en: {},
+        ja: {},
+      },
     };
     const input = computed<ToolInput>(() => props.inputType === "jsonWithSchema" ? {
       type: "jsonWithSchema",
