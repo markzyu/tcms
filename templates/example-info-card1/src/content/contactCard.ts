@@ -33,7 +33,7 @@ export const contactCardSchemaPathPromise = definePageContentSchema({
       },
       ja: {
         name: "名前",
-        headline: "見出し",
+        headline: "職業",
         bio: "自己紹介",
         email: "メールアドレス",
         phone: "電話番号",
@@ -54,7 +54,7 @@ export const contactCardSchemaPathPromise = definePageContentSchema({
       {
         labelByLanguage: {
           en: "Contact Information",
-          ja: "連絡先情報",
+          ja: "連絡先",
         },
         paths: ["email", "phone"],
         isSingleton: true,
