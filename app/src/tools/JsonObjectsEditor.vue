@@ -23,6 +23,10 @@ import { get, set } from 'lodash';
 import { IonInput, IonItem, IonList } from '@ionic/vue';
 import type { JSONSchema7Definition } from 'json-schema';
 import { useAppLanguageLocale } from '../utils/i18n';
+import { useToolsContent } from './content';
+import { toolContentKeys } from './contentKeys';
+
+const [miscGroupName] = useToolsContent(toolContentKeys);
 
 const locale = useAppLanguageLocale();
 const props = defineProps<ToolProps<"jsonWithSchema">>();
@@ -84,7 +88,6 @@ const newGroup = (name: string): FieldGroupDescriptor => ({
 const fieldGroupDescriptors = computed<FieldGroupDescriptor[]>(() => {
   const knownPaths = new Set<string>();
   const groupsByName: Record<string, FieldGroupDescriptor> = {};
-  const miscGroupName = "Miscellaneous Questions";
   const { fieldLabels } = props.input.editorUiSchema;
   const results = props.input.editorUiSchema.fieldGroups.map((fieldGroup) => {
     const { labelByLanguage, paths } = fieldGroup;
@@ -95,9 +98,9 @@ const fieldGroupDescriptors = computed<FieldGroupDescriptor[]>(() => {
         isSingleton: !!fieldGroup.isSingleton
       }));
     if (!labelByLanguage) {
-      groupsByName[miscGroupName] ||= newGroup(miscGroupName);
-      groupsByName[miscGroupName].fields.push(...fields);
-      return groupsByName[miscGroupName];
+      groupsByName[miscGroupName.value] ||= newGroup(miscGroupName.value);
+      groupsByName[miscGroupName.value].fields.push(...fields);
+      return groupsByName[miscGroupName.value];
     } else {
       const groupName = labelByLanguage[locale.value];
       const group = groupsByName[groupName] ||= newGroup(groupName);
@@ -112,8 +115,8 @@ const fieldGroupDescriptors = computed<FieldGroupDescriptor[]>(() => {
     }
     field.name = fieldLabels[locale.value]?.[field.fullPath] ?? field.fullPath;
     knownPaths.add(field.fullPath);
-    groupsByName[miscGroupName] ||= newGroup(miscGroupName);
-    groupsByName[miscGroupName].fields.push(field);
+    groupsByName[miscGroupName.value] ||= newGroup(miscGroupName.value);
+    groupsByName[miscGroupName.value].fields.push(field);
   });
   return results;
 });
