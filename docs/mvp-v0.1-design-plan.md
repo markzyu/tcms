@@ -369,27 +369,59 @@ After all of these are ready, Admin shell should also remove the debug UI we cre
 
 Note: For compliance and security reasons, MVP v0.1 will not support fully public hosting options. We will only support private IP (LAN) hosting. It's not that far away from fully public hosting. The user can fill this gap for now if they know to use Reverse Proxies or port forwarding.
 
-**Also, very importantly: Internationalization (i18n)**
+### Another important requirement: Internationalization (i18n)
 
 At this point, both the Admin shell, the Tools, and the mini apps, would need to support Internationalization (i18n). But as mentioned in requirements, we don't need to serve multiple languages at once. We just need to provide a way to define multiple variants of the same content.
 
-Additionally, there won't be a full UI for managing all languages just yet. But we should at least provide a global language selector, in the ThorCMS app's settings menu, to switch the language choice of Admin Shell + Tools + Mini Apps Content Jsons at the same time. (MVP v0.1 does not support editing English mini app json while the app language is in Spanish, for example.)
+There are two separate language settings in question:
 
-All 3 areas need to use ICU MessageFormat to store the i18n strings. However, we are going to use different libraries for different areas.
+* App Language: This includes translations provided by TCMS's core developers.
+  * All of Admin Shell and Tool UIs
+  * Field names of every json schema in every template. Only visible in editors, not in final website.
+  * Reusable "template default" contents that users don't usually edit. This is visible in the final website.
+* Mini App Language: This includes translations created at runtime, by the users of TCMS app.
+  * User contents that are used to create the final website.
+  * Overrides of the reusable "template default" contents.
 
-For Mini Apps, 
+Note: For each locale, we only consider the `language-script` part of the Intl.Locale object. This `language-script` string becomes the content json's variant / extension name.
 
-Template content jsons should contain all strings, including user facing content as well as reusable labels in the resulting website. But normally a user should only need to supply the user facing content. And the internal labels could be optional fields.
+Note: We do not currently support untranslatable content fields. But in the future, they should be stored separately as variant: `__` (instead of `language-script`)
 
-But because the templates might interpolate user content inside the UI labels, and because some template authors might not provide all languages, we need to discuss how to handle this.
+Tauri provides a `locale()` API in their os crate, which returns a BCP 47 language tag. We can use this to determine the App Language. However, we cannot assume that the user will create content in the same Mini App Language as the App Language.
 
-We can make sure that all template codebases call `intl-messageformat` directly to format the strings before displaying them via React or Vue. And LCDN must pass the correct language/variant of them to the mini app via LCDN `__query__` API + PageContentProvider.
+* If tauri detection fails during launch, user must be prompted with a list of known App Languages to choose from.
+* Alternatively, they can go to the settings menu and manually choose both the App Language and the Mini App Language.
+* However, if a Mini App Language is not set, we should set the default variant to `_1` meaning "Unknown Language (#1)".
+* However, during the creation of new mini app instances, the user will always have a chance to update the current Mini App language, AND, upon editing content jsons, we should do a very basic language check using `whatlang`. If it doesn't match the Mini App Language, we should prompt the user to update the language.
 
-And we can rely on the variant name of the content jsons to determine the language. Currently the variant name is just the language code, so English is `en`, Spanish is `es`, etc.
+There are also 3 different ways to perform the i18n text interpolation:
 
-In the future, we could support variants with more fields, for example `mainPage.<language>.<edition>.json`. But language field is always required and listed first.
+* In the Admin Shell, we would use standard `vue-i18n` with ICU MessageFormat. This also applie to the static strings of Tools UIs.
+* In the Tools UI, for field names and schemas, we would extend the existing `editorUiSchema` to support i18n, as described below.
+* In the Mini App and templates, we store ICU MessageFormat strings directly in the content json, as identified by file name `<pageShortName>.<variant>.json`.
 
-For Admin shell and Tools, we need more functionalities than just formatting the strings. And `vue-i18n` provides better tooling for a Vue frontend. But we must configure it to use the ICU MessageFormat instead of its traditional custom "Intlify" syntax.
+Here is a new field added to the `editorUiSchema` to support i18n:
+
+```
+editorUiSchema: {
+  fieldTitles: {
+    en: {
+      "xxx.firstName": "First name",
+      "xxx.lastName": "Last name"
+    }
+    jp: {
+      "xxx.firstName": "名",
+      "xxx.lastName": "姓"
+    }
+  }
+}
+```
+
+This "fieldTitles" field can both appear at the root of editor ui schema, and within each field group / array group. They don't technically have to be actually related to that field group to exist. But we merge all `fieldTitles` into a single object from the deepest level to the root level, or, if at the same level, first come first served.
+
+**Caveat**: No matter how I design this i18n meta schema, it introduces the likelihood of forgotten declarations of a specific field for a specific language. As a result, I opted for the cleaner meta schema design. And we would also need to update the schema build scripts to throw an error if a known field is not declared for a known language in the same schema json.
+
+Also, in the future, we could support page variants with more fields, for example: `.<variant>.json - .<language-script>.<publish-edition>.json`. But the language-script field is always required and listed first.
 
 ---
 
