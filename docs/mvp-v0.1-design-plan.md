@@ -435,6 +435,20 @@ Also, in the future, we could support page variants with more fields, for exampl
 
 **Goal:** Make v0.1 demo-ready for one market story; harden template packaging for additional templates later.
 
+**Goal:** Make sure the v0.1 UI is mobile friendly at all sizes (Phones and Tablets).
+
+> Note about tablet sized design: We don't have Figma for this but here is what I think
+>
+> * The home page in admin shell: Instead of showing the instance cards in a grid, we would show a vertical list with more info: show the simple phone-sized cards on the left, and a info card on the right, corresponding horizontally to each instance. (This can be later replaced with a nice timeseries monitoring chart)
+> 
+> * The json objects edit tool: On tablet landscape mode, we have enough space to show 3 columns of fields. Instead of randomly assinging a field group to each column, We dedicate each column to the type of field group (without having to show column titles): `fieldGroup (singleton)` (basic fields), `fieldGroup (non singleton)` (these are just one-liner buttons to open array items), `arrayGroup` (this isn't in MVP 0.1 but they are just fields in shallow arrays).
+> 
+> * The array editor tool: Instead of a thin left side panel showing multiple levels of array paths, we can have 2-3 levels of array navigation on the left side.
+> 
+> * For other admin shell pages we can use basic tablet designs: Use Grid instead of Flex for template cards; Use auto margin / max-width to show a basic settings list.
+
+----
+
 Pick **one** primary story first (recommended: **Today's board + pack drop export** before reversed CDN):
 
 
