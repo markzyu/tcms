@@ -22,7 +22,6 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@tailwindcss/cli": "^4.1.7",
     "@tcms/mini-app-react-test-utils": "workspace:*",
     "@types/jest": "^29.5.14",
     "@types/react": "^18.3.12",
