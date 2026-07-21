@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
+import schema from './JsonObjectsEditor.schema1.json'
 import JsonObjectsEditor from './JsonObjectsEditor.vue'
 
 const meta = {
@@ -20,20 +21,8 @@ const meta = {
       json: {
         name: 'John Doe',
       },
-      jsonSchema: {
-        type: 'object',
-        properties: {
-          name: { type: 'string' },
-        },  
-      },
-      editorUiSchema: {
-        fieldGroups: [
-          {
-            name: "Basic Information",
-            paths: ["name"],
-          }
-        ],
-      },
+      jsonSchema: schema.jsonSchema,
+      editorUiSchema: schema.editorUiSchema,
     },
     onAction: async (action) => {
       console.log("onAction", action);

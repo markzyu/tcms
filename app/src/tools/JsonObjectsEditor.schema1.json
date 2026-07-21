@@ -1,0 +1,71 @@
+{
+  "schemaVersion": "0.1.0",
+  "editorUiSchema": {
+    "fieldGroups": [
+      {
+        "name": "Basic Information",
+        "paths": [
+          "name",
+          "headline",
+          "bio"
+        ],
+        "isSingleton": true
+      },
+      {
+        "name": "Contact Information",
+        "paths": [
+          "email",
+          "phone"
+        ],
+        "isSingleton": true
+      },
+      {
+        "isSingleField": true,
+        "isSingleton": true,
+        "paths": [
+          "heroImage"
+        ]
+      }
+    ]
+  },
+  "jsonSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "headline": {
+        "type": "string"
+      },
+      "bio": {
+        "type": "string"
+      },
+      "email": {
+        "type": "string"
+      },
+      "phone": {
+        "type": "string"
+      },
+      "heroImage": {
+        "type": "string"
+      },
+      "heroAltText": {
+        "type": "string"
+      },
+      "heroAlignment": {
+        "default": "left",
+        "type": "string",
+        "enum": [
+          "left",
+          "right"
+        ]
+      }
+    },
+    "required": [
+      "name",
+      "heroImage"
+    ],
+    "additionalProperties": false
+  }
+}

@@ -47,7 +47,6 @@ type FieldDescriptor = {
 const fieldGroupDescriptors = computed<FieldGroupDescriptor[]>(() => {
   return props.input.editorUiSchema.fieldGroups.map((fieldGroup) => {
     const fields: FieldDescriptor[] = fieldGroup.paths
-      .filter((path) => has(jsonData.value, path))
       .map((path) => ({
         name: path,
         fullPath: path,
