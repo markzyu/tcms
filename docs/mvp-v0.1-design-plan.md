@@ -409,7 +409,7 @@ editorUiSchema: {
       "xxx.firstName": "First name",
       "xxx.lastName": "Last name"
     }
-    jp: {
+    ja: {
       "xxx.firstName": "名",
       "xxx.lastName": "姓"
     }
@@ -440,7 +440,7 @@ fieldGroups: [
   {
     "label": {
       "en": "Basic Information",
-      "jp": "基本情報"
+      "ja": "基本情報"
     },
     "paths": ["name", "headline", "bio"],
     "isSingleton": true

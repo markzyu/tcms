@@ -121,7 +121,7 @@ Example of how schemas and editor UI may work for multi-page templates with both
       {
         "label": {
           "en": "Basic Information",
-          "jp": "基本情報"
+          "ja": "基本情報"
         },
         "paths": ["name", "headline", "bio"],
         "isSingleton": true
@@ -129,7 +129,7 @@ Example of how schemas and editor UI may work for multi-page templates with both
       {
         "label": {
           "en": "Contact Information",
-          "jp": "連絡先情報"
+          "ja": "連絡先情報"
         },
         "paths": ["email", "phone"],
         "isSingleton": true
@@ -142,7 +142,7 @@ Example of how schemas and editor UI may work for multi-page templates with both
       {
         "label": {
           "en": "Project {index}",
-          "jp": "プロジェクト {index}"
+          "ja": "プロジェクト {index}"
         },
         "paths": ["projects.{index}.name"]
       }
@@ -151,7 +151,7 @@ Example of how schemas and editor UI may work for multi-page templates with both
       {
         "label": {
           "en": "\"{groupName}\" Project",
-          "jp": "「{groupName}」プロジェクト"
+          "ja": "「{groupName}」プロジェクト"
         },
         "groupsPath": "projects",
         "groupName": "projects.{groupIndex}.name",
@@ -162,7 +162,7 @@ Example of how schemas and editor UI may work for multi-page templates with both
         "isSingleArray": true,
         "label": {
           "en": "Biography Rich Text",
-          "jp": "自己紹介 (リッチテキスト)"
+          "ja": "自己紹介 (リッチテキスト)"
         },
         "itemsPath": "richTextList",
         "itemName": "richTextList.{itemIndex}.text"
@@ -178,7 +178,7 @@ Example of how schemas and editor UI may work for multi-page templates with both
       "phone": "Phone",
       "heroImage": "Hero Image"
     },
-    "jp": {
+    "ja": {
       "name": "名前",
       "headline": "見出し",
       "bio": "自己紹介",

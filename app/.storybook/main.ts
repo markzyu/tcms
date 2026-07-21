@@ -1,7 +1,7 @@
 import type { StorybookConfig } from '@storybook/vue3-vite'
 
 const config: StorybookConfig = {
-  stories: ['../src/tools/**/*.mdx', '../src/tools/**/*.stories.@(js|jsx|ts|tsx)'],
+  stories: ['../src/tools/**/*.mdx', '../src/tools/**/*.stories.@(js|jsx|ts|tsx)', "../src/playground.stories.ts"],
   staticDirs: ['../public'],
   addons: [],
   core: {
