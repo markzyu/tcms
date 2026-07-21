@@ -394,10 +394,10 @@ Tauri provides a `locale()` API in their os crate, which returns a BCP 47 langua
 * However, if a Mini App Language is not set, we should set the default variant to `_1` meaning "Unknown Language (#1)".
 * However, during the creation of new mini app instances, the user will always have a chance to update the current Mini App language, AND, upon editing content jsons, we should do a very basic language check using `whatlang`. If it doesn't match the Mini App Language, we should prompt the user to update the language.
 
-There are also 3 different ways to perform the i18n text interpolation:
+There are also 3 different ways to perform the i18n text interpolation, all of which involve using `intl-messageformat` to interpolate the strings:
 
-* In the Admin Shell, we would use standard `vue-i18n` with ICU MessageFormat. This also applie to the static strings of Tools UIs.
-* In the Tools UI, for field names and schemas, we would extend the existing `editorUiSchema` to support i18n, as described below.
+* In the Admin Shell and Tools, for non-user-generated contents, we would store all strings directly in the app js bundle.
+* In the Tools UI, for user-generated field labels like field names and schemas, we would extend the existing `editorUiSchema` to store i18n strings, as described below.
 * In the Mini App and templates, we store ICU MessageFormat strings directly in the content json, as identified by file name `<pageShortName>.<variant>.json`.
 
 Here is a new field added to the `editorUiSchema` to support i18n:
