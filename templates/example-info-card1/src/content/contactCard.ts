@@ -20,14 +20,42 @@ export const contactCardSchemaPathPromise = definePageContentSchema({
   schemaName: contactCardSchemaName,
   schemaVersion: contactCardSchemaVersion,
   editorUiSchema: {
+    fieldLabels: {
+      en: {
+        name: "Name",
+        headline: "Headline",
+        bio: "Bio",
+        email: "Email",
+        phone: "Phone",
+        heroImage: "Hero Image",
+        heroAltText: "Hero Alt Text",
+        heroAlignment: "Hero Alignment",
+      },
+      ja: {
+        name: "名前",
+        headline: "見出し",
+        bio: "自己紹介",
+        email: "メールアドレス",
+        phone: "電話番号",
+        heroImage: "写真",
+        heroAltText: "写真の代替テキスト",
+        heroAlignment: "写真の配置",
+      },
+    },
     fieldGroups: [
       {
-        name: "Basic Information",
+        labelByLanguage: {
+          en: "Basic Information",
+          ja: "基本情報",
+        },
         paths: ["name", "headline", "bio"],
         isSingleton: true,
       },
       {
-        name: "Contact Information",
+        labelByLanguage: {
+          en: "Contact Information",
+          ja: "連絡先情報",
+        },
         paths: ["email", "phone"],
         isSingleton: true,
       },
