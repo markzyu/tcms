@@ -91,3 +91,35 @@ This by itself should not require us to use outdated build tools. But the dev's 
 These versions were automatically chosen by Tauri's setup cli.
 
 Due to concerns over supply chain security, we should avoid importing arbitrary Java and Kotlin dependencies. We should try to keep Rust and Node.js dependencies up to date with Rust stable and Node.js LTS version.
+
+## Json Schema (limitations, post MVP v0.1)
+
+Template authors should be aware of the following limitations:
+
+(Not all features of JSON Schema are supported. And Zod schemas also have the following limitations, for templates, specifically.)
+
+1. We don't support a dynamic disctionary of fields.
+
+Instead of `basicTableRowAsFieldsToValues: Record<string, string>`, please use a simple array of objects instead: `basicTableRowAsFieldsToValues: { field: string, value: string }[]`.
+
+2. We don't support tuples.
+
+For types like `2dCoordinate: [number, number]`, which has a fixed length of 2, please store them as object fields instead: `2dCoordinate: { x: number, y: number }`.
+
+3. We don't support using an `oneOf` union as a "singleton" field value. But there are workarounds.
+
+This increases the complexity of Tools UI's parsing logics. Additionally, it's not nice to offer "options" in the form of a unioned type, and then ask the user to only provide one instance of such options.
+
+So, whenever you need a unioned type, please always store the `oneOf` values as an array.
+
+As example, Please avoid this type:
+
+`backgroundMedia1: ImageUrl | VideoUrl`
+
+Instead, please use this type:
+
+`backgroundMedia2: (ImageUrl | VideoUrl)[]`
+
+This would also help you, the template author, prepare against future needs of a fallback/polymorphic field mechanism. In the example above, `backgroundMedia2` would be immensely more helpful when you find out that you want different resolutions or formats for different devices.
+
+And if you would truly rather restrict the user to provide only 1 value, please simply set the `minItems` and `maxItems` to 1 in the array schema. And we would handle that restriction for you, in the json editor.

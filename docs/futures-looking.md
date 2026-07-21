@@ -106,6 +106,8 @@ When CAS is enabled, string fields that reference assets hold the CAS ID (SHA-25
 
 Example of how schemas and editor UI may work for multi-page templates with both flat objects, and nested arrays. Intentionally richer than example-info-card1 Phase 0 content.
 
+**Caveats**: Due to how we design the json editors and the `editorUiSchema` field, the `jsonSchema` field cannot be just any arbitrary json schema. For example, you won't be able to use `oneOf` as a property of an object. However, it could be the items type of an array. Please see tech-caveats-and-choices.md for more details.
+
 ```json
 {
   "schemaVersion": "0.1.0",
