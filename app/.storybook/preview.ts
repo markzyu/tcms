@@ -20,23 +20,22 @@ setup((app) => {
   app.use(IonicVue);
 });
 
+const appLanguageContext = createAppLanguageContext("en");
+
 const preview: Preview = {
   decorators: [
-    (story, context) => ({
-      components: { story: story() },
-      setup() {
-        const initialLocale = context.globals.locale as AppLanguages;
-        const newContext = createAppLanguageContext(initialLocale);
-        provide(AppLanguageKey, newContext);
+    (story, context) => {
+      const locale = context.globals.locale as AppLanguages;
+      appLanguageContext.setLocale(locale);
 
-        // This is a hack to update the locale when storybook toolbar is changed
-        setInterval(() => {
-          newContext.locale.value = context.globals.locale as AppLanguages;
-        }, 200);
-        return { newContext };
-      },
-      template: `<story />`,
-    })
+      return {
+        components: { story: story() },
+        setup() {
+          provide(AppLanguageKey, appLanguageContext);
+        },
+        template: `<story />`,
+      };
+    }
   ],
   globalTypes: {
     locale: {
