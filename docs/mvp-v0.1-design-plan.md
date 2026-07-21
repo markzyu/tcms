@@ -438,7 +438,7 @@ We should have:
 ```
 fieldGroups: [
   {
-    "label": {
+    "labelByLanguage": {
       "en": "Basic Information",
       "ja": "基本情報"
     },

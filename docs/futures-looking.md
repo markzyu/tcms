@@ -119,7 +119,7 @@ Example of how schemas and editor UI may work for multi-page templates with both
   "editorUiSchema": {
     "fieldGroups": [
       {
-        "label": {
+        "labelByLanguage": {
           "en": "Basic Information",
           "ja": "基本情報"
         },
@@ -127,7 +127,7 @@ Example of how schemas and editor UI may work for multi-page templates with both
         "isSingleton": true
       },
       {
-        "label": {
+        "labelByLanguage": {
           "en": "Contact Information",
           "ja": "連絡先情報"
         },
@@ -140,7 +140,7 @@ Example of how schemas and editor UI may work for multi-page templates with both
         "paths": ["heroImage"]
       },
       {
-        "label": {
+        "labelByLanguage": {
           "en": "Project {index}",
           "ja": "プロジェクト {index}"
         },
@@ -149,7 +149,7 @@ Example of how schemas and editor UI may work for multi-page templates with both
     ],
     "arrayGroups": [
       {
-        "label": {
+        "labelByLanguage": {
           "en": "\"{groupName}\" Project",
           "ja": "「{groupName}」プロジェクト"
         },
@@ -160,7 +160,7 @@ Example of how schemas and editor UI may work for multi-page templates with both
       },
       {
         "isSingleArray": true,
-        "label": {
+        "labelByLanguage": {
           "en": "Biography Rich Text",
           "ja": "自己紹介 (リッチテキスト)"
         },
