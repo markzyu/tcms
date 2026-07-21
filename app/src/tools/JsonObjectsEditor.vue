@@ -19,8 +19,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { ToolProps } from './toolTypes';
-import { get, has, set } from 'lodash';
+import { get, set } from 'lodash';
 import { IonInput, IonItem, IonList } from '@ionic/vue';
+import type { JSONSchema7Definition } from 'json-schema';
 
 const props = defineProps<ToolProps<"jsonWithSchema">>();
 const jsonData = ref<any>(props.input.json);
@@ -42,21 +43,70 @@ type FieldDescriptor = {
   name: string;
   // This is the full path to the field in the input JSON
   fullPath: string;
+  isSingleton: boolean;
 };
 
+const walkJsonSchemaForAllFields = (schema: JSONSchema7Definition, results?: FieldDescriptor[], rootPath?: string, notSingleton?: boolean): FieldDescriptor[] => {
+  const newResults = results ?? [];
+  if (typeof schema === "boolean") {
+    return newResults;
+  } else if (schema.oneOf) {
+    // We don't handle union types, for now
+    return newResults;
+  } else if (schema.type === "object") {
+    for (const [key, value] of Object.entries(schema.properties ?? {})) {
+      walkJsonSchemaForAllFields(value, newResults, rootPath ? `${rootPath}.${key}` : key, notSingleton);
+    }
+  } else if (schema.type === "array") {
+    if (Array.isArray(schema.items)) {
+      // We don't handle tuple types, for now
+      return newResults;
+    }
+    walkJsonSchemaForAllFields(schema.items ?? {}, newResults, rootPath ? `${rootPath}.[]` : "[]", true);
+  } else if (schema.type !== "null") {
+    newResults.push({
+      name: rootPath ?? "",
+      fullPath: rootPath ?? "",
+      isSingleton: !notSingleton,
+    });
+  }
+  return newResults;
+}
+
 const fieldGroupDescriptors = computed<FieldGroupDescriptor[]>(() => {
-  return props.input.editorUiSchema.fieldGroups.map((fieldGroup) => {
+  const knownPaths = new Set<string>();
+  const miscGroup: FieldGroupDescriptor = {
+    name: "Miscellaneous Questions",
+    fields: [],
+    indices: [],
+  };
+  const results = props.input.editorUiSchema.fieldGroups.map((fieldGroup) => {
     const fields: FieldDescriptor[] = fieldGroup.paths
       .map((path) => ({
         name: path,
-        fullPath: path,
+        fullPath: (knownPaths.add(path), path),
+        isSingleton: !!fieldGroup.isSingleton
       }));
-    return {
-      name: fieldGroup.name ?? "Miscellaneous Questions",
-      fields,
-      indices: [],
-    };
+    if (!fieldGroup.name || fieldGroup.name === miscGroup.name) {
+      miscGroup.fields.push(...fields);
+      return miscGroup;
+    } else {
+      return {
+        name: fieldGroup.name,
+        fields,
+        indices: [],
+      };
+    }
   });
+  const allFields = walkJsonSchemaForAllFields(props.input.jsonSchema);
+  allFields.forEach((field) => {
+    if (knownPaths.has(field.fullPath) || !field.isSingleton) {
+      return;
+    }
+    knownPaths.add(field.fullPath);
+    miscGroup.fields.push(field);
+  });
+  return results;
 });
 
 const updateField = (fullPath: string, event: Event) => {
