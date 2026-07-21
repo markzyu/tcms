@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="flex flex-col h-full overflow-y-auto custom-scrollbar px-4 md:max-w-[600px] md:mx-auto">
     <div class="hidden py-10" data-testid="debug-json-data">Debug: {{ jsonData }}</div>
     <div v-for="fieldGroup in fieldGroupDescriptors" :key="fieldGroup.name">
       <div>

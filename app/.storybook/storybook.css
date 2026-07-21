@@ -1,3 +1,7 @@
 .hidden[data-testid] {
   display: inherit !important;
 }
+
+#storybook-root {
+  height: 100%;
+}
