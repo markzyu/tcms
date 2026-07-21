@@ -9,7 +9,7 @@ export const ContactCard = () => {
   const heroAlignmentClass = heroAlignment === "left" ? "" : "order-1";
   return (
     <div
-      className="relative md:max-w-[700px] flex gap-6 border-0 border-gray-300 rounded-lg shadow-xl/20 overflow-hidden"
+      className="relative md:max-w-[700px] flex gap-6 border-0 border-gray-300 rounded-lg shadow-xl overflow-hidden"
       data-testid={CONTACT_CARD_TEST_IDS.root}
     >
       <div className={`flex-[2] -ml-6 -my-6 ${heroAlignmentClass}`}>
