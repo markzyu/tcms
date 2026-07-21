@@ -3,6 +3,13 @@
   import { alertCircle, moon, shareSocial } from 'ionicons/icons';
   import { computed, ref, watch } from 'vue';
   import { useEditableInstanceConfigs, useLocalCDNControls } from './hooks';
+  import { useAdminHomePageContent } from './content';
+  import { adminHomePageContentKeys } from './contentKeys';
+
+  const [
+    instanceStartBtnLabel, instanceStopBtnLabel, instanceEditBtnLabel, instanceShareBtnLabel,
+    debugToolsHeading, debugToolsSlugLabel, debugToolsJsonDataLabel,
+  ] = useAdminHomePageContent(adminHomePageContentKeys);
 
   const showErrorTooltip = ref(false);
   const urlToVisit = ref<string | null>(null);
@@ -77,29 +84,29 @@
             <ion-button size="small" fill="clear" data-testid="start-cdn-button" @click="urlSlug && startLocalCDN(urlSlug)" v-if="!isLocalCDNRunning">
               <ion-spinner class="w-4 h-4 mr-2" v-if="isLocalCDNStarting"></ion-spinner>
               <ion-icon class="w-4 h-4 mr-1 fill-red-600" :icon="alertCircle" v-if="localCDNError"></ion-icon>
-              Start
+              {{ instanceStartBtnLabel }}
             </ion-button>
             <ion-button size="small" fill="clear" data-testid="stop-cdn-button" @click="stopLocalCDN" v-else>
               <ion-spinner class="w-4 h-4 mr-2" v-if="isLocalCDNStopping"></ion-spinner>
-              Stop
+              {{ instanceStopBtnLabel }}
             </ion-button>
             <div class="pointer-events-none absolute bottom-10 left-20 right-20 bg-white p-2 rounded-md shadow-md" v-if="localCDNError && showErrorTooltip">
               {{ localCDNError }}
             </div>
-            <ion-button size="small" fill="clear" data-testid="edit-button">Edit</ion-button>
-            <ion-button size="small" fill="clear" data-testid="share-button">Share</ion-button>
+            <ion-button size="small" fill="clear" data-testid="edit-button">{{ instanceEditBtnLabel }}</ion-button>
+            <ion-button size="small" fill="clear" data-testid="share-button">{{ instanceShareBtnLabel }}</ion-button>
           </div>
         </ion-card>
         <ion-card class="w-full mx-auto max-w-[500px] lg:max-w-none pr-2">
           <ion-card-content class="" data-testid="debug-tools-heading">
-            Debug Tools
+            {{ debugToolsHeading }}
           </ion-card-content>
           <ion-list>
             <ion-item>
-              <ion-input type="text" label="URL Slug" data-testid="url-slug-input" v-model="urlSlug"></ion-input>
+              <ion-input type="text" :label="debugToolsSlugLabel" data-testid="url-slug-input" v-model="urlSlug"></ion-input>
             </ion-item>
             <ion-item>
-              <ion-textarea label="JSON Data" data-testid="json-data-textarea" v-model="contentJson"></ion-textarea>
+              <ion-textarea :label="debugToolsJsonDataLabel" data-testid="json-data-textarea" v-model="contentJson"></ion-textarea>
             </ion-item>
           </ion-list>
         </ion-card>

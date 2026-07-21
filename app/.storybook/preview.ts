@@ -1,7 +1,7 @@
 import { type Preview, setup } from '@storybook/vue3-vite'; // or @storybook/vue3-webpack5
 import { provide } from 'vue';
 import { IonicVue } from '@ionic/vue';
-import { AppLanguageKey, createAppLanguageContext } from "../src/utils/providers.ts";
+import { AppLanguageKey, createAppLanguageContext } from "../src/utils/i18n.ts";
 import '../src/main.css';
 import './storybook.css'; // Path to your custom styles
 

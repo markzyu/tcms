@@ -16,7 +16,7 @@ import '@ionic/vue/css/typography.css';
 
 /* For now, default to show system theme for dark/light mode */
 import '@ionic/vue/css/palettes/dark.system.css';
-import { AppLanguageKey, createAppLanguageContext } from "./utils/providers.ts";
+import { AppLanguageKey, createAppLanguageContext } from "./utils/i18n";
 
 const app = createApp(App).use(IonicVue).use(router);
 app.provide(AppLanguageKey, createAppLanguageContext("en"));

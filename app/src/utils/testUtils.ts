@@ -2,7 +2,7 @@ import { fireEvent, screen, waitFor } from "@testing-library/vue";
 import { IonicVue } from "@ionic/vue";
 import { mount, type MountingOptions, type VueWrapper } from "@vue/test-utils";
 import type { Component } from "vue";
-import { AppLanguageKey, createAppLanguageContext } from "./providers";
+import { AppLanguageKey, createAppLanguageContext } from "./i18n";
 
 // Keep track of the wrapper instance so we can cleanup after each test
 let wrapper: VueWrapper | undefined;

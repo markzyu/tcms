@@ -22,7 +22,7 @@ import { ToolProps } from './toolTypes';
 import { get, set } from 'lodash';
 import { IonInput, IonItem, IonList } from '@ionic/vue';
 import type { JSONSchema7Definition } from 'json-schema';
-import { useAppLanguageLocale } from '../utils/providers';
+import { useAppLanguageLocale } from '../utils/i18n';
 
 const locale = useAppLanguageLocale();
 const props = defineProps<ToolProps<"jsonWithSchema">>();
