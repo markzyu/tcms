@@ -6,15 +6,24 @@ const IS_NODE = typeof process !== "undefined" && Boolean(process?.versions?.nod
 // @ts-ignore: Node.js types are not available in the browser.
 const WORKDIR = IS_NODE ? process.cwd() : "";
 
+export const AppLanguagesSchema = z.enum(["en", "ja"]);
+export type AppLanguages = z.infer<typeof AppLanguagesSchema>;
+
 export const EditorUiFieldGroupSchema = z.object({
-  name: z.string().optional(),
+  // If not provided, we store all fields in the default "Miscellaneous" group.
+  labelByLanguage: z.record(AppLanguagesSchema, z.string()).optional(),
   paths: z.array(z.string()),
   isSingleton: z.boolean().optional(),
   isSingleField: z.boolean().optional(),
 });
 
+export const EditorUiFieldLabelsSchema = z.record(
+  AppLanguagesSchema, z.record(z.string(), z.string())
+);
+
 export const EditorUiSchemaJsonSchema = z.object({
   fieldGroups: z.array(EditorUiFieldGroupSchema),
+  fieldLabels: EditorUiFieldLabelsSchema,
 });
 
 export type EditorUiFieldGroup = z.infer<typeof EditorUiFieldGroupSchema>;
@@ -68,7 +77,7 @@ export const definePageContentSchema = async (props: DefinePageContentSchemaProp
 
   const schemaDefinition: PageContentSchemaJson = {
     schemaVersion,
-    editorUiSchema,
+    editorUiSchema: EditorUiSchemaJsonSchema.parse(editorUiSchema),
     jsonSchema: z.toJSONSchema(schema, { io: "input" }),
   };
 
