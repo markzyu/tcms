@@ -404,7 +404,7 @@ Here is a new field added to the `editorUiSchema` to support i18n:
 
 ```
 editorUiSchema: {
-  fieldTitles: {
+  fieldLabels: {
     en: {
       "xxx.firstName": "First name",
       "xxx.lastName": "Last name"
@@ -417,9 +417,36 @@ editorUiSchema: {
 }
 ```
 
-This "fieldTitles" field can both appear at the root of editor ui schema, and within each field group / array group. They don't technically have to be actually related to that field group to exist. But we merge all `fieldTitles` into a single object from the deepest level to the root level, or, if at the same level, first come first served.
+**Caveat**: No matter how I design this i18n meta schema, it introduces the likelihood of forgotten declarations of a specific field for a specific language. As a result, I opted for the cleaner meta schema design of a single `fieldLabels` object at the root of `editorUiSchema`. And we would also need to update the schema build scripts to throw an error if a known field is not declared for a known language in the same schema json.
 
-**Caveat**: No matter how I design this i18n meta schema, it introduces the likelihood of forgotten declarations of a specific field for a specific language. As a result, I opted for the cleaner meta schema design. And we would also need to update the schema build scripts to throw an error if a known field is not declared for a known language in the same schema json.
+Additionally, we extend the existing `fieldGroups` schema to support i18n of its group name:
+
+Instead of:
+
+```
+fieldGroups: [
+  {
+    "name": "Basic Information",
+    "paths": ["name", "headline", "bio"],
+    "isSingleton": true
+  },
+]
+```
+
+We should have:
+
+```
+fieldGroups: [
+  {
+    "label": {
+      "en": "Basic Information",
+      "jp": "基本情報"
+    },
+    "paths": ["name", "headline", "bio"],
+    "isSingleton": true
+  },
+]
+```
 
 Also, in the future, we could support page variants with more fields, for example: `.<variant>.json - .<language-script>.<publish-edition>.json`. But the language-script field is always required and listed first.
 

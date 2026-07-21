@@ -74,7 +74,12 @@ This json is the source of truth for the current Ops configs of the mini app ins
 
 * `lcdn.serverRenderer` choices: `callCSR`, `callMiniSSR`, `static`
 
-## `content.json`
+## `content.<variant>.json`
+
+Where `<variant>` is one of the below:
+
+* `<language-script>`: Example: `en`, `jp`, `zh-hant`
+* `<language-script>.<edition>`: Example: `en.chrismas`, `jp.hanabi`.
 
 When CAS is enabled, string fields that reference assets hold the CAS ID (SHA-256 + extension), not a plain filename.
 
@@ -114,12 +119,18 @@ Example of how schemas and editor UI may work for multi-page templates with both
   "editorUiSchema": {
     "fieldGroups": [
       {
-        "name": "Basic Information",
+        "label": {
+          "en": "Basic Information",
+          "jp": "基本情報"
+        },
         "paths": ["name", "headline", "bio"],
         "isSingleton": true
       },
       {
-        "name": "Contact Information",
+        "label": {
+          "en": "Contact Information",
+          "jp": "連絡先情報"
+        },
         "paths": ["email", "phone"],
         "isSingleton": true
       },
@@ -129,13 +140,19 @@ Example of how schemas and editor UI may work for multi-page templates with both
         "paths": ["heroImage"]
       },
       {
-        "name": "Project {index}",
+        "label": {
+          "en": "Project {index}",
+          "jp": "プロジェクト {index}"
+        },
         "paths": ["projects.{index}.name"]
       }
     ],
     "arrayGroups": [
       {
-        "groupDisplayName": "\"{groupName}\" Project",
+        "label": {
+          "en": "\"{groupName}\" Project",
+          "jp": "「{groupName}」プロジェクト"
+        },
         "groupsPath": "projects",
         "groupName": "projects.{groupIndex}.name",
         "itemsPath": "projects.{groupIndex}.richTextList",
@@ -143,21 +160,40 @@ Example of how schemas and editor UI may work for multi-page templates with both
       },
       {
         "isSingleArray": true,
-        "groupDisplayName": "Biography Rich Text",
+        "label": {
+          "en": "Biography Rich Text",
+          "jp": "自己紹介 (リッチテキスト)"
+        },
         "itemsPath": "richTextList",
         "itemName": "richTextList.{itemIndex}.text"
       }
     ]
   },
+  "fieldLabels": {
+    "en": {
+      "name": "Name",
+      "headline": "Headline",
+      "bio": "Bio",
+      "email": "Email",
+      "phone": "Phone",
+      "heroImage": "Hero Image"
+    },
+    "jp": {
+      "name": "名前",
+      "headline": "見出し",
+      "bio": "自己紹介",
+      "email": "メールアドレス",
+      "phone": "電話番号",
+      "heroImage": "写真"
+    }
+  },
   "jsonSchema": {
     "type": "object",
     "properties": {
       "name": {
-        "title": "Name",
         "type": "string"
       },
       "projects": {
-        "title": "Projects",
         "description": "(This is a demo of arrays) This is a list of projects that the person has worked on.",
         "type": "array",
         "items": {
@@ -183,24 +219,19 @@ Example of how schemas and editor UI may work for multi-page templates with both
         }
       },
       "headline": {
-        "title": "Headline",
         "type": "string"
       },
       "bio": {
-        "title": "Bio",
         "type": "string",
         "isMarkdown": true
       },
       "email": {
-        "title": "Email",
         "type": "string"
       },
       "phone": {
-        "title": "Phone",
         "type": "string"
       },
       "heroImage": {
-        "title": "Hero Image",
         "description": "This is a wide image that will be displayed at the top of the contact card.",
         "type": "string"
       },
