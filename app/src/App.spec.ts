@@ -3,7 +3,7 @@ import { flushPromises } from "@vue/test-utils";
 
 import App from "./App.vue";
 import router from "./router";
-import { renderTest } from "./testUtils";
+import { renderTest } from "./utils/testUtils.ts";
 
 vi.mock("@tauri-apps/plugin-os", () => ({
   type: vi.fn(() => "macos"),

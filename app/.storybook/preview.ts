@@ -1,5 +1,7 @@
 import { type Preview, setup } from '@storybook/vue3-vite'; // or @storybook/vue3-webpack5
+import { provide } from 'vue';
 import { IonicVue } from '@ionic/vue';
+import { AppLanguageKey, createAppLanguageContext } from "../src/utils/providers.ts";
 import '../src/main.css';
 import './storybook.css'; // Path to your custom styles
 
@@ -19,6 +21,36 @@ setup((app) => {
 });
 
 const preview: Preview = {
+  decorators: [
+    (story, context) => ({
+      components: { story: story() },
+      setup() {
+        const initialLocale = context.globals.locale as AppLanguages;
+        const newContext = createAppLanguageContext(initialLocale);
+        provide(AppLanguageKey, newContext);
+
+        // This is a hack to update the locale when storybook toolbar is changed
+        setInterval(() => {
+          newContext.locale.value = context.globals.locale as AppLanguages;
+        }, 200);
+        return { newContext };
+      },
+      template: `<story />`,
+    })
+  ],
+  globalTypes: {
+    locale: {
+      name: "Locale",
+      defaultValue: "en",
+      toolbar: {
+        icon: "globe",
+        items: [
+          { value: "en", title: "English" },
+          { value: "ja", title: "Japanese" },
+        ],
+      }
+    }
+  },
   parameters: {},
 };
 export default preview;

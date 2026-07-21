@@ -2,7 +2,7 @@ import { flushPromises } from "@vue/test-utils";
 import { screen, waitFor } from "@testing-library/vue";
 import { vi } from "vitest";
 
-import { renderTest } from "../testUtils";
+import { renderTest } from "../utils/testUtils";
 import { MockOrchestratorWrapper } from "./WorkflowOrchestrator.mocks";
 import { ToolInputTypes } from "./toolTypes";
 

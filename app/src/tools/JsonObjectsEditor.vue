@@ -22,7 +22,9 @@ import { ToolProps } from './toolTypes';
 import { get, set } from 'lodash';
 import { IonInput, IonItem, IonList } from '@ionic/vue';
 import type { JSONSchema7Definition } from 'json-schema';
+import { useAppLanguageLocale } from '../utils/providers';
 
+const locale = useAppLanguageLocale();
 const props = defineProps<ToolProps<"jsonWithSchema">>();
 const jsonData = ref<any>(props.input.json);
 
@@ -73,29 +75,34 @@ const walkJsonSchemaForAllFields = (schema: JSONSchema7Definition, results?: Fie
   return newResults;
 }
 
+const newGroup = (name: string): FieldGroupDescriptor => ({
+  name,
+  fields: [],
+  indices: [],
+});
+
 const fieldGroupDescriptors = computed<FieldGroupDescriptor[]>(() => {
   const knownPaths = new Set<string>();
-  const miscGroup: FieldGroupDescriptor = {
-    name: "Miscellaneous Questions",
-    fields: [],
-    indices: [],
-  };
+  const groupsByName: Record<string, FieldGroupDescriptor> = {};
+  const miscGroupName = "Miscellaneous Questions";
+  const { fieldLabels } = props.input.editorUiSchema;
   const results = props.input.editorUiSchema.fieldGroups.map((fieldGroup) => {
-    const fields: FieldDescriptor[] = fieldGroup.paths
+    const { labelByLanguage, paths } = fieldGroup;
+    const fields: FieldDescriptor[] = paths
       .map((path) => ({
-        name: path,
+        name: fieldLabels[locale.value]?.[path] ?? path,
         fullPath: (knownPaths.add(path), path),
         isSingleton: !!fieldGroup.isSingleton
       }));
-    if (!fieldGroup.name || fieldGroup.name === miscGroup.name) {
-      miscGroup.fields.push(...fields);
-      return miscGroup;
+    if (!labelByLanguage) {
+      groupsByName[miscGroupName] ||= newGroup(miscGroupName);
+      groupsByName[miscGroupName].fields.push(...fields);
+      return groupsByName[miscGroupName];
     } else {
-      return {
-        name: fieldGroup.name,
-        fields,
-        indices: [],
-      };
+      const groupName = labelByLanguage[locale.value];
+      const group = groupsByName[groupName] ||= newGroup(groupName);
+      group.fields.push(...fields);
+      return group;
     }
   });
   const allFields = walkJsonSchemaForAllFields(props.input.jsonSchema);
@@ -103,8 +110,10 @@ const fieldGroupDescriptors = computed<FieldGroupDescriptor[]>(() => {
     if (knownPaths.has(field.fullPath) || !field.isSingleton) {
       return;
     }
+    field.name = fieldLabels[locale.value]?.[field.fullPath] ?? field.fullPath;
     knownPaths.add(field.fullPath);
-    miscGroup.fields.push(field);
+    groupsByName[miscGroupName] ||= newGroup(miscGroupName);
+    groupsByName[miscGroupName].fields.push(field);
   });
   return results;
 });

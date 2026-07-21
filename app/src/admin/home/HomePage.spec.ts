@@ -4,7 +4,7 @@ import { flushPromises, type VueWrapper } from "@vue/test-utils";
 import { screen, waitFor } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
 
-import { clickIonButton, renderTest } from "../../testUtils";
+import { clickIonButton, renderTest } from "../../utils/testUtils.ts";
 import HomePage from "./HomePage.vue";
 import {
   getHomeTestMocks,
