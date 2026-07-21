@@ -5,7 +5,7 @@
       <div>
         <div class="mx-5">{{ fieldGroup.name }}</div>
       </div>
-      <ion-list class="rounded-md border-0 border-gray-300 p-2">
+      <ion-list class="rounded-md border-0 border-gray-500 p-2 filter brightness-90">
         <div v-for="field in fieldGroup.fields" :key="field.name">
           <ion-item>
             <ion-input :label="field.name" type="text" :value="get(jsonData, field.fullPath)" @input="updateField(field.fullPath, $event)" />
