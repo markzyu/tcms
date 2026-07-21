@@ -9,10 +9,10 @@ export const ContactCard = () => {
   const heroAlignmentClass = heroAlignment === "left" ? "" : "order-1";
   return (
     <div
-      className="relative md:max-w-200 flex gap-6 border-0 border-gray-300 rounded-lg shadow-xl/20 overflow-hidden"
+      className="relative md:max-w-[700px] flex gap-6 border-0 border-gray-300 rounded-lg shadow-xl/20 overflow-hidden"
       data-testid={CONTACT_CARD_TEST_IDS.root}
     >
-      <div className={`flex-2 -ml-6 -my-6 ${heroAlignmentClass}`}>
+      <div className={`flex-[2] -ml-6 -my-6 ${heroAlignmentClass}`}>
         <img className="absolute left-0 top-0 w-full object-cover max-w-none h-full -z-10" data-testid={CONTACT_CARD_TEST_IDS.heroImage} src={heroImage} alt={heroAltText} />
       </div>
       <div className="flex flex-1 flex-col text-gray-900 p-6 space-y-3 min-h-100 bg-white/80 backdrop-blur-sm">
