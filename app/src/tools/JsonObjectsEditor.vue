@@ -5,10 +5,34 @@
       <div>
         <div class="mx-5">{{ fieldGroup.name }}</div>
       </div>
-      <ion-list class="rounded-md border-0 border-gray-500 p-2 filter brightness-90">
+      <ion-list class="rounded-md border-0 border-gray-500 p-2 jsonFieldsList">
         <div v-for="field in fieldGroup.fields" :key="field.name">
           <ion-item>
-            <ion-input :label="field.name" type="text" :value="get(jsonData, field.fullPath)" @input="updateField(field.fullPath, $event)" />
+            <ion-textarea
+              :auto-grow="true"
+              v-if="field.type === 'textarea'"
+              :label="field.name"
+              :value="get(jsonData, field.fullPath)"
+              @input="updateField(field.fullPath, $event)" />
+            <div v-else-if="field.type === 'media'" class="flex flex-row w-full">
+              <ion-label>{{ field.name }}</ion-label>
+              <div class="mx-[25px] my-[10px] w-[100px] h-[100px] bg-gray-100 dark:bg-black flex items-center justify-center">
+                <ion-icon aria-label="Upload image" :icon="camera" size="large" />
+              </div>
+            </div>
+            <ion-input
+              v-else-if="field.type === 'input' && field.inputType"
+              :placeholder="hintsByInputType[field.inputType]"
+              :label="field.name"
+              :type="field.inputType"
+              :value="get(jsonData, field.fullPath)"
+              @input="updateField(field.fullPath, $event)" />
+            <ion-input
+              v-else
+              :label="field.name"
+              type="text"
+              :value="get(jsonData, field.fullPath)"
+              @input="updateField(field.fullPath, $event)" />
           </ion-item>
         </div>
       </ion-list>
@@ -20,13 +44,22 @@
 import { computed, ref } from 'vue';
 import { ToolProps } from './toolTypes';
 import { get, set } from 'lodash';
-import { IonInput, IonItem, IonList } from '@ionic/vue';
+import { IonIcon, IonInput, IonItem, IonList, IonTextarea } from '@ionic/vue';
 import type { JSONSchema7Definition } from 'json-schema';
+import { camera } from 'ionicons/icons';
 import { useAppLanguageLocale } from '../utils/i18n';
 import { useToolsContent } from './content';
 import { toolContentKeys } from './contentKeys';
+import { EditorUiFieldTypes } from '@tcms/mini-app-common';
 
-const [miscGroupName] = useToolsContent(toolContentKeys);
+const [miscGroupName, emailHint, urlHint, passwordHint, telHint, numberHint] = useToolsContent(toolContentKeys);
+const hintsByInputType = computed(() => ({
+  email: emailHint.value,
+  url: urlHint.value,
+  password: passwordHint.value,
+  tel: telHint.value,
+  number: numberHint.value,
+} as Partial<Record<string, string>>));
 
 const locale = useAppLanguageLocale();
 const props = defineProps<ToolProps<"jsonWithSchema">>();
@@ -50,7 +83,7 @@ type FieldDescriptor = {
   // This is the full path to the field in the input JSON
   fullPath: string;
   isSingleton: boolean;
-};
+} & EditorUiFieldTypes;
 
 const walkJsonSchemaForAllFields = (schema: JSONSchema7Definition, results?: FieldDescriptor[], rootPath?: string, notSingleton?: boolean): FieldDescriptor[] => {
   const newResults = results ?? [];
@@ -90,9 +123,10 @@ const fieldGroupDescriptors = computed<FieldGroupDescriptor[]>(() => {
   const groupsByName: Record<string, FieldGroupDescriptor> = {};
   const { fieldLabels } = props.input.editorUiSchema;
   const results = props.input.editorUiSchema.fieldGroups.map((fieldGroup) => {
-    const { labelByLanguage, paths } = fieldGroup;
-    const fields: FieldDescriptor[] = paths
-      .map((path) => ({
+    const { labelByLanguage, fields: rawFields } = fieldGroup;
+    const fields: FieldDescriptor[] = rawFields
+      .map(({ path, ...field }) => ({
+        ...field,
         name: fieldLabels[locale.value]?.[path] ?? path,
         fullPath: (knownPaths.add(path), path),
         isSingleton: !!fieldGroup.isSingleton
@@ -127,3 +161,16 @@ const updateField = (fullPath: string, event: Event) => {
 };
 
 </script>
+
+<style scoped>
+
+.jsonFieldsList {
+  --ion-item-background: #D9D9D9;
+}
+
+@media (prefers-color-scheme: dark) {
+  .jsonFieldsList {
+    --ion-item-background: #2D2D2D;
+  }
+}
+</style>

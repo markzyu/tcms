@@ -123,7 +123,11 @@ Example of how schemas and editor UI may work for multi-page templates with both
           "en": "Basic Information",
           "ja": "基本情報"
         },
-        "paths": ["name", "headline", "bio"],
+        "fields": [
+          { "path": "name" },
+          { "path": "headline" },
+          { "path": "bio", "type": "textarea" }
+        ],
         "isSingleton": true
       },
       {
@@ -131,20 +135,27 @@ Example of how schemas and editor UI may work for multi-page templates with both
           "en": "Contact Information",
           "ja": "連絡先情報"
         },
-        "paths": ["email", "phone"],
+        "fields": [
+          { "path": "email" },
+          { "path": "phone" }
+        ],
         "isSingleton": true
       },
       {
         "isSingleField": true,
         "isSingleton": true,
-        "paths": ["heroImage"]
+        "fields": [
+          { "path": "heroImage" }
+        ]
       },
       {
         "labelByLanguage": {
           "en": "Project {index}",
           "ja": "プロジェクト {index}"
         },
-        "paths": ["projects.{index}.name"]
+        "fields": [
+          { "path": "projects.{index}.name" }
+        ]
       }
     ],
     "arrayGroups": [

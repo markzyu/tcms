@@ -48,7 +48,11 @@ export const contactCardSchemaPathPromise = definePageContentSchema({
           en: "Basic Information",
           ja: "基本情報",
         },
-        paths: ["name", "headline", "bio"],
+        fields: [
+          { path: "name" },
+          { path: "headline" },
+          { path: "bio", type: "textarea" },
+        ],
         isSingleton: true,
       },
       {
@@ -56,13 +60,18 @@ export const contactCardSchemaPathPromise = definePageContentSchema({
           en: "Contact Information",
           ja: "連絡先",
         },
-        paths: ["email", "phone"],
+        fields: [
+          { path: "email", type: "input", inputType: "email" },
+          { path: "phone", type: "input", inputType: "tel" },
+        ],
         isSingleton: true,
       },
       {
         isSingleField: true,
         isSingleton: true,
-        paths: ["heroImage"],
+        fields: [
+          { path: "heroImage", type: "media" },
+        ],
       },
     ],
   },

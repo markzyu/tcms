@@ -7,10 +7,17 @@
           "en": "Basic Information",
           "ja": "基本情報"
         },
-        "paths": [
-          "name",
-          "headline",
-          "bio"
+        "fields": [
+          {
+            "path": "name"
+          },
+          {
+            "path": "headline"
+          },
+          {
+            "type": "textarea",
+            "path": "bio"
+          }
         ],
         "isSingleton": true
       },
@@ -19,15 +26,26 @@
           "en": "Contact Information",
           "ja": "連絡先"
         },
-        "paths": [
-          "email",
-          "phone"
+        "fields": [
+          {
+            "type": "input",
+            "inputType": "email",
+            "path": "email"
+          },
+          {
+            "type": "input",
+            "inputType": "tel",
+            "path": "phone"
+          }
         ],
         "isSingleton": true
       },
       {
-        "paths": [
-          "heroImage"
+        "fields": [
+          {
+            "type": "media",
+            "path": "heroImage"
+          }
         ],
         "isSingleton": true,
         "isSingleField": true

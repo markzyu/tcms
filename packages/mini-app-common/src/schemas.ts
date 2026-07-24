@@ -9,10 +9,39 @@ const WORKDIR = IS_NODE ? process.cwd() : "";
 export const AppLanguagesSchema = z.enum(["en", "ja"]);
 export type AppLanguages = z.infer<typeof AppLanguagesSchema>;
 
+export const EditorUiTextareaFieldSchema = z.object({
+  type: z.literal("textarea"),
+});
+
+export const EditorUiInputFieldSchema = z.object({
+  type: z.literal("input"),
+  inputType: z.enum(["text", "number", "email", "password", "tel", "url"]).optional(),
+});
+
+export const EditorUiMediaFieldSchema = z.object({
+  type: z.literal("media"),
+});
+
+export const EditorUiFieldTypesSchema = z.union([
+  EditorUiTextareaFieldSchema.partial(),
+  EditorUiMediaFieldSchema.partial(),
+  EditorUiInputFieldSchema.partial(),
+]);
+
+export const EditorUiFieldSchema = z.intersection(
+  EditorUiFieldTypesSchema,
+  z.object({
+    path: z.string(),
+  }),
+);
+
+export type EditorUiFieldTypes = z.infer<typeof EditorUiFieldTypesSchema>;
+export type EditorUiField = z.infer<typeof EditorUiFieldSchema>;
+
 export const EditorUiFieldGroupSchema = z.object({
   // If not provided, we store all fields in the default "Miscellaneous" group.
   labelByLanguage: z.record(AppLanguagesSchema, z.string()).optional(),
-  paths: z.array(z.string()),
+  fields: z.array(EditorUiFieldSchema),
   isSingleton: z.boolean().optional(),
   isSingleField: z.boolean().optional(),
 });
