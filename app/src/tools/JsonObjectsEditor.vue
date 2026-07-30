@@ -1,43 +1,48 @@
 <template>
-  <div class="flex flex-col h-full overflow-y-auto custom-scrollbar px-4 md:max-w-[600px] md:mx-auto">
-    <div class="hidden py-10" data-testid="debug-json-data">Debug: {{ jsonData }}</div>
-    <div v-for="fieldGroup in fieldGroupDescriptors" :key="fieldGroup.name">
-      <div>
-        <div class="mx-5">{{ fieldGroup.name }}</div>
-      </div>
-      <ion-list class="rounded-md border-0 border-gray-500 p-2 jsonFieldsList">
-        <div v-for="field in fieldGroup.fields" :key="field.name">
-          <ion-item>
-            <ion-textarea
-              :auto-grow="true"
-              v-if="field.type === 'textarea'"
-              :label="field.name"
-              :value="get(jsonData, field.fullPath)"
-              @input="updateField(field.fullPath, $event)" />
-            <div v-else-if="field.type === 'media'" class="flex flex-row w-full">
-              <ion-label>{{ field.name }}</ion-label>
-              <div class="mx-[25px] my-[10px] w-[100px] h-[100px] bg-gray-100 dark:bg-black flex items-center justify-center">
-                <ion-icon aria-label="Upload image" :icon="camera" size="large" />
-              </div>
-            </div>
-            <ion-input
-              v-else-if="field.type === 'input' && field.inputType"
-              :placeholder="hintsByInputType[field.inputType]"
-              :label="field.name"
-              :type="field.inputType"
-              :value="get(jsonData, field.fullPath)"
-              @input="updateField(field.fullPath, $event)" />
-            <ion-input
-              v-else
-              :label="field.name"
-              type="text"
-              :value="get(jsonData, field.fullPath)"
-              @input="updateField(field.fullPath, $event)" />
-          </ion-item>
+  <tools-screen>
+    <template #title>
+      <div class="text-2xl font-bold">JSON Objects Editor</div>
+    </template>
+    <div class="flex flex-col px-4 md:max-w-[600px] md:mx-auto">
+      <div class="hidden py-10" data-testid="debug-json-data">Debug: {{ jsonData }}</div>
+      <div v-for="fieldGroup in fieldGroupDescriptors" :key="fieldGroup.name">
+        <div>
+          <div class="mx-5">{{ fieldGroup.name }}</div>
         </div>
-      </ion-list>
+        <ion-list class="rounded-md border-0 border-gray-500 p-2 jsonFieldsList">
+          <div v-for="field in fieldGroup.fields" :key="field.name">
+            <ion-item>
+              <ion-textarea
+                :auto-grow="true"
+                v-if="field.type === 'textarea'"
+                :label="field.name"
+                :value="get(jsonData, field.fullPath)"
+                @input="updateField(field.fullPath, $event)" />
+              <div v-else-if="field.type === 'media'" class="flex flex-row w-full">
+                <ion-label>{{ field.name }}</ion-label>
+                <div class="mx-[25px] my-[10px] w-[100px] h-[100px] bg-gray-100 dark:bg-black flex items-center justify-center">
+                  <ion-icon aria-label="Upload image" :icon="camera" size="large" />
+                </div>
+              </div>
+              <ion-input
+                v-else-if="field.type === 'input' && field.inputType"
+                :placeholder="hintsByInputType[field.inputType]"
+                :label="field.name"
+                :type="field.inputType"
+                :value="get(jsonData, field.fullPath)"
+                @input="updateField(field.fullPath, $event)" />
+              <ion-input
+                v-else
+                :label="field.name"
+                type="text"
+                :value="get(jsonData, field.fullPath)"
+                @input="updateField(field.fullPath, $event)" />
+            </ion-item>
+          </div>
+        </ion-list>
+      </div>
     </div>
-  </div>
+  </tools-screen>
 </template>
 
 <script setup lang="ts">
@@ -51,6 +56,7 @@ import { useAppLanguageLocale } from '../utils/i18n';
 import { useToolsContent } from './content';
 import { toolContentKeys } from './contentKeys';
 import { EditorUiFieldTypes } from '@tcms/mini-app-common';
+import ToolsScreen from './ToolsScreen.vue';
 
 const [miscGroupName, emailHint, urlHint, passwordHint, telHint, numberHint] = useToolsContent(toolContentKeys);
 const hintsByInputType = computed(() => ({

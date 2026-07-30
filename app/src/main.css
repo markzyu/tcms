@@ -12,20 +12,19 @@
 }
 
 @layer utilities {
-  /* Custom scrollbar style */
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-track {
-    border-radius: 4px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    border-radius: 4px;
-  }
-
-  /* Standard properties for Firefox */
-  .custom-scrollbar {
+  /* Custom scrollbar style on desktop */
+  .is-desktop-os .custom-scrollbar ion-content::part(scroll) {
     scrollbar-width: thin;
+
+    &::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    &::-webkit-scrollbar-track {
+      border-radius: 4px;
+    }
+    &::-webkit-scrollbar-thumb {
+      border-radius: 4px;
+    }
   }
 }

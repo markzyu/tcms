@@ -50,6 +50,8 @@ const preview: Preview = {
       }
     }
   },
-  parameters: {},
+  parameters: {
+    layout: 'fullscreen',
+  },
 };
 export default preview;
