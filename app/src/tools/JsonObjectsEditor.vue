@@ -3,7 +3,7 @@
     <template #title>
       <div class="text-2xl font-bold">JSON Objects Editor</div>
     </template>
-    <div class="flex flex-col px-4 md:max-w-[600px] md:mx-auto">
+    <div class="flex flex-col p-4 md:max-w-[600px] md:mx-auto">
       <div class="hidden py-10" data-testid="debug-json-data">Debug: {{ jsonData }}</div>
       <div v-for="fieldGroup in fieldGroupDescriptors" :key="fieldGroup.name">
         <div>
@@ -11,7 +11,7 @@
         </div>
         <ion-list class="rounded-md border-0 border-gray-500 p-2 jsonFieldsList">
           <div v-for="field in fieldGroup.fields" :key="field.name">
-            <ion-item>
+            <ion-item :data-testid="`field-${field.type}-${field.fullPath}`">
               <ion-textarea
                 :auto-grow="true"
                 v-if="field.type === 'textarea'"
@@ -24,6 +24,20 @@
                   <ion-icon aria-label="Upload image" :icon="camera" size="large" />
                 </div>
               </div>
+              <div v-else-if="field.type === 'segment'" class="flex flex-row items-center w-full gap-4">
+                <ion-label>{{ field.name }}</ion-label>
+                <ion-segment class="flex-1" mode="ios" :value="get(jsonData, field.fullPath) || field.defaultValue" @ionChange="updateField(field.fullPath, $event)">
+                  <ion-segment-button v-for="choice in field.choices" :key="choice" :value="choice">
+                    <ion-label>{{ choice }}</ion-label>
+                  </ion-segment-button>
+                </ion-segment>
+              </div>
+              <ion-toggle
+                v-else-if="field.type === 'toggle'"
+                :checked="get(jsonData, field.fullPath)"
+                @ionChange="updateField(field.fullPath, $event)">
+                {{ field.name }}
+              </ion-toggle>
               <ion-input
                 v-else-if="field.type === 'input' && field.inputType"
                 :placeholder="hintsByInputType[field.inputType]"
@@ -49,7 +63,7 @@
 import { computed, ref } from 'vue';
 import { ToolProps } from './toolTypes';
 import { get, set } from 'lodash';
-import { IonIcon, IonInput, IonItem, IonList, IonTextarea } from '@ionic/vue';
+import { IonIcon, IonInput, IonItem, IonList, IonSegment, IonTextarea, IonToggle } from '@ionic/vue';
 import type { JSONSchema7Definition } from 'json-schema';
 import { camera } from 'ionicons/icons';
 import { useAppLanguageLocale } from '../utils/i18n';
@@ -109,7 +123,17 @@ const walkJsonSchemaForAllFields = (schema: JSONSchema7Definition, results?: Fie
     }
     walkJsonSchemaForAllFields(schema.items ?? {}, newResults, rootPath ? `${rootPath}.[]` : "[]", true);
   } else if (schema.type !== "null") {
+    let extras: EditorUiFieldTypes = {};
+    if (schema.type === "boolean") {
+      extras = { type: "toggle" };
+    } else if (schema.type === "string" && Array.isArray(schema.enum)) {
+      extras = { type: "segment" };
+      extras.choices = schema.enum.map((choice) => String(choice));
+      extras.defaultValue = schema.default ? String(schema.default) : undefined;
+    }
+    console.log("TESTT", rootPath, extras);
     newResults.push({
+      ...extras,
       name: rootPath ?? "",
       fullPath: rootPath ?? "",
       isSingleton: !notSingleton,
@@ -127,8 +151,11 @@ const newGroup = (name: string): FieldGroupDescriptor => ({
 const fieldGroupDescriptors = computed<FieldGroupDescriptor[]>(() => {
   const knownPaths = new Set<string>();
   const groupsByName: Record<string, FieldGroupDescriptor> = {};
+  const miscGroup = newGroup(miscGroupName.value);
+
+  // First, copy any manually declared field groups
   const { fieldLabels } = props.input.editorUiSchema;
-  const results = props.input.editorUiSchema.fieldGroups.map((fieldGroup) => {
+  props.input.editorUiSchema.fieldGroups.forEach((fieldGroup) => {
     const { labelByLanguage, fields: rawFields } = fieldGroup;
     const fields: FieldDescriptor[] = rawFields
       .map(({ path, ...field }) => ({
@@ -137,28 +164,35 @@ const fieldGroupDescriptors = computed<FieldGroupDescriptor[]>(() => {
         fullPath: (knownPaths.add(path), path),
         isSingleton: !!fieldGroup.isSingleton
       }));
-    if (!labelByLanguage) {
-      groupsByName[miscGroupName.value] ||= newGroup(miscGroupName.value);
-      groupsByName[miscGroupName.value].fields.push(...fields);
-      return groupsByName[miscGroupName.value];
-    } else {
+    if (labelByLanguage) {
       const groupName = labelByLanguage[locale.value];
       const group = groupsByName[groupName] ||= newGroup(groupName);
       group.fields.push(...fields);
-      return group;
     }
   });
+
+  // Then, derive remaining groups based on JSON Schema (misc group and groups organized by parent)
   const allFields = walkJsonSchemaForAllFields(props.input.jsonSchema);
+  const allNamedGroups: string[] = Object.keys(fieldLabels[locale.value] ?? {});
+  allNamedGroups.sort((a, b) => b.length - a.length);
   allFields.forEach((field) => {
     if (knownPaths.has(field.fullPath) || !field.isSingleton) {
       return;
     }
     field.name = fieldLabels[locale.value]?.[field.fullPath] ?? field.fullPath;
     knownPaths.add(field.fullPath);
-    groupsByName[miscGroupName.value] ||= newGroup(miscGroupName.value);
-    groupsByName[miscGroupName.value].fields.push(field);
+
+    const longestMatchingGroupPath = allNamedGroups.find((groupName) => field.fullPath.startsWith(groupName + "."));
+    const matchingGroupName = longestMatchingGroupPath && fieldLabels[locale.value]?.[longestMatchingGroupPath];
+    console.log("TESTT", field.fullPath, longestMatchingGroupPath, matchingGroupName);
+    if (matchingGroupName) {
+      groupsByName[matchingGroupName] ||= newGroup(matchingGroupName);
+      groupsByName[matchingGroupName].fields.push(field);
+    } else {
+      miscGroup.fields.push(field);
+    }
   });
-  return results;
+  return [...Object.values(groupsByName), miscGroup];
 });
 
 const updateField = (fullPath: string, event: Event) => {

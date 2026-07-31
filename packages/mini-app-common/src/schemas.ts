@@ -22,10 +22,22 @@ export const EditorUiMediaFieldSchema = z.object({
   type: z.literal("media"),
 });
 
+export const EditorUiToggleFieldSchema = z.object({
+  type: z.literal("toggle"),
+});
+
+export const EditorUiSegmentFieldSchema = z.object({
+  type: z.literal("segment"),
+  choices: z.array(z.string()),
+  defaultValue: z.string().optional(),
+});
+
 export const EditorUiFieldTypesSchema = z.union([
   EditorUiTextareaFieldSchema.partial(),
   EditorUiMediaFieldSchema.partial(),
   EditorUiInputFieldSchema.partial(),
+  EditorUiToggleFieldSchema.partial(),
+  EditorUiSegmentFieldSchema.partial(),
 ]);
 
 export const EditorUiFieldSchema = z.intersection(

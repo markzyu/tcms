@@ -60,7 +60,11 @@
         "phone": "Phone",
         "heroImage": "Hero Image",
         "heroAltText": "Hero Alt Text",
-        "heroAlignment": "Hero Alignment"
+        "heroAlignment": "Hero Alignment",
+        "exampleDeepField": "Example Deep Field",
+        "exampleDeepField.field1": "Question 1",
+        "exampleDeepField.field2": "Question 2",
+        "exampleDeepField.field3": "Question 3"
       },
       "ja": {
         "name": "名前",
@@ -70,7 +74,11 @@
         "phone": "電話番号",
         "heroImage": "写真",
         "heroAltText": "写真の代替テキスト",
-        "heroAlignment": "写真の配置"
+        "heroAlignment": "写真の配置",
+        "exampleDeepField": "例深いフィールド",
+        "exampleDeepField.field1": "質問 1",
+        "exampleDeepField.field2": "質問 2",
+        "exampleDeepField.field3": "質問 3"
       }
     }
   },
@@ -106,6 +114,20 @@
           "left",
           "right"
         ]
+      },
+      "exampleDeepField": {
+        "type": "object",
+        "properties": {
+          "field1": {
+            "type": "string"
+          },
+          "field2": {
+            "type": "number"
+          },
+          "field3": {
+            "type": "boolean"
+          }
+        }
       }
     },
     "required": [
