@@ -22,7 +22,7 @@ const meta = {
         name: 'John Doe',
       },
       jsonSchema: schema.jsonSchema,
-      editorUiSchema: schema.editorUiSchema,
+      editorUiSchema: schema.editorUiSchema as any,
     },
     onAction: async (action) => {
       console.log("onAction", action);
