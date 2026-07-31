@@ -194,9 +194,10 @@ const fieldGroupDescriptors = computed<FieldGroupDescriptor[]>(() => {
 });
 
 const updateField = (fullPath: string, event: Event) => {
+  const { target } = event;
   const value = (event.target as HTMLInputElement).value;
-  if (event.target && 'checked' in event.target) {
-    set(jsonData.value, fullPath, event.target.checked);
+  if (target && 'checked' in target && 'role' in target && target.role === 'switch') {
+    set(jsonData.value, fullPath, target.checked);
     return;
   }
   set(jsonData.value, fullPath, value);
