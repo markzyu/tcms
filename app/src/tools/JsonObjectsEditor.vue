@@ -131,7 +131,6 @@ const walkJsonSchemaForAllFields = (schema: JSONSchema7Definition, results?: Fie
       extras.choices = schema.enum.map((choice) => String(choice));
       extras.defaultValue = schema.default ? String(schema.default) : undefined;
     }
-    console.log("TESTT", rootPath, extras);
     newResults.push({
       ...extras,
       name: rootPath ?? "",
@@ -184,7 +183,6 @@ const fieldGroupDescriptors = computed<FieldGroupDescriptor[]>(() => {
 
     const longestMatchingGroupPath = allNamedGroups.find((groupName) => field.fullPath.startsWith(groupName + "."));
     const matchingGroupName = longestMatchingGroupPath && fieldLabels[locale.value]?.[longestMatchingGroupPath];
-    console.log("TESTT", field.fullPath, longestMatchingGroupPath, matchingGroupName);
     if (matchingGroupName) {
       groupsByName[matchingGroupName] ||= newGroup(matchingGroupName);
       groupsByName[matchingGroupName].fields.push(field);
@@ -197,6 +195,10 @@ const fieldGroupDescriptors = computed<FieldGroupDescriptor[]>(() => {
 
 const updateField = (fullPath: string, event: Event) => {
   const value = (event.target as HTMLInputElement).value;
+  if (event.target && 'checked' in event.target) {
+    set(jsonData.value, fullPath, event.target.checked);
+    return;
+  }
   set(jsonData.value, fullPath, value);
 };
 
