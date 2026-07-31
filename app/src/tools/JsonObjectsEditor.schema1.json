@@ -49,6 +49,20 @@
         ],
         "isSingleton": true,
         "isSingleField": true
+      },
+      {
+        "labelByLanguage": {
+          "en": "Example Deep Field",
+          "ja": "例深いフィールド"
+        },
+        "fields": [
+          {
+            "type": "input",
+            "inputType": "password",
+            "path": "exampleDeepField.field1"
+          }
+        ],
+        "isSingleton": true
       }
     ],
     "fieldLabels": {
