@@ -34,15 +34,23 @@
                 :label="field.name"
                 :value="get(jsonData, field.fullPath)"
                 @input="updateField(field.fullPath, $event)" />
-              <div v-else-if="field.type === 'media'" class="flex flex-row w-full">
-                <ion-label>{{ field.name }}</ion-label>
-                <div class="mx-[25px] my-[10px] w-[100px] h-[100px] bg-gray-100 dark:bg-black flex items-center justify-center">
-                  <ion-icon aria-label="Upload image" :icon="camera" size="large" />
+              <div v-else-if="field.type === 'media'" class="flex flex-col w-full items-end">
+                <ion-input
+                  type="text"
+                  disabled
+                  :class="field.validationError ? 'placeholder-error' : ''"
+                  :label="field.name"
+                  :value="field.validationError ? '' : get(jsonData, field.fullPath)"
+                  :placeholder="field.validationError" />
+                <div class="w-[66%] flex justify-center">
+                  <div class="mx-[25px] my-[10px] w-[100px] h-[100px] bg-gray-100 dark:bg-black flex items-center justify-center">
+                    <ion-icon aria-label="Upload image" :icon="camera" size="large" />
+                  </div>
                 </div>
               </div>
               <div v-else-if="field.type === 'segment'" class="flex flex-row items-center w-full gap-4">
                 <ion-label>{{ field.name }}</ion-label>
-                <ion-segment class="flex-1" mode="ios" :value="get(jsonData, field.fullPath) || field.defaultValue" @ionChange="updateField(field.fullPath, $event)">
+                <ion-segment class="flex-1" mode="ios" :value="get(jsonData, field.fullPath)" @ionChange="updateField(field.fullPath, $event)">
                   <ion-segment-button v-for="choice in field.choices" :key="choice" :value="choice">
                     <ion-label>{{ choice }}</ion-label>
                   </ion-segment-button>
@@ -67,6 +75,7 @@
                 type="text"
                 :value="get(jsonData, field.fullPath)"
                 @input="updateField(field.fullPath, $event)" />
+              <ion-note v-if="field.validationError && field.type !== 'media'" color="danger" slot="end">{{ field.validationError }}</ion-note>
             </ion-item>
           </div>
         </ion-list>
@@ -76,22 +85,24 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, nextTick, onMounted, ref } from 'vue';
 import { ToolProps } from './toolTypes';
 import { get, set } from 'lodash';
 import { IonIcon, IonInput, IonItem, IonLabel, IonList, IonSegment, IonSegmentButton, IonTextarea, IonToggle, IonFab, IonFabButton, IonActionSheet, ActionSheetButton, IonButton } from '@ionic/vue';
 import { camera, add } from 'ionicons/icons';
-import { newFieldGroup, FieldGroupDescriptor, FieldDescriptor, walkJsonSchemaForAllFields, getShallowArrayPaths, getShallowArrayPath } from './json.utils';
+import { newFieldGroup, FieldGroupDescriptor, FieldDescriptor, walkJsonSchemaForAllFields, getShallowArrayPaths, getShallowArrayPath, getRequiredFields } from './json.utils';
 import { useAppLanguageLocale } from '../utils/i18n';
 import { useToolsContent } from './content';
 import { toolContentKeys } from './contentKeys';
 import ToolsScreen from './ToolsScreen.vue';
 import IntlMessageFormat from 'intl-messageformat';
+import { convertJsonSchemaToZod } from 'zod-from-json-schema';
 
 const [
   miscGroupName,
   emailHint, urlHint, passwordHint, telHint, numberHint,
-  addFlatArray, cancelButtonText, editDetailsButtonText, deleteButtonText, deleteConfirmButtonText
+  addFlatArray, cancelButtonText, editDetailsButtonText, deleteButtonText, deleteConfirmButtonText,
+  validationRequiredField, validationInvalidValue,
 ] = useToolsContent(toolContentKeys);
 const hintsByInputType = computed(() => ({
   email: emailHint.value,
@@ -110,30 +121,27 @@ const confirmDeletionOfGroupName = ref<string | null>(null);
 // These are "abstract" because array indices are not yet resolved.
 const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
   const knownPaths = new Set<string>();
+  const fieldPathToGroupName: Record<string, string | undefined> = {};
+  const singletonGroups: Set<string> = new Set();
   const groupsByName: Record<string, FieldGroupDescriptor> = {};
   const miscGroup = newFieldGroup(miscGroupName.value, locale.value);
 
-  // First, copy any manually declared field groups
+  // First, find relationship between field paths and group names
   const { fieldLabels } = props.input.editorUiSchema;
   props.input.editorUiSchema.fieldGroups.forEach((fieldGroup) => {
     const { isSingleton, labelByLanguage, fields: rawFields } = fieldGroup;
-    const fields: FieldDescriptor[] = rawFields
-      .map(({ path, ...field }) => ({
-        ...field,
-        name: fieldLabels[locale.value]?.[path] ?? path,
-        fullPath: (knownPaths.add(path), path),
-        arrayPath: getShallowArrayPath(path),
-        isSingleton: !!isSingleton
-      }));
-    if (labelByLanguage) {
-      const groupName = labelByLanguage[locale.value];
-      const group = groupsByName[groupName] ||= newFieldGroup(groupName, locale.value, isSingleton ? undefined : 0);
-      group.fields.push(...fields);
+    const groupName = labelByLanguage?.[locale.value] || undefined;
+    rawFields.forEach(({ path }) => {
+      fieldPathToGroupName[path] = groupName;
+    });
+    if (isSingleton && groupName) {
+      singletonGroups.add(groupName);
     }
   });
 
   // Then, derive remaining groups based on JSON Schema (misc group and groups organized by parent)
-  const allFields = walkJsonSchemaForAllFields(props.input.jsonSchema);
+  const requiredFields = getRequiredFields(props.input.jsonSchema);
+  const allFields = walkJsonSchemaForAllFields(props.input.jsonSchema, requiredFields);
   const allNamedGroups: string[] = Object.keys(fieldLabels[locale.value] ?? {});
   allNamedGroups.sort((a, b) => b.length - a.length);
   allFields.forEach((field) => {
@@ -143,22 +151,79 @@ const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
     field.name = fieldLabels[locale.value]?.[field.fullPath] ?? field.fullPath;
     knownPaths.add(field.fullPath);
 
+    const preferredGroupName = fieldPathToGroupName[field.fullPath];
+    if (preferredGroupName) {
+      const isSingleton = singletonGroups.has(preferredGroupName);
+      const group = groupsByName[preferredGroupName] ||= newFieldGroup(preferredGroupName, locale.value, isSingleton ? undefined : 0);
+      group.fields.push(field);
+      return;
+    }
+
+    // Fallback: if not specified in fieldGroups, try to group based on fieldLabels
     const longestMatchingGroupPath = allNamedGroups.find((groupName) => field.fullPath.startsWith(groupName + "."));
     const matchingGroupName = longestMatchingGroupPath && fieldLabels[locale.value]?.[longestMatchingGroupPath];
     if (matchingGroupName) {
       const isSingleton = !matchingGroupName.includes("{index}");
       groupsByName[matchingGroupName] ||= newFieldGroup(matchingGroupName, locale.value, isSingleton ? undefined : 0);
       groupsByName[matchingGroupName].fields.push(field);
-    } else if (field.isSingleton) {
-      // Only Singleton groups can fall back to the misc group
+      return;
+    }
+    
+    // Only Singleton groups can fall back to the misc group
+    if (field.isSingleton) {
       miscGroup.fields.push(field);
     }
+  });
+
+  // Then, copy the uiEditorSchema field groups as overrides of json schema behaviors
+  props.input.editorUiSchema.fieldGroups.forEach((fieldGroup) => {
+    const { isSingleton, labelByLanguage, fields: rawFields } = fieldGroup;
+    const groupName = labelByLanguage?.[locale.value];
+    const group = groupName ? groupsByName[groupName] : miscGroup;
+    rawFields.forEach(({ path, ...field }) => {
+      const fieldToWrite = group.fields.find((f) => f.fullPath === path);
+      if (fieldToWrite) {
+        Object.assign(fieldToWrite, field);
+        fieldToWrite.name = fieldLabels[locale.value]?.[path] ?? path;
+        fieldToWrite.arrayPath = getShallowArrayPath(path);
+        fieldToWrite.isSingleton = !!isSingleton;
+      }
+    });
   });
   return [...Object.values(groupsByName), miscGroup];
 });
 
+const performFieldValidations = (field: FieldDescriptor) => {
+  const isUndefinedOrNull = get(jsonData.value, field.fullPath) === undefined || get(jsonData.value, field.fullPath) === null;
+  if (field.isRequired && isUndefinedOrNull) {
+    return {
+      ...field,
+      validationError: validationRequiredField.value, 
+    };
+  }
+  if (isUndefinedOrNull) {
+    // Not a required field. Don't validate (or the undefined/null values can cause confusion)
+    return field;
+  }
+  if (field.jsonSchema && typeof field.jsonSchema === "object") {
+    const { error } = convertJsonSchemaToZod(field.jsonSchema).safeParse(get(jsonData.value, field.fullPath));
+    if (!error) {
+      return field;
+    }
+    console.warn(`Invalid value for field ${field.fullPath}: ${get(jsonData.value, field.fullPath)}`, error);
+    return {
+      ...field,
+      validationError: validationInvalidValue.value,
+    };
+  }
+  return field;
+};
+
 const singletonFieldGroups = computed<FieldGroupDescriptor[]>(() => {
-  return abstractFieldGroups.value.filter((group) => group.isSingleton);
+  return abstractFieldGroups.value.filter((group) => group.isSingleton).map((group) => ({
+    ...group,
+    fields: group.fields.map(performFieldValidations),
+  }));
 });
 
 // Derive array groups only if we have a fieldLabel for them
@@ -173,15 +238,47 @@ const arrayFieldGroups = computed<FieldGroupDescriptor[]>(() => {
     // Create new copies of the original abstract array groups, based on actual array lengths
     return Array(validLength).fill(0).map((_, i) => {
       const arrayItemGroup = newFieldGroup(group.nameTemplate, locale.value, i);
-      arrayItemGroup.fields.push(...group.fields.map((field) => ({
+      arrayItemGroup.fields = group.fields.map((field) => ({
         ...field,
         fullPath: field.fullPath.replace("{index}", String(i)),
         arrayIndex: i,
-      })));
+      })).map(performFieldValidations);
       return arrayItemGroup;
     });
   });
 });
+
+const allFieldGroups = computed<(FieldGroupDescriptor | null)[]>(() => {
+  let leftGroups = singletonFieldGroups.value;
+  let rightGroups = arrayFieldGroups.value;
+  if (rightGroups.length === 0) {
+    const halfLength = Math.floor(leftGroups.length / 2);
+    rightGroups = leftGroups.slice(halfLength);
+    leftGroups = leftGroups.slice(0, halfLength);
+  }
+  const maxLength = Math.max(leftGroups.length, rightGroups.length);
+  return [
+    ...leftGroups, ...Array(maxLength - leftGroups.length).fill(null),
+    ...rightGroups, ...Array(maxLength - rightGroups.length).fill(null),
+  ];
+});
+
+// Set default values for required toggles and segments
+onMounted(() => nextTick(() => {
+  allFieldGroups.value.forEach((group) => {
+    if (group) {
+      group.fields.forEach((field) => {
+        if (field.type === 'toggle' && field.isRequired) {
+          set(jsonData.value, field.fullPath, false);
+        }
+        if (field.type === 'segment' && field.isRequired) {
+          set(jsonData.value, field.fullPath, field.defaultValue || field.choices?.[0]);
+        }
+      });
+    }
+  });
+}));
+
 
 const actionSheetButtons = computed(() => abstractFieldGroups.value.flatMap((group) => {
   if (group.isSingleton) {
@@ -206,21 +303,6 @@ const actionSheetButtons = computed(() => abstractFieldGroups.value.flatMap((gro
     action: "cancel",
   }
 }]));
-
-const allFieldGroups = computed<(FieldGroupDescriptor | null)[]>(() => {
-  let leftGroups = singletonFieldGroups.value;
-  let rightGroups = arrayFieldGroups.value;
-  if (rightGroups.length === 0) {
-    const halfLength = Math.floor(leftGroups.length / 2);
-    rightGroups = leftGroups.slice(halfLength);
-    leftGroups = leftGroups.slice(0, halfLength);
-  }
-  const maxLength = Math.max(leftGroups.length, rightGroups.length);
-  return [
-    ...leftGroups, ...Array(maxLength - leftGroups.length).fill(null),
-    ...rightGroups, ...Array(maxLength - rightGroups.length).fill(null),
-  ];
-});
 
 const gridStyles = computed(() => ({
   // On desktop, the grid needs configuration such that array groups show as a separate column.
@@ -308,6 +390,11 @@ const onDeleteArrayItem = (group: FieldGroupDescriptor) => {
 
 .jsonFieldsList {
   --ion-item-background: #D9D9D9;
+}
+
+.placeholder-error {
+  --placeholder-color: red;
+  --placeholder-opacity: 1;
 }
 
 @media (prefers-color-scheme: dark) {

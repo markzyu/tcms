@@ -22,10 +22,15 @@ export type FieldDescriptor = {
   name: string;
   // This is the full path to the actual field in the input JSON
   fullPath: string;
+  jsonSchema: any;
+  isRequired: boolean;
 
   // The array which this field came from, if any.
   arrayPath?: string;
   arrayIndex?: number;
+
+  // The validation error message, if any.
+  validationError?: string;
 
   // True = This field is not an array item. False = This field is an array item.
   isSingleton: boolean;
@@ -33,7 +38,7 @@ export type FieldDescriptor = {
 
 // ----------------------------- Utility Functions -----------------------------
 
-export const walkJsonSchemaForAllFields = (schema: JSONSchema7Definition, results?: FieldDescriptor[], rootPath?: string, notSingleton?: boolean): FieldDescriptor[] => {
+export const walkJsonSchemaForAllFields = (schema: JSONSchema7Definition, requiredFields: string[], results?: FieldDescriptor[], rootPath?: string, notSingleton?: boolean): FieldDescriptor[] => {
   const newResults = results ?? [];
   if (typeof schema === "boolean") {
     return newResults;
@@ -42,7 +47,7 @@ export const walkJsonSchemaForAllFields = (schema: JSONSchema7Definition, result
     return newResults;
   } else if (schema.type === "object") {
     for (const [key, value] of Object.entries(schema.properties ?? {})) {
-      walkJsonSchemaForAllFields(value, newResults, rootPath ? `${rootPath}.${key}` : key, notSingleton);
+      walkJsonSchemaForAllFields(value, requiredFields, newResults, rootPath ? `${rootPath}.${key}` : key, notSingleton);
     }
   } else if (schema.type === "array") {
     if (Array.isArray(schema.items)) {
@@ -53,7 +58,7 @@ export const walkJsonSchemaForAllFields = (schema: JSONSchema7Definition, result
       // The JsonObjectsEditor does not handle nested arrays.
       return newResults;
     }
-    walkJsonSchemaForAllFields(schema.items ?? {}, newResults, rootPath ? `${rootPath}.{index}` : "{index}", true);
+    walkJsonSchemaForAllFields(schema.items ?? {}, requiredFields, newResults, rootPath ? `${rootPath}.{index}` : "{index}", true);
   } else if (schema.type !== "null") {
     let extras: EditorUiFieldTypes = {};
     if (schema.type === "boolean") {
@@ -69,9 +74,35 @@ export const walkJsonSchemaForAllFields = (schema: JSONSchema7Definition, result
       fullPath: rootPath ?? "",
       arrayPath: notSingleton ? getShallowArrayPath(rootPath ?? "") : undefined,
       isSingleton: !notSingleton,
+      jsonSchema: schema,
+      isRequired: rootPath ? requiredFields.includes(rootPath) : true,
     });
   }
   return newResults;
+}
+
+export const getRequiredFields = (schema: JSONSchema7Definition, requiredFields?: string[], rootPath?: string) => {
+  const results = requiredFields ?? [];
+  if (typeof schema === "boolean") {
+    return results;
+  }
+  if (schema.required) {
+    schema.required.forEach((required) => {
+      results.push(rootPath ? `${rootPath}.${required}` : required);
+    });
+  }
+  if (schema.type === "object" && "properties" in schema) {
+    for (const [key, value] of Object.entries(schema.properties ?? {})) {
+      getRequiredFields(value, results, rootPath ? `${rootPath}.${key}` : key);
+    }
+  } else if (schema.type === "array" && "items" in schema && !Array.isArray(schema.items)) {
+    getRequiredFields(schema.items ?? {}, results, rootPath ? `${rootPath}.{index}` : "{index}");
+  } else if (schema.type === "array" && "items" in schema && Array.isArray(schema.items)) {
+    schema.items.forEach((item, i) => getRequiredFields(item, results, rootPath ? `${rootPath}.${i}` : String(i)));
+  } else if (schema.oneOf) {
+    schema.oneOf.forEach((oneOf) => getRequiredFields(oneOf, results, rootPath));
+  }
+  return results;
 }
 
 export const newFieldGroup = (nameTemplate: string, locale: string, index?: number): FieldGroupDescriptor => ({
