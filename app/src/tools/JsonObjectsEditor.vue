@@ -9,13 +9,17 @@
       </ion-fab-button>
     </ion-fab>
     <ion-action-sheet trigger="open-action-sheet" :buttons="actionSheetButtons" @did-dismiss="onAction" />
-    <div class="flex flex-col p-4 md:max-w-[600px] md:mx-auto">
-      <div class="hidden py-10" data-testid="debug-json-data">Debug: {{ jsonData }}</div>
-      <div v-for="fieldGroup in allFieldGroups" :key="fieldGroup.name">
-        <div>
+    <div class="hidden py-10" data-testid="debug-json-data">Debug: {{ jsonData }}</div>
+    <div class="flex flex-col p-4 transition-all duration-300 ease-in-out md:max-w-[720px] lg:max-w-[960px] md:mx-auto md:grid md:grid-flow-col md:gap-x-4 lg:gap-x-8 md:grid-cols-2" :style="gridStyles">
+      <div class="h-full md:flex md:flex-col" v-for="fieldGroup in allFieldGroups" :key="fieldGroup?.name">
+        <div v-if="fieldGroup">
           <div class="mx-3 h-10 flex items-center">{{ fieldGroup.name }}</div>
         </div>
-        <ion-list class="rounded-[20px] border-0 border-gray-500 p-2 pr-6 jsonFieldsList">
+
+        <!-- Placeholder to format Grid alignment on desktop/md viewports -->
+        <div v-if="!fieldGroup" class="hidden md:block"></div>
+
+        <ion-list v-else class="md:flex-1 rounded-[20px] border-0 border-gray-500 p-2 pr-6 jsonFieldsList">
           <div v-for="field in fieldGroup.fields" :key="field.name">
             <ion-item :data-testid="`field-${field.type}-${field.fullPath}`">
               <ion-textarea
@@ -191,9 +195,23 @@ const actionSheetButtons = computed(() => abstractFieldGroups.value.flatMap((gro
   }
 }]));
 
-const allFieldGroups = computed<FieldGroupDescriptor[]>(() => {
-  return [...singletonFieldGroups.value, ...arrayFieldGroups.value];
+const allFieldGroups = computed<(FieldGroupDescriptor | null)[]>(() => {
+  const maxLength = Math.max(
+    singletonFieldGroups.value.length,
+    arrayFieldGroups.value.length
+  );
+  const fillerOne = Array(maxLength - singletonFieldGroups.value.length).fill(null);
+  const fillerTwo = Array(maxLength - arrayFieldGroups.value.length).fill(null);
+  return [
+    ...singletonFieldGroups.value, ...fillerOne,
+    ...arrayFieldGroups.value, ...fillerTwo,
+  ];
 });
+
+const gridStyles = computed(() => ({
+  // On desktop, the grid needs configuration such that array groups show as a separate column.
+  "grid-template-rows": `repeat(${allFieldGroups.value.length / 2}, 1fr)`,
+}));
 
 const updateField = (fullPath: string, event: Event) => {
   const { target } = event;
