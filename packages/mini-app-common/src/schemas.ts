@@ -54,7 +54,9 @@ export const EditorUiFieldGroupSchema = z.object({
   // If not provided, we store all fields in the default "Miscellaneous" group.
   labelByLanguage: z.record(AppLanguagesSchema, z.string()).optional(),
   fields: z.array(EditorUiFieldSchema),
+  // True = Contains only non-array fields. False = Contains only array fields.
   isSingleton: z.boolean().optional(),
+  // True = Simply displayed in UI as a field input, not a group/card of many fields.
   isSingleField: z.boolean().optional(),
 });
 
