@@ -142,7 +142,6 @@ Example of how schemas and editor UI may work for multi-page templates with both
         "isSingleton": true
       },
       {
-        "isSingleField": true,
         "isSingleton": true,
         "fields": [
           { "path": "heroImage" }

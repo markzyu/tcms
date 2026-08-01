@@ -47,8 +47,7 @@
             "path": "heroImage"
           }
         ],
-        "isSingleton": true,
-        "isSingleField": true
+        "isSingleton": true
       },
       {
         "labelByLanguage": {

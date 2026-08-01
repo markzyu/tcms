@@ -56,8 +56,6 @@ export const EditorUiFieldGroupSchema = z.object({
   fields: z.array(EditorUiFieldSchema),
   // True = Contains only non-array fields. False = Contains only array fields.
   isSingleton: z.boolean().optional(),
-  // True = Simply displayed in UI as a field input, not a group/card of many fields.
-  isSingleField: z.boolean().optional(),
 });
 
 export const EditorUiFieldLabelsSchema = z.record(

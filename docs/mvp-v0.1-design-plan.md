@@ -154,7 +154,6 @@ Aligned with example-info-card1 Phase 0 — flat fields only, minimal editor UI 
         "isSingleton": true
       },
       {
-        "isSingleField": true,
         "isSingleton": true,
         "paths": ["heroImage"]
       }

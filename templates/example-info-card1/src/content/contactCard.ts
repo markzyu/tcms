@@ -67,7 +67,6 @@ export const contactCardSchemaPathPromise = definePageContentSchema({
         isSingleton: true,
       },
       {
-        isSingleField: true,
         isSingleton: true,
         fields: [
           { path: "heroImage", type: "media" },
