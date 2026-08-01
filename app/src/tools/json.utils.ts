@@ -12,7 +12,7 @@ export type FieldGroupDescriptor = {
   // The original i18n template (without instantiating {index})
   nameTemplate: string;
   fields: FieldDescriptor[];
-  // Contains only singleton fields.
+  // True = Contains only singleton fields. False = Contains only array fields.
   isSingleton: boolean;
 };
 
@@ -27,6 +27,7 @@ export type FieldDescriptor = {
   arrayPath?: string;
   arrayIndex?: number;
 
+  // True = This field is not an array item. False = This field is an array item.
   isSingleton: boolean;
 } & EditorUiFieldTypes;
 
