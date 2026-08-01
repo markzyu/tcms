@@ -3,13 +3,19 @@
     <template #title>
       <div class="text-2xl font-bold">JSON Objects Editor</div>
     </template>
+    <ion-fab horizontal="end" vertical="bottom" slot="fixed">
+      <ion-fab-button id="open-action-sheet">
+        <ion-icon :icon="add"></ion-icon>
+      </ion-fab-button>
+    </ion-fab>
+    <ion-action-sheet trigger="open-action-sheet" :buttons="actionSheetButtons" @did-dismiss="onAction" />
     <div class="flex flex-col p-4 md:max-w-[600px] md:mx-auto">
       <div class="hidden py-10" data-testid="debug-json-data">Debug: {{ jsonData }}</div>
-      <div v-for="fieldGroup in fieldGroupDescriptors" :key="fieldGroup.name">
+      <div v-for="fieldGroup in allFieldGroups" :key="fieldGroup.name">
         <div>
-          <div class="mx-5">{{ fieldGroup.name }}</div>
+          <div class="mx-3 h-10 flex items-center">{{ fieldGroup.name }}</div>
         </div>
-        <ion-list class="rounded-md border-0 border-gray-500 p-2 jsonFieldsList">
+        <ion-list class="rounded-[20px] border-0 border-gray-500 p-2 pr-6 jsonFieldsList">
           <div v-for="field in fieldGroup.fields" :key="field.name">
             <ion-item :data-testid="`field-${field.type}-${field.fullPath}`">
               <ion-textarea
@@ -63,16 +69,16 @@
 import { computed, ref } from 'vue';
 import { ToolProps } from './toolTypes';
 import { get, set } from 'lodash';
-import { IonIcon, IonInput, IonItem, IonList, IonSegment, IonTextarea, IonToggle } from '@ionic/vue';
-import type { JSONSchema7Definition } from 'json-schema';
-import { camera } from 'ionicons/icons';
+import { IonIcon, IonInput, IonItem, IonList, IonSegment, IonTextarea, IonToggle, IonFab, IonFabButton, IonActionSheet, ActionSheetButton } from '@ionic/vue';
+import { camera, add } from 'ionicons/icons';
+import { newFieldGroup, FieldGroupDescriptor, FieldDescriptor, walkJsonSchemaForAllFields, getShallowArrayPaths } from './json.utils';
 import { useAppLanguageLocale } from '../utils/i18n';
 import { useToolsContent } from './content';
 import { toolContentKeys } from './contentKeys';
-import { EditorUiFieldTypes } from '@tcms/mini-app-common';
 import ToolsScreen from './ToolsScreen.vue';
+import IntlMessageFormat from 'intl-messageformat';
 
-const [miscGroupName, emailHint, urlHint, passwordHint, telHint, numberHint] = useToolsContent(toolContentKeys);
+const [miscGroupName, emailHint, urlHint, passwordHint, telHint, numberHint, addFlatArray, cancelButtonText] = useToolsContent(toolContentKeys);
 const hintsByInputType = computed(() => ({
   email: emailHint.value,
   url: urlHint.value,
@@ -85,87 +91,27 @@ const locale = useAppLanguageLocale();
 const props = defineProps<ToolProps<"jsonWithSchema">>();
 const jsonData = ref<any>(props.input.json);
 
-// Unlike the EditorUiSchemaJson, the FieldGroups here reflect real data from input
-// (Any non singleton field group will have different names, etc)
-type FieldGroupDescriptor = {
-  // This is also the key of the field group in the UI. It must include all `indices`.
-  name: string;
-  fields: FieldDescriptor[];
-  // This is a list of all indices accessed along the `EditorUiFieldGroup.paths` of the input JSON.
-  indices: number[];
-};
 
-// Unlike the EditorUiFieldGroup, the FieldDescriptors here reflect real data. Non existing fields are not included.
-type FieldDescriptor = {
-  // This is also the UI key within the current field group.
-  // For now this is just the field name. (TODO: For INTL we need a separate editorUiSchema field for field names in each language)
-  name: string;
-  // This is the full path to the field in the input JSON
-  fullPath: string;
-  isSingleton: boolean;
-} & EditorUiFieldTypes;
-
-const walkJsonSchemaForAllFields = (schema: JSONSchema7Definition, results?: FieldDescriptor[], rootPath?: string, notSingleton?: boolean): FieldDescriptor[] => {
-  const newResults = results ?? [];
-  if (typeof schema === "boolean") {
-    return newResults;
-  } else if (schema.oneOf) {
-    // We don't handle union types, for now
-    return newResults;
-  } else if (schema.type === "object") {
-    for (const [key, value] of Object.entries(schema.properties ?? {})) {
-      walkJsonSchemaForAllFields(value, newResults, rootPath ? `${rootPath}.${key}` : key, notSingleton);
-    }
-  } else if (schema.type === "array") {
-    if (Array.isArray(schema.items)) {
-      // We don't handle tuple types, for now
-      return newResults;
-    }
-    walkJsonSchemaForAllFields(schema.items ?? {}, newResults, rootPath ? `${rootPath}.[]` : "[]", true);
-  } else if (schema.type !== "null") {
-    let extras: EditorUiFieldTypes = {};
-    if (schema.type === "boolean") {
-      extras = { type: "toggle" };
-    } else if (schema.type === "string" && Array.isArray(schema.enum)) {
-      extras = { type: "segment" };
-      extras.choices = schema.enum.map((choice) => String(choice));
-      extras.defaultValue = schema.default ? String(schema.default) : undefined;
-    }
-    newResults.push({
-      ...extras,
-      name: rootPath ?? "",
-      fullPath: rootPath ?? "",
-      isSingleton: !notSingleton,
-    });
-  }
-  return newResults;
-}
-
-const newGroup = (name: string): FieldGroupDescriptor => ({
-  name,
-  fields: [],
-  indices: [],
-});
-
-const fieldGroupDescriptors = computed<FieldGroupDescriptor[]>(() => {
+// These are "abstract" because array indices are not yet resolved.
+const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
   const knownPaths = new Set<string>();
   const groupsByName: Record<string, FieldGroupDescriptor> = {};
-  const miscGroup = newGroup(miscGroupName.value);
+  const miscGroup = newFieldGroup(miscGroupName.value, true);
 
   // First, copy any manually declared field groups
   const { fieldLabels } = props.input.editorUiSchema;
   props.input.editorUiSchema.fieldGroups.forEach((fieldGroup) => {
-    const { labelByLanguage, fields: rawFields } = fieldGroup;
+    const { isSingleton, labelByLanguage, fields: rawFields } = fieldGroup;
     const fields: FieldDescriptor[] = rawFields
       .map(({ path, ...field }) => ({
         ...field,
         name: fieldLabels[locale.value]?.[path] ?? path,
         fullPath: (knownPaths.add(path), path),
-        isSingleton: !!fieldGroup.isSingleton
+        isSingleton: !!isSingleton
       }));
     if (labelByLanguage) {
       const groupName = labelByLanguage[locale.value];
-      const group = groupsByName[groupName] ||= newGroup(groupName);
+      const group = groupsByName[groupName] ||= newFieldGroup(groupName, !!isSingleton);
       group.fields.push(...fields);
     }
   });
@@ -175,7 +121,7 @@ const fieldGroupDescriptors = computed<FieldGroupDescriptor[]>(() => {
   const allNamedGroups: string[] = Object.keys(fieldLabels[locale.value] ?? {});
   allNamedGroups.sort((a, b) => b.length - a.length);
   allFields.forEach((field) => {
-    if (knownPaths.has(field.fullPath) || !field.isSingleton) {
+    if (knownPaths.has(field.fullPath)) {
       return;
     }
     field.name = fieldLabels[locale.value]?.[field.fullPath] ?? field.fullPath;
@@ -184,13 +130,69 @@ const fieldGroupDescriptors = computed<FieldGroupDescriptor[]>(() => {
     const longestMatchingGroupPath = allNamedGroups.find((groupName) => field.fullPath.startsWith(groupName + "."));
     const matchingGroupName = longestMatchingGroupPath && fieldLabels[locale.value]?.[longestMatchingGroupPath];
     if (matchingGroupName) {
-      groupsByName[matchingGroupName] ||= newGroup(matchingGroupName);
+      const isSingleton = !matchingGroupName.includes("{index}");
+      groupsByName[matchingGroupName] ||= newFieldGroup(matchingGroupName, isSingleton);
       groupsByName[matchingGroupName].fields.push(field);
-    } else {
+    } else if (field.isSingleton) {
+      // Only Singleton groups can fall back to the misc group
       miscGroup.fields.push(field);
     }
   });
   return [...Object.values(groupsByName), miscGroup];
+});
+
+const singletonFieldGroups = computed<FieldGroupDescriptor[]>(() => {
+  return abstractFieldGroups.value.filter((group) => group.isSingleton);
+});
+
+// Derive array groups only if we have a fieldLabel for them
+const arrayFieldGroups = computed<FieldGroupDescriptor[]>(() => {
+  const groups = abstractFieldGroups.value.filter((group) => !group.isSingleton);
+  return groups.flatMap((group) => {
+    const arrayLengths = getShallowArrayPaths(group).map((path) =>
+      get(jsonData.value, path)?.length ?? 0
+    );
+    const validLength = Math.min(...arrayLengths);
+
+    // Create new copies of the original abstract array groups, based on actual array lengths
+    return Array(validLength).fill(0).map((_, i) => {
+      const groupName = new IntlMessageFormat(group.name, locale.value).format({ index: i + 1 });
+      const arrayItemGroup = newFieldGroup(String(groupName), false);
+      arrayItemGroup.fields.push(...group.fields.map((field) => ({
+        ...field,
+        fullPath: field.fullPath.replace("{index}", String(i)),
+      })));
+      return arrayItemGroup;
+    });
+  });
+});
+
+const actionSheetButtons = computed(() => abstractFieldGroups.value.flatMap((group) => {
+  if (group.isSingleton) {
+    return [];
+  }
+  const arrayLengths = getShallowArrayPaths(group).map((path) =>
+    get(jsonData.value, path)?.length ?? 0
+  );
+  const validLength = Math.min(...arrayLengths);
+  const nextItemName = new IntlMessageFormat(group.name, locale.value).format({ index: validLength + 1 });
+  return [{
+    text: new IntlMessageFormat(addFlatArray.value, locale.value).format({ name: nextItemName }),
+    data: {
+      action: "add-flat-array-item",
+      groupName: group.name,
+    }
+  }] as ActionSheetButton[];
+}).concat([{
+  text: cancelButtonText.value,
+  role: "cancel",
+  data: {
+    action: "cancel",
+  }
+}]));
+
+const allFieldGroups = computed<FieldGroupDescriptor[]>(() => {
+  return [...singletonFieldGroups.value, ...arrayFieldGroups.value];
 });
 
 const updateField = (fullPath: string, event: Event) => {
@@ -202,6 +204,33 @@ const updateField = (fullPath: string, event: Event) => {
   }
   set(jsonData.value, fullPath, value);
 };
+
+const onAction = (event: CustomEvent) => {
+  const data = event?.detail?.data;
+  if (!data || typeof data !== "object") {
+    return;
+  }
+  const { action, groupName } = data;
+  if (action === "add-flat-array-item") {
+    const group = abstractFieldGroups.value.find((group) => group.name === groupName);
+    if (!group) {
+      return;
+    }
+    const arrayPaths = getShallowArrayPaths(group);
+    const arrayLengths = arrayPaths.map((path) =>
+      get(jsonData.value, path)?.length ?? 0
+    );
+    const minLength = Math.min(...arrayLengths);
+    const maxLength = Math.max(...arrayLengths);
+    let arrayPathsToUpdate = arrayPaths;
+    if (minLength !== maxLength) {
+      arrayPathsToUpdate = arrayPaths.filter((path) => get(jsonData.value, path)?.length === minLength);
+    }
+    new Set(arrayPathsToUpdate).forEach((path) => {
+      set(jsonData.value, path, [...get(jsonData.value, path), {}]);
+    });
+  }
+}
 
 </script>
 

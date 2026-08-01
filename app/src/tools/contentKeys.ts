@@ -4,6 +4,8 @@ export const TemplateEditorUrlHint = "tools.templateEditor.urlHint" as const;
 export const TemplateEditorPasswordHint = "tools.templateEditor.passwordHint" as const;
 export const TemplateEditorTelHint = "tools.templateEditor.telHint" as const;
 export const TemplateEditorNumberHint = "tools.templateEditor.numberHint" as const;
+export const TemplateEditorAddFlatArray = "tools.templateEditor.addFlatArray" as const;
+export const TemplateEditorCancelButton = "tools.templateEditor.cancelButton" as const;
 
 export const toolContentKeys = [
   TemplateEditorMiscGroupLabel,
@@ -12,6 +14,8 @@ export const toolContentKeys = [
   TemplateEditorPasswordHint,
   TemplateEditorTelHint,
   TemplateEditorNumberHint,
+  TemplateEditorAddFlatArray,
+  TemplateEditorCancelButton,
 ] as const;
 
 export type ToolContentKey = typeof toolContentKeys[number];

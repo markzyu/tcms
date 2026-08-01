@@ -78,7 +78,12 @@
         "exampleDeepField": "Example Deep Field",
         "exampleDeepField.field1": "Question 1",
         "exampleDeepField.field2": "Question 2",
-        "exampleDeepField.field3": "Question 3"
+        "exampleDeepField.field3": "Question 3",
+        "projects.{index}": "Project {index}",
+        "projects.{index}.title": "Title",
+        "projects.{index}.description": "Description",
+        "projects.{index}.url": "URL",
+        "projects.{index}.tasks": "Tasks"
       },
       "ja": {
         "name": "名前",
@@ -92,7 +97,12 @@
         "exampleDeepField": "例深いフィールド",
         "exampleDeepField.field1": "質問 1",
         "exampleDeepField.field2": "質問 2",
-        "exampleDeepField.field3": "質問 3"
+        "exampleDeepField.field3": "質問 3",
+        "projects.{index}": "項目 {index}",
+        "projects.{index}.title": "タイトル",
+        "projects.{index}.description": "説明",
+        "projects.{index}.url": "URL",
+        "projects.{index}.tasks": "タスク"
       }
     }
   },
@@ -140,6 +150,18 @@
           },
           "field3": {
             "type": "boolean"
+          }
+        }
+      },
+      "projects": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "title": { "type": "string" },
+            "description": { "type": "string" },
+            "url": { "type": "string" },
+            "tasks": { "type": "array", "items": { "type": "string" } }
           }
         }
       }

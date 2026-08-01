@@ -9,6 +9,8 @@ export const toolsContent: Content<Keys.ToolContentKey> = {
     [Keys.TemplateEditorPasswordHint]: "********",
     [Keys.TemplateEditorTelHint]: "888-888-8888",
     [Keys.TemplateEditorNumberHint]: "000",
+    [Keys.TemplateEditorAddFlatArray]: "Add \"{name}\"",
+    [Keys.TemplateEditorCancelButton]: "Cancel",
   },
   ja: {
     [Keys.TemplateEditorMiscGroupLabel]: "その他",
@@ -17,6 +19,8 @@ export const toolsContent: Content<Keys.ToolContentKey> = {
     [Keys.TemplateEditorPasswordHint]: "********",
     [Keys.TemplateEditorTelHint]: "(00) 0000-0000",
     [Keys.TemplateEditorNumberHint]: "000",
+    [Keys.TemplateEditorAddFlatArray]: "\"{name}\" を追加",
+    [Keys.TemplateEditorCancelButton]: "戻る",
   },
 };
 
