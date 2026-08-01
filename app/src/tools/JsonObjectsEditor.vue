@@ -43,8 +43,9 @@
                   :value="field.validationError ? '' : get(jsonData, field.fullPath)"
                   :placeholder="field.validationError" />
                 <div class="w-[66%] flex justify-center">
-                  <div class="mx-[25px] my-[10px] w-[100px] h-[100px] bg-gray-100 dark:bg-black flex items-center justify-center">
-                    <ion-icon aria-label="Upload image" :icon="camera" size="large" />
+                  <div class="mx-[25px] my-[10px] w-[100px] h-[100px] bg-gray-100 dark:bg-black flex items-center justify-center" @click="onChooseMedia(field)">
+                    <img v-if="get(jsonData, field.fullPath)" :src="get(jsonData, field.fullPath)" alt="Media" class="w-full h-full object-cover" />
+                    <ion-icon v-else aria-label="Upload image" :icon="camera" size="large" />
                   </div>
                 </div>
               </div>
@@ -383,6 +384,15 @@ const onDeleteArrayItem = (group: FieldGroupDescriptor) => {
   });
   confirmDeletionOfGroupName.value = null;
 }
+
+const onChooseMedia = (field: FieldDescriptor) => {
+  props.onAction({
+    type: "chooseMedia",
+    onMediaUrl: (mediaUrl: string) => {
+      set(jsonData.value, field.fullPath, mediaUrl);
+    },
+  });
+};
 
 </script>
 

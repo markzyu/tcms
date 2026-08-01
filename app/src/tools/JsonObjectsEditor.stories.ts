@@ -50,5 +50,11 @@ export const WithArrayFields: Story = {
       jsonSchema: schema.jsonSchema,
       editorUiSchema: schema.editorUiSchema as any,
     },
+    onAction: async (action) => {
+      console.log("onAction", action);
+      if (action.type === "chooseMedia") {
+        action.onMediaUrl("https://picsum.photos/600/400?v=" + Math.random());
+      }
+    },
   },
 }

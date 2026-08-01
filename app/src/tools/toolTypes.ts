@@ -159,12 +159,21 @@ export const ToolStartWorkflowActionSchema = z.object({
   inputByProxy: ToolInputProxySchema.optional(),
 });
 
+export const ToolChooseMediaActionSchema = z.object({
+  type: z.literal("chooseMedia"),
+  onMediaUrl: z.function({
+    input: [z.string()],
+    output: z.void(),
+  })
+});
+
 export const ToolActionSchema = z.union([
   ToolCloseWorkflowActionSchema,
   ToolOpenToolActionSchema,
   ToolReloadLcdnConfigsActionSchema,
   ToolStartWorkflowActionSchema,
   ToolSaveTextActionSchema,
+  ToolChooseMediaActionSchema,
 ]);
 export type ToolAction = z.infer<typeof ToolActionSchema>;
 
