@@ -1,27 +1,36 @@
 import type { EditorUiFieldTypes } from "@tcms/mini-app-common";
+import IntlMessageFormat from "intl-messageformat";
 import type { JSONSchema7Definition } from "json-schema";
+
+// ----------------------------- UI States -----------------------------
 
 // Unlike the EditorUiSchemaJson, the FieldGroups here reflect real data from input
 // (Any non singleton field group will have different names, etc)
 export type FieldGroupDescriptor = {
-  // This is also the key of the field group in the UI. It must include all `indices`.
+  // The i18n name. This is also the key of the field group in the UI.
   name: string;
+  // The original i18n template (without instantiating {index})
+  nameTemplate: string;
   fields: FieldDescriptor[];
-  // This is a list of all indices accessed along the `EditorUiFieldGroup.paths` of the input JSON.
-  indices: number[];
   // Contains only singleton fields.
   isSingleton: boolean;
 };
 
 // Unlike the EditorUiFieldGroup, the FieldDescriptors here reflect real data. Non existing fields are not included.
 export type FieldDescriptor = {
-  // This is also the UI key within the current field group.
-  // For now this is just the field name. (TODO: For INTL we need a separate editorUiSchema field for field names in each language)
+  // The i18n name. This is also the UI key within the current field group.
   name: string;
   // This is the full path to the actual field in the input JSON
   fullPath: string;
+
+  // The array which this field came from, if any.
+  arrayPath?: string;
+  arrayIndex?: number;
+
   isSingleton: boolean;
 } & EditorUiFieldTypes;
+
+// ----------------------------- Utility Functions -----------------------------
 
 export const walkJsonSchemaForAllFields = (schema: JSONSchema7Definition, results?: FieldDescriptor[], rootPath?: string, notSingleton?: boolean): FieldDescriptor[] => {
   const newResults = results ?? [];
@@ -57,27 +66,37 @@ export const walkJsonSchemaForAllFields = (schema: JSONSchema7Definition, result
       ...extras,
       name: rootPath ?? "",
       fullPath: rootPath ?? "",
+      arrayPath: notSingleton ? getShallowArrayPath(rootPath ?? "") : undefined,
       isSingleton: !notSingleton,
     });
   }
   return newResults;
 }
 
-export const newFieldGroup = (name: string, isSingleton: boolean): FieldGroupDescriptor => ({
-  name,
+export const newFieldGroup = (nameTemplate: string, locale: string, index?: number): FieldGroupDescriptor => ({
+  name: String(new IntlMessageFormat(nameTemplate, locale).format({
+    index: index !== undefined ? index + 1 : undefined,
+  })),
+  nameTemplate,
   fields: [],
-  indices: [],
-  isSingleton,
+  isSingleton: index === undefined,
 });
+
+export const getShallowArrayPath = (fullPath: string) => {
+  const parts = fullPath.split(".");
+  const firstIndex = parts.indexOf("{index}");
+  if (firstIndex === -1) {
+    return undefined;
+  }
+  return parts.slice(0, firstIndex).join(".");
+}
 
 export const getShallowArrayPaths = (group: FieldGroupDescriptor) => {
   return group.fields.flatMap(({ fullPath }) => {
-    const parts = fullPath.split(".");
-    const firstIndex = parts.indexOf("{index}");
-    if (firstIndex === -1) {
-      return [];
+    const result = getShallowArrayPath(fullPath);
+    if (result) {
+      return [result];
     }
-    const result = parts.slice(0, firstIndex).join(".");
-    return [result];
+    return [];
   });
 }

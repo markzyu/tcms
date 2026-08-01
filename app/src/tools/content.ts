@@ -11,6 +11,9 @@ export const toolsContent: Content<Keys.ToolContentKey> = {
     [Keys.TemplateEditorNumberHint]: "000",
     [Keys.TemplateEditorAddFlatArray]: "Add \"{name}\"",
     [Keys.TemplateEditorCancelButton]: "Cancel",
+    [Keys.JsonObjEditorEditDetailsButton]: "Edit Details",
+    [Keys.JsonObjEditorDeleteButton]: "Delete",
+    [Keys.JsonObjEditorDeleteConfirmButton]: "Confirm?",
   },
   ja: {
     [Keys.TemplateEditorMiscGroupLabel]: "その他",
@@ -21,6 +24,9 @@ export const toolsContent: Content<Keys.ToolContentKey> = {
     [Keys.TemplateEditorNumberHint]: "000",
     [Keys.TemplateEditorAddFlatArray]: "\"{name}\" を追加",
     [Keys.TemplateEditorCancelButton]: "戻る",
+    [Keys.JsonObjEditorEditDetailsButton]: "詳細",
+    [Keys.JsonObjEditorDeleteButton]: "削除",
+    [Keys.JsonObjEditorDeleteConfirmButton]: "確認？",
   },
 };
 

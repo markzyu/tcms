@@ -13,7 +13,13 @@
     <div class="flex flex-col p-4 transition-all duration-300 ease-in-out md:max-w-[720px] lg:max-w-[960px] md:mx-auto md:grid md:grid-flow-col md:gap-x-4 lg:gap-x-8 md:grid-cols-2" :style="gridStyles">
       <div class="h-full md:flex md:flex-col" v-for="fieldGroup in allFieldGroups" :key="fieldGroup?.name">
         <div v-if="fieldGroup">
-          <div class="mx-3 h-10 flex items-center">{{ fieldGroup.name }}</div>
+          <div class="mx-3 h-10 flex items-center gap-2">
+            {{ fieldGroup.name }}
+            <div class="w-full flex-shrink flex-1" />
+            <ion-button v-if="!fieldGroup.isSingleton" size="small" fill="outline">{{ editDetailsButtonText }}</ion-button>
+            <ion-button v-if="!fieldGroup.isSingleton && confirmDeletionOfGroupName !== fieldGroup.name" size="small" fill="outline" color="danger" @click="onDeleteArrayItem(fieldGroup)">{{ deleteButtonText }}</ion-button>
+            <ion-button v-if="!fieldGroup.isSingleton && confirmDeletionOfGroupName === fieldGroup.name" size="small" color="danger" @click="onDeleteArrayItem(fieldGroup)">{{ deleteConfirmButtonText }}</ion-button>
+          </div>
         </div>
 
         <!-- Placeholder to format Grid alignment on desktop/md viewports -->
@@ -73,16 +79,20 @@
 import { computed, ref } from 'vue';
 import { ToolProps } from './toolTypes';
 import { get, set } from 'lodash';
-import { IonIcon, IonInput, IonItem, IonLabel, IonList, IonSegment, IonSegmentButton, IonTextarea, IonToggle, IonFab, IonFabButton, IonActionSheet, ActionSheetButton } from '@ionic/vue';
+import { IonIcon, IonInput, IonItem, IonLabel, IonList, IonSegment, IonSegmentButton, IonTextarea, IonToggle, IonFab, IonFabButton, IonActionSheet, ActionSheetButton, IonButton } from '@ionic/vue';
 import { camera, add } from 'ionicons/icons';
-import { newFieldGroup, FieldGroupDescriptor, FieldDescriptor, walkJsonSchemaForAllFields, getShallowArrayPaths } from './json.utils';
+import { newFieldGroup, FieldGroupDescriptor, FieldDescriptor, walkJsonSchemaForAllFields, getShallowArrayPaths, getShallowArrayPath } from './json.utils';
 import { useAppLanguageLocale } from '../utils/i18n';
 import { useToolsContent } from './content';
 import { toolContentKeys } from './contentKeys';
 import ToolsScreen from './ToolsScreen.vue';
 import IntlMessageFormat from 'intl-messageformat';
 
-const [miscGroupName, emailHint, urlHint, passwordHint, telHint, numberHint, addFlatArray, cancelButtonText] = useToolsContent(toolContentKeys);
+const [
+  miscGroupName,
+  emailHint, urlHint, passwordHint, telHint, numberHint,
+  addFlatArray, cancelButtonText, editDetailsButtonText, deleteButtonText, deleteConfirmButtonText
+] = useToolsContent(toolContentKeys);
 const hintsByInputType = computed(() => ({
   email: emailHint.value,
   url: urlHint.value,
@@ -94,13 +104,14 @@ const hintsByInputType = computed(() => ({
 const locale = useAppLanguageLocale();
 const props = defineProps<ToolProps<"jsonWithSchema">>();
 const jsonData = ref<any>(props.input.json);
+const confirmDeletionOfGroupName = ref<string | null>(null);
 
 
 // These are "abstract" because array indices are not yet resolved.
 const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
   const knownPaths = new Set<string>();
   const groupsByName: Record<string, FieldGroupDescriptor> = {};
-  const miscGroup = newFieldGroup(miscGroupName.value, true);
+  const miscGroup = newFieldGroup(miscGroupName.value, locale.value);
 
   // First, copy any manually declared field groups
   const { fieldLabels } = props.input.editorUiSchema;
@@ -111,11 +122,12 @@ const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
         ...field,
         name: fieldLabels[locale.value]?.[path] ?? path,
         fullPath: (knownPaths.add(path), path),
+        arrayPath: getShallowArrayPath(path),
         isSingleton: !!isSingleton
       }));
     if (labelByLanguage) {
       const groupName = labelByLanguage[locale.value];
-      const group = groupsByName[groupName] ||= newFieldGroup(groupName, !!isSingleton);
+      const group = groupsByName[groupName] ||= newFieldGroup(groupName, locale.value, isSingleton ? undefined : 0);
       group.fields.push(...fields);
     }
   });
@@ -135,7 +147,7 @@ const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
     const matchingGroupName = longestMatchingGroupPath && fieldLabels[locale.value]?.[longestMatchingGroupPath];
     if (matchingGroupName) {
       const isSingleton = !matchingGroupName.includes("{index}");
-      groupsByName[matchingGroupName] ||= newFieldGroup(matchingGroupName, isSingleton);
+      groupsByName[matchingGroupName] ||= newFieldGroup(matchingGroupName, locale.value, isSingleton ? undefined : 0);
       groupsByName[matchingGroupName].fields.push(field);
     } else if (field.isSingleton) {
       // Only Singleton groups can fall back to the misc group
@@ -160,11 +172,11 @@ const arrayFieldGroups = computed<FieldGroupDescriptor[]>(() => {
 
     // Create new copies of the original abstract array groups, based on actual array lengths
     return Array(validLength).fill(0).map((_, i) => {
-      const groupName = new IntlMessageFormat(group.name, locale.value).format({ index: i + 1 });
-      const arrayItemGroup = newFieldGroup(String(groupName), false);
+      const arrayItemGroup = newFieldGroup(group.nameTemplate, locale.value, i);
       arrayItemGroup.fields.push(...group.fields.map((field) => ({
         ...field,
         fullPath: field.fullPath.replace("{index}", String(i)),
+        arrayIndex: i,
       })));
       return arrayItemGroup;
     });
@@ -179,7 +191,7 @@ const actionSheetButtons = computed(() => abstractFieldGroups.value.flatMap((gro
     get(jsonData.value, path)?.length ?? 0
   );
   const validLength = Math.min(...arrayLengths);
-  const nextItemName = new IntlMessageFormat(group.name, locale.value).format({ index: validLength + 1 });
+  const nextItemName = new IntlMessageFormat(group.nameTemplate, locale.value).format({ index: validLength + 1 });
   return [{
     text: new IntlMessageFormat(addFlatArray.value, locale.value).format({ name: nextItemName }),
     data: {
@@ -247,7 +259,45 @@ const onAction = (event: CustomEvent) => {
     new Set(arrayPathsToUpdate).forEach((path) => {
       set(jsonData.value, path, [...get(jsonData.value, path), {}]);
     });
+    
+    // Edge case: clearing all references to group names because indices might have changed
+    confirmDeletionOfGroupName.value = null;
   }
+}
+
+const onDeleteArrayItem = (group: FieldGroupDescriptor) => {
+  if (confirmDeletionOfGroupName.value !== group.name) {
+    confirmDeletionOfGroupName.value = group.name;
+    return;
+  }
+  const visitedArrayPaths = new Set<string>();
+  group.fields.forEach(({ arrayPath, arrayIndex }) => {
+    if (!arrayPath || typeof arrayIndex !== "number") {
+      return;
+    }
+    const oldArr = get(jsonData.value, arrayPath);
+    if (!oldArr || !Array.isArray(oldArr)) {
+      return;
+    }
+
+    // In the edge case where one refers to both {index} and {index +/- 1} of the same array,
+    //    we delete only the index matching the group path (note: displayed index is 1-based)
+    const groupNameAtIndex = new IntlMessageFormat(group.nameTemplate, locale.value).format({ index: arrayIndex + 1 });
+    if (groupNameAtIndex !== group.name) {
+      return;
+    }
+
+    if (visitedArrayPaths.has(arrayPath)) {
+      return;
+    }
+    visitedArrayPaths.add(arrayPath);
+    const newArr = oldArr.filter((_, i) => i !== arrayIndex);
+    if (newArr.length === oldArr.length) {
+      return;
+    }
+    set(jsonData.value, arrayPath, newArr);
+  });
+  confirmDeletionOfGroupName.value = null;
 }
 
 </script>

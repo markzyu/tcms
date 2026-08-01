@@ -6,6 +6,9 @@ export const TemplateEditorTelHint = "tools.templateEditor.telHint" as const;
 export const TemplateEditorNumberHint = "tools.templateEditor.numberHint" as const;
 export const TemplateEditorAddFlatArray = "tools.templateEditor.addFlatArray" as const;
 export const TemplateEditorCancelButton = "tools.templateEditor.cancelButton" as const;
+export const JsonObjEditorEditDetailsButton = "tools.jsonObjectsEditor.editDetailsButton" as const;
+export const JsonObjEditorDeleteButton = "tools.jsonObjectsEditor.deleteButton" as const;
+export const JsonObjEditorDeleteConfirmButton = "tools.jsonObjectsEditor.deleteConfirmButton" as const;
 
 export const toolContentKeys = [
   TemplateEditorMiscGroupLabel,
@@ -16,6 +19,9 @@ export const toolContentKeys = [
   TemplateEditorNumberHint,
   TemplateEditorAddFlatArray,
   TemplateEditorCancelButton,
+  JsonObjEditorEditDetailsButton,
+  JsonObjEditorDeleteButton,
+  JsonObjEditorDeleteConfirmButton,
 ] as const;
 
 export type ToolContentKey = typeof toolContentKeys[number];
