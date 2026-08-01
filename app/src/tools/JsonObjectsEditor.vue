@@ -208,15 +208,17 @@ const actionSheetButtons = computed(() => abstractFieldGroups.value.flatMap((gro
 }]));
 
 const allFieldGroups = computed<(FieldGroupDescriptor | null)[]>(() => {
-  const maxLength = Math.max(
-    singletonFieldGroups.value.length,
-    arrayFieldGroups.value.length
-  );
-  const fillerOne = Array(maxLength - singletonFieldGroups.value.length).fill(null);
-  const fillerTwo = Array(maxLength - arrayFieldGroups.value.length).fill(null);
+  let leftGroups = singletonFieldGroups.value;
+  let rightGroups = arrayFieldGroups.value;
+  if (rightGroups.length === 0) {
+    const halfLength = Math.floor(leftGroups.length / 2);
+    rightGroups = leftGroups.slice(halfLength);
+    leftGroups = leftGroups.slice(0, halfLength);
+  }
+  const maxLength = Math.max(leftGroups.length, rightGroups.length);
   return [
-    ...singletonFieldGroups.value, ...fillerOne,
-    ...arrayFieldGroups.value, ...fillerTwo,
+    ...leftGroups, ...Array(maxLength - leftGroups.length).fill(null),
+    ...rightGroups, ...Array(maxLength - rightGroups.length).fill(null),
   ];
 });
 
