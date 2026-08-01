@@ -73,7 +73,7 @@
 import { computed, ref } from 'vue';
 import { ToolProps } from './toolTypes';
 import { get, set } from 'lodash';
-import { IonIcon, IonInput, IonItem, IonList, IonSegment, IonTextarea, IonToggle, IonFab, IonFabButton, IonActionSheet, ActionSheetButton } from '@ionic/vue';
+import { IonIcon, IonInput, IonItem, IonLabel, IonList, IonSegment, IonSegmentButton, IonTextarea, IonToggle, IonFab, IonFabButton, IonActionSheet, ActionSheetButton } from '@ionic/vue';
 import { camera, add } from 'ionicons/icons';
 import { newFieldGroup, FieldGroupDescriptor, FieldDescriptor, walkJsonSchemaForAllFields, getShallowArrayPaths } from './json.utils';
 import { useAppLanguageLocale } from '../utils/i18n';
