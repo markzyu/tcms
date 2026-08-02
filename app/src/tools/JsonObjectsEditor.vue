@@ -11,7 +11,7 @@
     <template #button2>
       <ion-button data-testid="json-objects-editor-save-button" :disabled="disableSaveButton" @click="onSave">{{ saveButtonText }}</ion-button>
     </template>
-    <ion-fab horizontal="end" vertical="bottom" slot="fixed">
+    <ion-fab v-if="actionSheetButtons.length > 1" horizontal="end" vertical="bottom" slot="fixed">
       <ion-fab-button id="open-action-sheet">
         <ion-icon :icon="add"></ion-icon>
       </ion-fab-button>
