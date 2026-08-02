@@ -44,13 +44,17 @@ const onAction = async (action: ToolAction) => {
     case "closeWorkflow":
       history.back();
       break;
+    case "chooseMedia":
+    case "openTool":
     case "reloadLcdnConfigs":
     case "startWorkflow":
     case "saveText":
       await props.onAction(action);
       break;
     default:
+      // @ts-expect-error - If this isn't an error, then we are missing a switch-case above.
       console.error(`Unknown action: ${action.type}`);
+      // @ts-expect-error - In that case, please hover over `action.type` to see the possible values.
       errorMessage.value = `Unknown action: ${action.type}`;
   }
 }
