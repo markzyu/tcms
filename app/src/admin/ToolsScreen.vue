@@ -5,6 +5,7 @@ import { WorkflowRegistry } from '../tools/workflowTypes';
 import { ToolAction, ToolRegistry } from '../tools/toolTypes';
 import { JsonObjectsEditorTool } from '../tools/JsonObjectsEditor.tool';
 import { onMounted } from 'vue';
+import { IonPage, IonRouterOutlet } from '@ionic/vue';
 
 const route = useRoute();
 const workflowId = route.params.workflowId as string;
@@ -39,12 +40,15 @@ const onAction = async (action: ToolAction) => {
 </script>
 
 <template>
-  <WorkflowOrchestrator
-    v-if="input"
-    :workflow-id="workflowId"
-    :workflow-registry="workflowRegistry"
-    :tool-registry="toolRegistry"
-    :input="input"
-    :on-action="onAction"
-  />
+  <ion-page>
+    <ion-router-outlet />
+    <WorkflowOrchestrator
+      v-if="input"
+      :workflow-id="workflowId"
+      :workflow-registry="workflowRegistry"
+      :tool-registry="toolRegistry"
+      :input="input"
+      :on-action="onAction"
+    />
+  </ion-page>
 </template>
