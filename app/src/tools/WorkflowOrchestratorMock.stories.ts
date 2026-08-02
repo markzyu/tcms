@@ -52,3 +52,15 @@ export default meta
 type Story = StoryObj<typeof meta>
 export const BasicTemplateEditor: Story = {
 }
+
+export const CrashDuringLoad: Story = {
+  args: {
+    workflowToolIds: 'mock-crash-during-load',
+  },
+}
+
+export const LoadingForever: Story = {
+  args: {
+    workflowToolIds: 'mock-loading-forever',
+  },
+}

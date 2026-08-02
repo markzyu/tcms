@@ -85,6 +85,15 @@ export const mockToolRegistry: ToolRegistry = {
       };
     },
   },
+  "mock-loading-forever": {
+    id: "mock-loading-forever",
+    inputType: "jsonWithSchema",
+    onLoad: () => {
+      return {
+        loader: new Promise(() => {}),
+      };
+    },
+  },
 };
 
 export const MockOrchestratorWrapper = defineComponent({

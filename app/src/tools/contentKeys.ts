@@ -13,6 +13,10 @@ export const JsonObjEditorDeleteConfirmButton = "tools.jsonObjectsEditor.deleteC
 export const JsonObjEditorValidationRequiredField = "tools.jsonObjectsEditor.validation.requiredField" as const;
 export const JsonObjEditorValidationInvalidValue = "tools.jsonObjectsEditor.validation.invalidValue" as const;
 export const JsonObjEditorFallbackTitle = "tools.jsonObjectsEditor.fallbackTitle" as const;
+export const WorkflowOrchestratorErrorHeader = "tools.workflowOrchestrator.errorHeader" as const;
+export const WorkflowOrchestratorErrorDismissBtn = "tools.workflowOrchestrator.errorDismissBtn" as const;
+export const WorkflowOrchestratorErrorMessageWrapper = "tools.workflowOrchestrator.errorMessageWrapper" as const;
+export const WorkflowOrchestratorLoadingMessageWrapper = "tools.workflowOrchestrator.loadingMessageWrapper" as const;
 
 export const toolContentKeys = [
   TemplateEditorMiscGroupLabel,
@@ -30,6 +34,10 @@ export const toolContentKeys = [
   JsonObjEditorValidationRequiredField,
   JsonObjEditorValidationInvalidValue,
   JsonObjEditorFallbackTitle,
+  WorkflowOrchestratorErrorHeader,
+  WorkflowOrchestratorErrorDismissBtn,
+  WorkflowOrchestratorErrorMessageWrapper,
+  WorkflowOrchestratorLoadingMessageWrapper,
 ] as const;
 
 export type ToolContentKey = typeof toolContentKeys[number];

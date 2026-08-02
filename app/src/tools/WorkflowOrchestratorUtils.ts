@@ -1,6 +1,11 @@
-import { Component, defineComponent } from 'vue';
+import { Component, defineComponent, watchEffect } from 'vue';
 import { convertJsonSchemaToZod } from 'zod-from-json-schema';
 import { ToolInput, ToolInputTypes, ToolProps, ToolRegistry } from './toolTypes';
+import { alertController } from '@ionic/vue';
+import * as Keys from './contentKeys';
+import { useToolsContent } from './content';
+import IntlMessageFormat from 'intl-messageformat';
+import { useAppLanguageLocale } from '../utils/i18n';
 
 export const workflowOrchestratorErrorComponent = defineComponent({
   name: 'WorkflowOrchestratorErrorComponent',
@@ -10,11 +15,43 @@ export const workflowOrchestratorErrorComponent = defineComponent({
       required: true,
     },
   },
-  template: `
-    <div data-testid="workflow-orchestrator-error-component" class="hidden">
-      {{ errorMessage }}
-    </div>
-  `,
+  setup({ errorMessage }) {
+    const locale = useAppLanguageLocale();
+    const [
+      header,
+      dismissBtn,
+      errorMessageWrapper,
+    ] = useToolsContent([
+      Keys.WorkflowOrchestratorErrorHeader,
+      Keys.WorkflowOrchestratorErrorDismissBtn,
+      Keys.WorkflowOrchestratorErrorMessageWrapper,
+    ]);
+    watchEffect(async (onCleanup) => {
+      const alert = await alertController.create({
+        header: header.value,
+        message: String(new IntlMessageFormat(errorMessageWrapper.value, locale.value).format({errorMessage})),
+        buttons: [
+          {
+            text: dismissBtn.value,
+            role: 'cancel',
+          },
+        ],
+      });
+      let selfDismiss = false;
+      alert.onDidDismiss().finally(() => {
+        if (selfDismiss) {
+          return;
+        }
+        history.back();
+      });
+      await alert.present();
+      onCleanup(() => {
+        selfDismiss = true;
+        alert.dismiss();
+      });
+    });
+  },
+  template: `<div/>`,
 });
 
 /**

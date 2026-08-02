@@ -1,6 +1,6 @@
 <template>
   <div v-if="isLoadingTool" class="flex flex-col items-center justify-center h-full" data-testid="loading-workflow">
-    Loading Workflow: {{ workflowId }}...
+    {{ loadingMessage }}
   </div>
   <component :is="currentComponent" :input="props.input" :onAction="onAction" :errorMessage="errorMessage" />
 </template>
@@ -9,7 +9,11 @@
 import { computed, defineAsyncComponent, ref } from 'vue';
 import { findFirstToolInWorkflow, validateWorkflowInput, workflowOrchestratorErrorComponent } from './WorkflowOrchestratorUtils';
 import { ToolAction, ToolProps, ToolRegistry } from './toolTypes';
+import { useAppLanguageLocale } from '../utils/i18n';
 import { WorkflowRegistry } from './workflowTypes';
+import { useToolsContent } from './content';
+import * as Keys from './contentKeys';
+import IntlMessageFormat from 'intl-messageformat';
 
 interface WorkflowOrchestratorProps extends ToolProps {
   workflowId: string;
@@ -23,6 +27,10 @@ const workflow = computed(() => props.workflowRegistry[props.workflowId] ?? null
 const toolsToLoad = computed(() => workflow.value?.toolIds ?? []);
 const currentToolId = ref<string | null>(null);
 const errorMessage = ref<string | null>(null);
+
+const locale = useAppLanguageLocale();
+const [loadingMessageWrapper] = useToolsContent([Keys.WorkflowOrchestratorLoadingMessageWrapper]);
+const loadingMessage = computed(() => new IntlMessageFormat(loadingMessageWrapper.value, locale.value).format({workflowId: props.workflowId}));
 
 const onAction = async (action: ToolAction) => {
   switch (action.type) {
@@ -41,7 +49,11 @@ const onAction = async (action: ToolAction) => {
   }
 }
 
+
+const isLoadingTool = ref(true);
+
 const logAndExit = (message: string) => {
+  isLoadingTool.value = false;
   console.error(message);
   errorMessage.value = message;
   props.onAction({
@@ -50,8 +62,6 @@ const logAndExit = (message: string) => {
   });
   return workflowOrchestratorErrorComponent;
 }
-
-const isLoadingTool = computed(() => currentToolId.value === null && errorMessage.value === null);
 
 // TODO: pull most of this stuff out of defineAsyncComponent because right now, computed doesn't know which dependencies are needed to re-run the function
 const currentComponent = computed(() => {
@@ -80,6 +90,8 @@ const currentComponent = computed(() => {
       return await loader;
     } catch (error) {
       return logAndExit(`Failed to load required tool ${toolId}: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      isLoadingTool.value = false;
     }
   });
 });

@@ -18,6 +18,12 @@ export const toolsContent: Content<Keys.ToolContentKey> = {
     [Keys.JsonObjEditorValidationRequiredField]: "Missing information",
     [Keys.JsonObjEditorValidationInvalidValue]: "Invalid information",
     [Keys.JsonObjEditorFallbackTitle]: "Page Content Editor",
+    [Keys.WorkflowOrchestratorErrorHeader]: "Error",
+    [Keys.WorkflowOrchestratorErrorDismissBtn]: "Dismiss",
+    [Keys.WorkflowOrchestratorErrorMessageWrapper]:
+      "An internal error occurred while loading the workflow. Details: {errorMessage}",
+    [Keys.WorkflowOrchestratorLoadingMessageWrapper]:
+      "Loading workflow: {workflowId}...",
   },
   ja: {
     [Keys.TemplateEditorMiscGroupLabel]: "その他",
@@ -35,6 +41,12 @@ export const toolsContent: Content<Keys.ToolContentKey> = {
     [Keys.JsonObjEditorValidationRequiredField]: "情報が不足しています",
     [Keys.JsonObjEditorValidationInvalidValue]: "無効な情報です",
     [Keys.JsonObjEditorFallbackTitle]: "ページ編集",
+    [Keys.WorkflowOrchestratorErrorHeader]: "エラー",
+    [Keys.WorkflowOrchestratorErrorDismissBtn]: "戻る",
+    [Keys.WorkflowOrchestratorErrorMessageWrapper]:
+      "ワークフローの読み込み中に内部エラーが発生しました。詳細: 「{errorMessage}」",
+    [Keys.WorkflowOrchestratorLoadingMessageWrapper]:
+      "ワークフローの読み込み中: {workflowId}...",
   },
 };
 
