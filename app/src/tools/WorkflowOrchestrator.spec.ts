@@ -1,10 +1,11 @@
 import { flushPromises } from "@vue/test-utils";
-import { screen, waitFor } from "@testing-library/vue";
+import { screen, waitFor, within } from "@testing-library/vue";
 import { vi } from "vitest";
 
 import { renderTest } from "../utils/testUtils";
 import { MockOrchestratorWrapper } from "./WorkflowOrchestrator.mocks";
 import { ToolInputTypes } from "./toolTypes";
+import userEvent from "@testing-library/user-event";
 
 type OrchestratorTestProps = {
   workflowToolIds: string;
@@ -34,7 +35,7 @@ function normalizeText(text: string | null | undefined) {
 
 function getErrorText() {
   return normalizeText(
-    screen.getByTestId("workflow-orchestrator-error-component").textContent,
+    screen.getByTestId("workflow-orchestrator-error-alert").textContent,
   );
 }
 
@@ -69,7 +70,13 @@ async function renderOrchestrator(overrides: Partial<OrchestratorTestProps> = {}
   return { onAction };
 }
 
+const spyHistoryBack = vi.spyOn(history, "back");
+
 describe("WorkflowOrchestrator", () => {
+  beforeEach(() => {
+    spyHistoryBack.mockClear();
+  });
+
   describe("happy paths", () => {
     it("loads the first eligible tool with the storybook default args", async () => {
       const { onAction } = await renderOrchestrator();
@@ -140,21 +147,44 @@ describe("WorkflowOrchestrator", () => {
 
   describe("error cases", () => {
     it("reports no eligible tool when workflowToolIds is empty", async () => {
-      const { onAction } = await renderOrchestrator({
+      await renderOrchestrator({
         workflowToolIds: "",
       });
 
       await expectErrorMatching(/There was no eligible tool to load/);
-      expect(onAction).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: "closeWorkflow",
-          errorMessage: expect.stringMatching(/There was no eligible tool to load/),
-        }),
-      );
+    });
+
+    it("goes back to the previous page when the error alert is dismissed", async () => {
+      await renderOrchestrator({
+        workflowToolIds: "",
+      });
+
+      await expectErrorMatching(/There was no eligible tool to load/);
+      expect(spyHistoryBack).not.toHaveBeenCalled();
+
+      const btn = within(screen.getByTestId("workflow-orchestrator-error-alert")).getByText("Go back");
+      await userEvent.setup().click(btn);
+      expect(spyHistoryBack).toHaveBeenCalled();
+    });
+
+    it("dismisses the error alert when WorkflowOrchestrator is unmounted from the outside", async () => {
+      await renderOrchestrator({
+        workflowToolIds: "",
+      });
+
+      await expectErrorMatching(/There was no eligible tool to load/);
+      expect(spyHistoryBack).not.toHaveBeenCalled();
+
+      const btn = screen.getByTestId("workflow-orchestrator-unmount-btn");
+      await userEvent.setup().click(btn);
+      await waitFor(() => {
+        expect(screen.queryByTestId("workflow-orchestrator-error-alert")).not.toBeInTheDocument();
+      });
+      expect(spyHistoryBack).not.toHaveBeenCalled();
     });
 
     it("reports skip reason when json-arrays-editor cannot handle object input", async () => {
-      const { onAction } = await renderOrchestrator({
+      await renderOrchestrator({
         workflowToolIds: "json-arrays-editor",
       });
 
@@ -163,15 +193,10 @@ describe("WorkflowOrchestrator", () => {
         /json-arrays-editor/,
         /Skipping json-arrays-editor because input is not an array/,
       );
-      expect(onAction).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: "closeWorkflow",
-        }),
-      );
     });
 
     it("reports missing tools when workflowToolIds contains unknown ids", async () => {
-      const { onAction } = await renderOrchestrator({
+      await renderOrchestrator({
         workflowToolIds: "abc,def",
       });
 
@@ -180,15 +205,10 @@ describe("WorkflowOrchestrator", () => {
         /Tried abc: There is no such tool/,
         /Tried def: There is no such tool/,
       );
-      expect(onAction).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: "closeWorkflow",
-        }),
-      );
     });
 
     it("reports loader failure for mock-crash-during-load", async () => {
-      const { onAction } = await renderOrchestrator({
+      await renderOrchestrator({
         workflowToolIds: "mock-crash-during-load,json-objects-editor",
       });
 
@@ -196,15 +216,10 @@ describe("WorkflowOrchestrator", () => {
         /Failed to load required tool mock-crash-during-load/,
         /Mock crash during load/,
       );
-      expect(onAction).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: "closeWorkflow",
-        }),
-      );
     });
 
     it("reports input type mismatch when workflow expects miniAppInstance", async () => {
-      const { onAction } = await renderOrchestrator({
+      await renderOrchestrator({
         inputType: "miniAppInstance",
       });
 
@@ -213,15 +228,10 @@ describe("WorkflowOrchestrator", () => {
         /json-objects-editor: Input type mismatch: jsonWithSchema !== miniAppInstance/,
         /json-arrays-editor: Input type mismatch: jsonWithSchema !== miniAppInstance/,
       );
-      expect(onAction).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: "closeWorkflow",
-        }),
-      );
     });
 
     it("reports schema validation error when name is not a string", async () => {
-      const { onAction } = await renderOrchestrator({
+      await renderOrchestrator({
         inputJson: {
           name: 123,
         },
@@ -232,11 +242,6 @@ describe("WorkflowOrchestrator", () => {
         /"path":\s*\[\s*"name"\s*\]/,
         /invalid_type/,
         /"expected":\s*"string"/,
-      );
-      expect(onAction).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: "closeWorkflow",
-        }),
       );
     });
   });

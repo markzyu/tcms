@@ -64,3 +64,9 @@ export const LoadingForever: Story = {
     workflowToolIds: 'mock-loading-forever',
   },
 }
+
+export const ErrorDuringToolRerender: Story = {
+  args: {
+    workflowToolIds: 'mock-error-during-tool-rerender',
+  },
+}

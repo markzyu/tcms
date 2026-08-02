@@ -138,11 +138,13 @@ export const ToolOpenToolActionSchema = z.object({
   inputByProxy: ToolInputProxySchema.optional(),
 });
 
-/** Close the entire tooling workflow */
+/**
+ * Close the entire tooling workflow.
+ * 
+ * This will be hanlded at the WorkflowOrchestrator level, and should never reach the Admin Shell.
+ */
 export const ToolCloseWorkflowActionSchema = z.object({
   type: z.literal("closeWorkflow"),
-  /** If the workflow encountered an error, this will be set. */
-  errorMessage: z.string().optional(),
 });
 
 /**

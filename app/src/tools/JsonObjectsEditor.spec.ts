@@ -149,7 +149,7 @@ async function deleteArrayGroup(groupName: string) {
   const group = getGroupContainer(groupName);
   await userEvent.setup().click(within(group).getByText("Delete"));
   await flushPromises();
-  await userEvent.setup().click(within(group).getByText("Confirm?"));
+  await userEvent.setup().click(within(group).getByText("Confirm deletion"));
   await flushPromises();
 }
 
@@ -320,11 +320,11 @@ describe("JsonObjectsEditor", () => {
 
       const group = getGroupContainer("Project 2");
       await userEvent.setup().click(within(group).getByText("Delete"));
-      expect(within(group).getByText("Confirm?")).toBeInTheDocument();
+      expect(within(group).getByText("Confirm deletion")).toBeInTheDocument();
 
       await dispatchAddArrayItem();
 
-      expect(within(group).queryByText("Confirm?")).not.toBeInTheDocument();
+      expect(within(group).queryByText("Confirm deletion")).not.toBeInTheDocument();
       expect(within(group).getByText("Delete")).toBeInTheDocument();
     });
   });

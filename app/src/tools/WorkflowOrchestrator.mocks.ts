@@ -1,4 +1,4 @@
-import { computed, defineComponent, PropType } from "vue";
+import { computed, defineComponent, PropType, ref } from "vue";
 import { ToolAction, ToolInput, ToolInputTypes, ToolProps, ToolRegistry } from "./toolTypes";
 import { WorkflowRegistry } from "./workflowTypes";
 import { EditorUiSchemaJson } from "@tcms/mini-app-common";
@@ -94,6 +94,25 @@ export const mockToolRegistry: ToolRegistry = {
       };
     },
   },
+  "mock-error-during-tool-rerender": {
+    id: "mock-error-during-tool-rerender",
+    inputType: "jsonWithSchema",
+    onLoad: () => {
+      return {
+        loader: Promise.resolve(defineComponent({
+          template: `<a href="#" @click.prevent="throwError">Click here to Throw Error</a>`,
+          setup() {
+            const throwError = () => {
+              throw new Error("Mock error during tool rerender");
+            };
+            return {
+              throwError,
+            };
+          },
+        })),
+      };
+    },
+  },
 };
 
 export const MockOrchestratorWrapper = defineComponent({
@@ -124,6 +143,7 @@ export const MockOrchestratorWrapper = defineComponent({
     },
   },
   setup(props) {
+    const unmounted = ref(false);
     const workflowRegistry = computed<WorkflowRegistry>(() => ({
       "mock-workflow": {
         id: "mock-workflow",
@@ -155,6 +175,7 @@ export const MockOrchestratorWrapper = defineComponent({
       instanceUrl: `https://mock.instance.url/${props.inputJson.instanceId}`,
     });
     return {
+      unmounted,
       workflowId: "mock-workflow",
       workflowRegistry,
       toolRegistry: mockToolRegistry,
@@ -165,7 +186,9 @@ export const MockOrchestratorWrapper = defineComponent({
     };
   },
   template: `
+    <button class="hidden" @click="unmounted = true" data-testid="workflow-orchestrator-unmount-btn">Unmount</button>
     <WorkflowOrchestrator
+      v-if="!unmounted"
       :workflow-id="workflowId"
       :workflow-registry="workflowRegistry"
       :tool-registry="toolRegistry"
