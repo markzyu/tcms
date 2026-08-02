@@ -3,6 +3,9 @@
     <template #title>
       <div class="text-2xl font-bold">JSON Objects Editor</div>
     </template>
+    <template #button2>
+      <ion-button :disabled="disableSaveButton" @click="onSave">{{ saveButtonText }}</ion-button>
+    </template>
     <ion-fab horizontal="end" vertical="bottom" slot="fixed">
       <ion-fab-button id="open-action-sheet">
         <ion-icon :icon="add"></ion-icon>
@@ -102,7 +105,8 @@ import { convertJsonSchemaToZod } from 'zod-from-json-schema';
 const [
   miscGroupName,
   emailHint, urlHint, passwordHint, telHint, numberHint,
-  addFlatArray, cancelButtonText, editDetailsButtonText, deleteButtonText, deleteConfirmButtonText,
+  addFlatArray, cancelButtonText, saveButtonText,
+  editDetailsButtonText, deleteButtonText, deleteConfirmButtonText,
   validationRequiredField, validationInvalidValue,
 ] = useToolsContent(toolContentKeys);
 const hintsByInputType = computed(() => ({
@@ -264,6 +268,15 @@ const allFieldGroups = computed<(FieldGroupDescriptor | null)[]>(() => {
   ];
 });
 
+const disableSaveButton = computed(() => {
+  return allFieldGroups.value.some((group) => {
+    if (group) {
+      return group.fields.some((field) => field.validationError);
+    }
+    return false;
+  });
+});
+
 // Set default values for required toggles and segments
 onMounted(() => nextTick(() => {
   allFieldGroups.value.forEach((group) => {
@@ -391,6 +404,19 @@ const onChooseMedia = (field: FieldDescriptor) => {
     onMediaUrl: (mediaUrl: string) => {
       set(jsonData.value, field.fullPath, mediaUrl);
     },
+  });
+};
+
+const onSave = async () => {
+  await props.onAction({
+    type: "saveText",
+    text: JSON.stringify(jsonData.value, null, 2),
+    filePath: {
+      ...props.input.savePath
+    }
+  });
+  await props.onAction({
+    type: "closeWorkflow",
   });
 };
 

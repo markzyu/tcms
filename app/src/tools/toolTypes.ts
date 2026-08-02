@@ -23,34 +23,6 @@ import { z } from "zod";
 //   - Explicit naming takes precedence over implicit naming.
 //   - Lastly but optionally, Typescript types like `FooBar` should have a `FooBarSchema` which is a Zod schema object.
 
-// ------- Tool Input Types -------
-
-/** Input as a JSON object with a corresponding schema. */
-export const ToolJsonWithSchemaInputSchema = z.object({
-  type: z.literal("jsonWithSchema"),
-  json: z.any(),
-  /** The path within the json object that is being edited */
-  jsonPath: z.string().optional(),
-  jsonSchema: z.object<Record<string, unknown>>(),
-  editorUiSchema: EditorUiSchemaJsonSchema,
-});
-
-/** Input as a mini app instance (id and url) */
-export const ToolMiniAppInstanceInputSchema = z.object({
-  type: z.literal("miniAppInstance"),
-  instanceId: z.string(),
-  instanceUrl: z.string(),
-});
-
-export const ToolInputSchema = z.union([
-  ToolJsonWithSchemaInputSchema, 
-  ToolMiniAppInstanceInputSchema,
-]);
-export type ToolInput = z.infer<typeof ToolInputSchema>;
-
-export const ToolInputTypesSchema = z.union(ToolInputSchema.options.map((option) => option.shape.type));
-export type ToolInputTypes = z.infer<typeof ToolInputTypesSchema>;
-
 // ------- Generic File Path Types -------
 
 export const MiniAppContentFilePathSchema = z.object({
@@ -77,6 +49,35 @@ export const GenericFilePathSchema = z.union([
   MiniAppContentFilePathSchema,
 ]);
 export type GenericFilePath = z.infer<typeof GenericFilePathSchema>;
+
+// ------- Tool Input Types -------
+
+/** Input as a JSON object with a corresponding schema. */
+export const ToolJsonWithSchemaInputSchema = z.object({
+  type: z.literal("jsonWithSchema"),
+  json: z.any(),
+  /** The path within the json object that is being edited */
+  jsonPath: z.string().optional(),
+  jsonSchema: z.object<Record<string, unknown>>(),
+  editorUiSchema: EditorUiSchemaJsonSchema,
+  savePath: GenericFilePathSchema,
+});
+
+/** Input as a mini app instance (id and url) */
+export const ToolMiniAppInstanceInputSchema = z.object({
+  type: z.literal("miniAppInstance"),
+  instanceId: z.string(),
+  instanceUrl: z.string(),
+});
+
+export const ToolInputSchema = z.union([
+  ToolJsonWithSchemaInputSchema, 
+  ToolMiniAppInstanceInputSchema,
+]);
+export type ToolInput = z.infer<typeof ToolInputSchema>;
+
+export const ToolInputTypesSchema = z.union(ToolInputSchema.options.map((option) => option.shape.type));
+export type ToolInputTypes = z.infer<typeof ToolInputTypesSchema>;
 
 // ------- Tool Input Proxies -------
 

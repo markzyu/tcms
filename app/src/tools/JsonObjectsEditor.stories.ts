@@ -23,6 +23,11 @@ const meta = {
       },
       jsonSchema: schema.jsonSchema,
       editorUiSchema: schema.editorUiSchema as any,
+      savePath: {
+        type: 'miniAppContent',
+        instanceId: '123',
+        _pathAsUrl: '/content/main.en.json',
+      },
     },
     onAction: async (action) => {
       console.log("onAction", action);
@@ -49,6 +54,11 @@ export const WithArrayFields: Story = {
       },
       jsonSchema: schema.jsonSchema,
       editorUiSchema: schema.editorUiSchema as any,
+      savePath: {
+        type: 'miniAppContent',
+        instanceId: '123',
+        _pathAsUrl: '/content/main.en.json',
+      },
     },
     onAction: async (action) => {
       console.log("onAction", action);
