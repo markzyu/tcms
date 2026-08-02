@@ -1,6 +1,6 @@
 import { onMounted, ref, watch } from "vue";
 import { invoke } from "@tauri-apps/api/core";
-import { invokeWithType, LcdnConfig, LcdnInstanceConfig, LcdnInstanceConfigSchema, LcdnStatusSchema } from "../tauri-types";
+import { invokeWithType, LcdnConfig, LcdnInstanceConfig, LcdnInstanceConfigSchema, LcdnStatusSchema } from "../types";
 import { join } from "@tauri-apps/api/path";
 import { z } from "zod";
 import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";

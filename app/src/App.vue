@@ -3,7 +3,7 @@ import packageJson from '../package.json';
 import { computed, onMounted, ref } from 'vue';
 import { IonApp, IonRouterOutlet, toastController } from '@ionic/vue';
 import { type as osType, OsType } from '@tauri-apps/plugin-os';
-import { InstallStatus, InstallStatusSchema, invokeWithType } from './admin/tauri-types';
+import { InstallStatus, InstallStatusSchema, invokeWithType } from './admin/types';
 import { z } from 'zod';
 import { readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
 import { invoke } from '@tauri-apps/api/core';

@@ -1,5 +1,5 @@
 import { vi, type Mock } from "vitest";
-import { LcdnInstanceConfig, LcdnStatus } from "../tauri-types";
+import { LcdnInstanceConfig, LcdnStatus } from "../types";
 
 export const INITIAL_SLUG = "my-contact-card";
 export const INSTANCE_ID = "6fa27a2f-2f1e-413d-a842-424242424242";
