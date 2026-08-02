@@ -4,7 +4,7 @@
       <div class="text-2xl font-bold">{{ fallbackTitle }}</div>
     </template>
     <template #button2>
-      <ion-button :disabled="disableSaveButton" @click="onSave">{{ saveButtonText }}</ion-button>
+      <ion-button data-testid="json-objects-editor-save-button" :disabled="disableSaveButton" @click="onSave">{{ saveButtonText }}</ion-button>
     </template>
     <ion-fab horizontal="end" vertical="bottom" slot="fixed">
       <ion-fab-button id="open-action-sheet">
@@ -13,7 +13,7 @@
     </ion-fab>
     <ion-action-sheet trigger="open-action-sheet" :buttons="actionSheetButtons" @did-dismiss="onAction" />
     <div class="hidden py-10" data-testid="debug-json-data">Debug: {{ jsonData }}</div>
-    <div class="flex flex-col p-4 transition-all duration-300 ease-in-out md:max-w-[720px] lg:max-w-[960px] md:mx-auto md:grid md:grid-flow-col md:gap-x-4 lg:gap-x-8 md:grid-cols-2" :style="gridStyles">
+    <div data-testid="field-groups-grid" class="flex flex-col p-4 transition-all duration-300 ease-in-out md:max-w-[720px] lg:max-w-[960px] md:mx-auto md:grid md:grid-flow-col md:gap-x-4 lg:gap-x-8 md:grid-cols-2" :style="gridStyles">
       <div class="h-full md:flex md:flex-col" v-for="fieldGroup in allFieldGroups" :key="fieldGroup?.name">
         <div v-if="fieldGroup">
           <div class="mx-3 h-10 flex items-center gap-2">
@@ -46,7 +46,7 @@
                   :value="field.validationError ? '' : get(jsonData, field.fullPath)"
                   :placeholder="field.validationError" />
                 <div class="w-[66%] flex justify-center">
-                  <div class="mx-[25px] my-[10px] w-[100px] h-[100px] bg-gray-100 dark:bg-black flex items-center justify-center" @click="onChooseMedia(field)">
+                  <div class="mx-[25px] my-[10px] w-[100px] h-[100px] bg-gray-100 dark:bg-black flex items-center justify-center" :data-testid="`media-picker-${field.fullPath}`" @click="onChooseMedia(field)">
                     <img v-if="get(jsonData, field.fullPath)" :src="get(jsonData, field.fullPath)" alt="Media" class="w-full h-full object-cover" />
                     <ion-icon v-else aria-label="Upload image" :icon="camera" size="large" />
                   </div>
@@ -92,7 +92,7 @@
 import { computed, nextTick, onMounted, ref } from 'vue';
 import { ToolProps } from './toolTypes';
 import { get, set } from 'lodash';
-import { IonIcon, IonInput, IonItem, IonLabel, IonList, IonSegment, IonSegmentButton, IonTextarea, IonToggle, IonFab, IonFabButton, IonActionSheet, ActionSheetButton, IonButton } from '@ionic/vue';
+import { IonIcon, IonInput, IonItem, IonLabel, IonList, IonNote, IonSegment, IonSegmentButton, IonTextarea, IonToggle, IonFab, IonFabButton, IonActionSheet, ActionSheetButton, IonButton } from '@ionic/vue';
 import { camera, add } from 'ionicons/icons';
 import { newFieldGroup, FieldGroupDescriptor, FieldDescriptor, walkJsonSchemaForAllFields, getShallowArrayPaths, getShallowArrayPath, getRequiredFields } from './json.utils';
 import { useAppLanguageLocale } from '../utils/i18n';
@@ -200,7 +200,9 @@ const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
 });
 
 const performFieldValidations = (field: FieldDescriptor) => {
-  const isUndefinedOrNull = get(jsonData.value, field.fullPath) === undefined || get(jsonData.value, field.fullPath) === null;
+  const rawValue = get(jsonData.value, field.fullPath);
+  const isEmptyOptionalValue = !field.isRequired && rawValue === "";
+  const isUndefinedOrNull = rawValue === undefined || rawValue === null || isEmptyOptionalValue;
   if (field.isRequired && isUndefinedOrNull) {
     return {
       ...field,

@@ -151,7 +151,10 @@
           "field3": {
             "type": "boolean"
           }
-        }
+        },
+        "required": [
+          "field3"
+        ]
       },
       "projects": {
         "type": "array",
