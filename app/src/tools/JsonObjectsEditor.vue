@@ -61,7 +61,7 @@
                 <ion-label>{{ field.name }}</ion-label>
                 <ion-segment class="flex-1" mode="ios" :value="get(jsonData, field.fullPath)" @ionChange="updateField(field.fullPath, $event)">
                   <ion-segment-button v-for="choice in field.choices" :key="choice" :value="choice">
-                    <ion-label>{{ choice }}</ion-label>
+                    <ion-label>{{ field.segmentNames?.[choice] ?? choice }}</ion-label>
                   </ion-segment-button>
                 </ion-segment>
               </div>
@@ -164,6 +164,11 @@ const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
       return;
     }
     field.name = fieldLabels[locale.value]?.[field.fullPath] ?? field.fullPath;
+    if (field.type === 'segment') {
+      field.segmentNames = Object.fromEntries(field.choices?.map((choice) => 
+        [choice, fieldLabels[locale.value]?.[`${field.fullPath}.${choice}`]]
+      ) || []);
+    }
     knownPaths.add(field.fullPath);
 
     const preferredGroupName = fieldPathToGroupName[field.fullPath];

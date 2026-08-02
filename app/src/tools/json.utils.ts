@@ -29,6 +29,9 @@ export type FieldDescriptor = {
   arrayPath?: string;
   arrayIndex?: number;
 
+  // The i18n names for the choices in a segment field / string enum.
+  segmentNames?: Record<string, string>;
+
   // The validation error message, if any.
   validationError?: string;
 

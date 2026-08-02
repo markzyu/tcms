@@ -186,7 +186,10 @@ Example of how schemas and editor UI may work for multi-page templates with both
       "bio": "Bio",
       "email": "Email",
       "phone": "Phone",
-      "heroImage": "Hero Image"
+      "heroImage": "Hero Image",
+      "heroAlignment": "Hero Alignment",
+      "heroAlignment.left": "Left",
+      "heroAlignment.right": "Right"
     },
     "ja": {
       "name": "名前",
@@ -194,7 +197,10 @@ Example of how schemas and editor UI may work for multi-page templates with both
       "bio": "自己紹介",
       "email": "メールアドレス",
       "phone": "電話番号",
-      "heroImage": "写真"
+      "heroImage": "写真",
+      "heroAlignment": "写真の配置",
+      "heroAlignment.left": "左",
+      "heroAlignment.right": "右"
     }
   },
   "jsonSchema": {
@@ -244,6 +250,10 @@ Example of how schemas and editor UI may work for multi-page templates with both
       "heroImage": {
         "description": "This is a wide image that will be displayed at the top of the contact card.",
         "type": "string"
+      },
+      "heroAlignment": {
+        "type": "string",
+        "enum": ["left", "right"]
       },
       "richTextList": {
         "type": "array",
