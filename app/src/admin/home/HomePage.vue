@@ -62,7 +62,7 @@
     const schema: PageContentSchemaJson = JSON.parse(schemaString);
     const input: ToolInput = {
       type: "jsonWithSchema",
-      json: contentJson.value,
+      json: JSON.parse(contentJson.value ?? "{}"),
       savePath: {
         type: "miniAppContent",
         instanceId: cardInstanceId,

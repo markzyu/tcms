@@ -9,6 +9,10 @@ const routes: Array<RouteRecordRaw> = [
     redirect: '/home',
   },
   {
+    path: '/tools/:workflowId/:inputKey',
+    component: () => import('./admin/ToolsScreen.vue'),
+  },
+  {
     path: '/',
     component: TabsScreen,
     children: [
@@ -27,11 +31,7 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: 'settings',
         component: () => import('./admin/settings/SettingsPage.vue'),
-      },
-      {
-        path: 'tools/:workflowId/:inputKey',
-        component: () => import('./admin/ToolsScreen.vue'),
-      },
+      }
     ],
   },
 ];
