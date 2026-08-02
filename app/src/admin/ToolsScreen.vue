@@ -13,6 +13,10 @@ const inputJson = sessionStorage.getItem(inputKey);
 const input = inputJson && JSON.parse(inputJson);
 
 onMounted(() => {
+  if (!input) {
+    history.back();
+  }
+
   // clean up session storage for privacy reasons
   sessionStorage.removeItem(inputKey);
 });
@@ -36,6 +40,7 @@ const onAction = async (action: ToolAction) => {
 
 <template>
   <WorkflowOrchestrator
+    v-if="input"
     :workflow-id="workflowId"
     :workflow-registry="workflowRegistry"
     :tool-registry="toolRegistry"
