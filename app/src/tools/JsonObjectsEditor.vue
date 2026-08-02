@@ -1,7 +1,7 @@
 <template>
   <tools-screen>
     <template #title>
-      <div class="text-2xl font-bold">JSON Objects Editor</div>
+      <div class="text-2xl font-bold">{{ fallbackTitle }}</div>
     </template>
     <template #button2>
       <ion-button :disabled="disableSaveButton" @click="onSave">{{ saveButtonText }}</ion-button>
@@ -108,6 +108,7 @@ const [
   addFlatArray, cancelButtonText, saveButtonText,
   editDetailsButtonText, deleteButtonText, deleteConfirmButtonText,
   validationRequiredField, validationInvalidValue,
+  fallbackTitle,
 ] = useToolsContent(toolContentKeys);
 const hintsByInputType = computed(() => ({
   email: emailHint.value,

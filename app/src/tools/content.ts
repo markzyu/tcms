@@ -17,6 +17,7 @@ export const toolsContent: Content<Keys.ToolContentKey> = {
     [Keys.JsonObjEditorDeleteConfirmButton]: "Confirm?",
     [Keys.JsonObjEditorValidationRequiredField]: "Missing information",
     [Keys.JsonObjEditorValidationInvalidValue]: "Invalid information",
+    [Keys.JsonObjEditorFallbackTitle]: "Page Content Editor",
   },
   ja: {
     [Keys.TemplateEditorMiscGroupLabel]: "その他",
@@ -33,6 +34,7 @@ export const toolsContent: Content<Keys.ToolContentKey> = {
     [Keys.JsonObjEditorDeleteConfirmButton]: "確認？",
     [Keys.JsonObjEditorValidationRequiredField]: "情報が不足しています",
     [Keys.JsonObjEditorValidationInvalidValue]: "無効な情報です",
+    [Keys.JsonObjEditorFallbackTitle]: "ページ編集",
   },
 };
 

@@ -12,6 +12,7 @@ export const JsonObjEditorDeleteButton = "tools.jsonObjectsEditor.deleteButton" 
 export const JsonObjEditorDeleteConfirmButton = "tools.jsonObjectsEditor.deleteConfirmButton" as const;
 export const JsonObjEditorValidationRequiredField = "tools.jsonObjectsEditor.validation.requiredField" as const;
 export const JsonObjEditorValidationInvalidValue = "tools.jsonObjectsEditor.validation.invalidValue" as const;
+export const JsonObjEditorFallbackTitle = "tools.jsonObjectsEditor.fallbackTitle" as const;
 
 export const toolContentKeys = [
   TemplateEditorMiscGroupLabel,
@@ -28,6 +29,7 @@ export const toolContentKeys = [
   JsonObjEditorDeleteConfirmButton,
   JsonObjEditorValidationRequiredField,
   JsonObjEditorValidationInvalidValue,
+  JsonObjEditorFallbackTitle,
 ] as const;
 
 export type ToolContentKey = typeof toolContentKeys[number];
