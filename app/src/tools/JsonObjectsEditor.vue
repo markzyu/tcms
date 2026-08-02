@@ -358,7 +358,8 @@ const onAction = (event: CustomEvent) => {
       arrayPathsToUpdate = arrayPaths.filter((path) => get(jsonData.value, path)?.length === minLength);
     }
     new Set(arrayPathsToUpdate).forEach((path) => {
-      set(jsonData.value, path, [...get(jsonData.value, path), {}]);
+      const oldArr = get(jsonData.value, path) || [];
+      set(jsonData.value, path, [...oldArr, {}]);
     });
     
     // Edge case: clearing all references to group names because indices might have changed

@@ -415,5 +415,15 @@ describe("JsonObjectsEditor", () => {
       expect(within(toggleField).queryByText("Missing information")).not.toBeInTheDocument();
       expect(getDebugJson().exampleDeepField.field3).toBe(false);
     });
+
+    it("can add an array item to a non-existing array", async () => {
+      await renderEditor({ json: {} });
+
+      await dispatchAddArrayItem();
+
+      expect(getArrayGroupNames()).toEqual(["Project 1"]);
+      expect(getDebugJson().projects).toHaveLength(1);
+      expect(getDebugJson().projects[0]).toEqual({});
+    });
   });
 });
