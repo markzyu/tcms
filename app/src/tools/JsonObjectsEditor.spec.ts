@@ -121,11 +121,13 @@ async function getSaveButton() {
 
 async function expectSaveDisabled(disabled: boolean) {
   const button = await getSaveButton();
-  if (disabled) {
-    expect(button).toHaveAttribute("disabled");
-  } else {
-    expect(button).not.toHaveAttribute("disabled");
-  }
+  await waitFor(() => {
+    if (disabled) {
+      expect(button).toHaveAttribute("disabled");
+    } else {
+      expect(button).not.toHaveAttribute("disabled");
+    }
+  });
 }
 
 async function dispatchAddArrayItem(groupName = "Project 1") {

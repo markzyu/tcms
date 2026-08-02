@@ -27,7 +27,7 @@ export const toolsContent: Content<Keys.ToolContentKey> = {
     [Keys.TemplateEditorTelHint]: "(00) 0000-0000",
     [Keys.TemplateEditorNumberHint]: "000",
     [Keys.TemplateEditorAddFlatArray]: "\"{name}\" を追加",
-    [Keys.TemplateEditorCancelButton]: "戻る",
+    [Keys.TemplateEditorCancelButton]: "閉じる",
     [Keys.TemplateEditorSaveButton]: "保存",
     [Keys.JsonObjEditorEditDetailsButton]: "詳細",
     [Keys.JsonObjEditorDeleteButton]: "削除",

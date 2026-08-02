@@ -2,6 +2,17 @@ import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import schema from './JsonObjectsEditor.schema1.json'
 import JsonObjectsEditor from './JsonObjectsEditor.vue'
 
+const getExampleMediaUrl = () => {
+  return "https://picsum.photos/600/400?v=" + Math.random();
+}
+
+const onAction = async (action: any) => {
+  console.log("onAction", action);
+  if (action.type === "chooseMedia") {
+    action.onMediaUrl(getExampleMediaUrl());
+  }
+}
+
 const meta = {
   title: 'Tools/JsonObjectsEditor',
   component: JsonObjectsEditor,
@@ -29,9 +40,7 @@ const meta = {
         _pathAsUrl: '/content/main.en.json',
       },
     },
-    onAction: async (action) => {
-      console.log("onAction", action);
-    },
+    onAction,
   },
 } satisfies Meta<typeof JsonObjectsEditor>
 
@@ -60,11 +69,6 @@ export const WithArrayFields: Story = {
         _pathAsUrl: '/content/main.en.json',
       },
     },
-    onAction: async (action) => {
-      console.log("onAction", action);
-      if (action.type === "chooseMedia") {
-        action.onMediaUrl("https://picsum.photos/600/400?v=" + Math.random());
-      }
-    },
+    onAction,
   },
 }
