@@ -3,6 +3,11 @@
     <template #title>
       <div class="text-2xl font-bold">{{ fallbackTitle }}</div>
     </template>
+    <template #button1>
+      <ion-button size="small" fill="clear" data-testid="json-objects-editor-back-button" @click="onBack">
+        <ion-icon :icon="arrowBack" slot="icon-only"></ion-icon>
+      </ion-button>
+    </template>
     <template #button2>
       <ion-button data-testid="json-objects-editor-save-button" :disabled="disableSaveButton" @click="onSave">{{ saveButtonText }}</ion-button>
     </template>
@@ -91,9 +96,9 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref } from 'vue';
 import { ToolProps } from './toolTypes';
-import { get, set } from 'lodash';
-import { IonIcon, IonInput, IonItem, IonLabel, IonList, IonNote, IonSegment, IonSegmentButton, IonTextarea, IonToggle, IonFab, IonFabButton, IonActionSheet, ActionSheetButton, IonButton } from '@ionic/vue';
-import { camera, add } from 'ionicons/icons';
+import { get, isEqual, set } from 'lodash';
+import { IonIcon, IonInput, IonItem, IonLabel, IonList, IonNote, IonSegment, IonSegmentButton, IonTextarea, IonToggle, IonFab, IonFabButton, IonActionSheet, ActionSheetButton, IonButton, alertController, AlertButton } from '@ionic/vue';
+import { camera, add, arrowBack } from 'ionicons/icons';
 import { newFieldGroup, FieldGroupDescriptor, FieldDescriptor, walkJsonSchemaForAllFields, getShallowArrayPaths, getShallowArrayPath, getRequiredFields } from './json.utils';
 import { useAppLanguageLocale } from '../utils/i18n';
 import { useToolsContent } from './content';
@@ -109,6 +114,8 @@ const [
   editDetailsButtonText, deleteButtonText, deleteConfirmButtonText,
   validationRequiredField, validationInvalidValue,
   fallbackTitle,
+  confirmBackAlertHeader, confirmBackAlertMessage,
+  confirmBackAlertCancelButton, confirmBackAlertOKButton,
 ] = useToolsContent(toolContentKeys);
 const hintsByInputType = computed(() => ({
   email: emailHint.value,
@@ -120,9 +127,11 @@ const hintsByInputType = computed(() => ({
 
 const locale = useAppLanguageLocale();
 const props = defineProps<ToolProps<"jsonWithSchema">>();
-const jsonData = ref<any>(props.input.json);
+const jsonData = ref<any>(JSON.parse(JSON.stringify(props.input.json)));
 const confirmDeletionOfGroupName = ref<string | null>(null);
 
+// This value differs from props.input.json because we apply some default value fixes on mount.
+const initialJsonData = ref<any>(JSON.parse(JSON.stringify(props.input.json)));
 
 // These are "abstract" because array indices are not yet resolved.
 const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
@@ -294,6 +303,7 @@ onMounted(() => nextTick(() => {
       });
     }
   });
+  initialJsonData.value = JSON.parse(JSON.stringify(jsonData.value));
 }));
 
 
@@ -420,6 +430,40 @@ const onSave = async () => {
     }
   });
   await props.onAction({
+    type: "closeWorkflow",
+  });
+};
+
+const onBack = async () => {
+  const confirmBackAlertButtons: AlertButton[] = [
+    {
+      text: confirmBackAlertCancelButton.value,
+      role: "cancel",
+    },
+    {
+      text: confirmBackAlertOKButton.value,
+      role: "destructive",
+      handler: () => {
+        props.onAction({
+          type: "closeWorkflow",
+        });
+      },
+    },
+  ];
+
+  if (!isEqual(jsonData.value, initialJsonData.value)) {
+    const alert = await alertController.create({
+      header: confirmBackAlertHeader.value,
+      message: confirmBackAlertMessage.value,
+      buttons: confirmBackAlertButtons,
+      htmlAttributes: {
+        "data-testid": "json-objects-editor-confirm-back-alert",
+      }
+    });
+    await alert.present();
+    return;
+  }
+  props.onAction({
     type: "closeWorkflow",
   });
 };

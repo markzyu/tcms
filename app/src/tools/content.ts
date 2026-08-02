@@ -18,6 +18,10 @@ export const toolsContent: Content<Keys.ToolContentKey> = {
     [Keys.JsonObjEditorValidationRequiredField]: "Missing information",
     [Keys.JsonObjEditorValidationInvalidValue]: "Invalid information",
     [Keys.JsonObjEditorFallbackTitle]: "Page Content Editor",
+    [Keys.JsonObjEditorConfirmBackAlertHeader]: "Confirm",
+    [Keys.JsonObjEditorConfirmBackAlertMessage]: "Are you sure you want to leave this page? Any unsaved changes will be lost.",
+    [Keys.JsonObjEditorConfirmBackAlertCancelButton]: "Cancel",
+    [Keys.JsonObjEditorConfirmBackAlertOKButton]: "OK",
     [Keys.WorkflowOrchestratorErrorHeader]: "Error",
     [Keys.WorkflowOrchestratorErrorDismissBtn]: "Go back",
     [Keys.WorkflowOrchestratorErrorMessageWrapper]:
@@ -41,6 +45,10 @@ export const toolsContent: Content<Keys.ToolContentKey> = {
     [Keys.JsonObjEditorValidationRequiredField]: "情報が不足しています",
     [Keys.JsonObjEditorValidationInvalidValue]: "無効な情報です",
     [Keys.JsonObjEditorFallbackTitle]: "ページ編集",
+    [Keys.JsonObjEditorConfirmBackAlertHeader]: "確認",
+    [Keys.JsonObjEditorConfirmBackAlertMessage]: "このページを離れますか？未保存の変更は失われます。",
+    [Keys.JsonObjEditorConfirmBackAlertCancelButton]: "キャンセル",
+    [Keys.JsonObjEditorConfirmBackAlertOKButton]: "OK",
     [Keys.WorkflowOrchestratorErrorHeader]: "エラー",
     [Keys.WorkflowOrchestratorErrorDismissBtn]: "戻る",
     [Keys.WorkflowOrchestratorErrorMessageWrapper]:

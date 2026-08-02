@@ -119,6 +119,19 @@ async function getSaveButton() {
   return button;
 }
 
+async function clickBackButton() {
+  const button = screen.getByTestId("json-objects-editor-back-button");
+  await waitFor(() => {
+    expect(button.classList.contains("hydrated")).toBe(true);
+  });
+  await userEvent.setup().click(button);
+  await flushPromises();
+}
+
+async function getConfirmBackAlert() {
+  return await waitFor(() => screen.getByTestId("json-objects-editor-confirm-back-alert"));
+}
+
 async function expectSaveDisabled(disabled: boolean) {
   const button = await getSaveButton();
   await waitFor(() => {
@@ -215,8 +228,8 @@ describe("JsonObjectsEditor", () => {
       expect(names.slice(singletonCount)).toEqual(["Project 1", "Project 2", "Project 3"]);
     });
 
-    it("updates singleton field edits in debug JSON", async () => {
-      await renderEditor();
+    it("updates singleton field edits in debug JSON, and confirms before leaving", async () => {
+      const { onAction } = await renderEditor();
 
       await setFieldInputValue("field-undefined-name", "Jane Smith");
       await setFieldInputValue("field-textarea-bio", "A short bio");
@@ -225,6 +238,26 @@ describe("JsonObjectsEditor", () => {
         name: "Jane Smith",
         bio: "A short bio",
       });
+
+      await clickBackButton();
+      const alert1 = await getConfirmBackAlert();
+      await userEvent.click(within(alert1).getByText("Cancel"));
+      await flushPromises();
+      expect(onAction).not.toHaveBeenCalled();
+
+      await setFieldInputValue("field-textarea-bio", "A long bio");
+      expect(getDebugJson()).toMatchObject({
+        name: "Jane Smith",
+        bio: "A long bio",
+      });
+
+      await clickBackButton();
+      const alert2 = await getConfirmBackAlert();
+      await userEvent.click(within(alert2).getByText("OK"));
+      await flushPromises();
+      expect(onAction).toHaveBeenCalledWith(
+        expect.objectContaining({ type: "closeWorkflow" }),
+      );
     });
 
     it("updates each schema1 input type in debug JSON", async () => {

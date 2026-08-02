@@ -13,6 +13,10 @@ export const JsonObjEditorDeleteConfirmButton = "tools.jsonObjectsEditor.deleteC
 export const JsonObjEditorValidationRequiredField = "tools.jsonObjectsEditor.validation.requiredField" as const;
 export const JsonObjEditorValidationInvalidValue = "tools.jsonObjectsEditor.validation.invalidValue" as const;
 export const JsonObjEditorFallbackTitle = "tools.jsonObjectsEditor.fallbackTitle" as const;
+export const JsonObjEditorConfirmBackAlertHeader = "tools.jsonObjectsEditor.confirmBackAlertHeader" as const;
+export const JsonObjEditorConfirmBackAlertMessage = "tools.jsonObjectsEditor.confirmBackAlertMessage" as const;
+export const JsonObjEditorConfirmBackAlertCancelButton = "tools.jsonObjectsEditor.confirmBackAlertCancelButton" as const;
+export const JsonObjEditorConfirmBackAlertOKButton = "tools.jsonObjectsEditor.confirmBackAlertOKButton" as const;
 export const WorkflowOrchestratorErrorHeader = "tools.workflowOrchestrator.errorHeader" as const;
 export const WorkflowOrchestratorErrorDismissBtn = "tools.workflowOrchestrator.errorDismissBtn" as const;
 export const WorkflowOrchestratorErrorMessageWrapper = "tools.workflowOrchestrator.errorMessageWrapper" as const;
@@ -34,6 +38,10 @@ export const toolContentKeys = [
   JsonObjEditorValidationRequiredField,
   JsonObjEditorValidationInvalidValue,
   JsonObjEditorFallbackTitle,
+  JsonObjEditorConfirmBackAlertHeader,
+  JsonObjEditorConfirmBackAlertMessage,
+  JsonObjEditorConfirmBackAlertCancelButton,
+  JsonObjEditorConfirmBackAlertOKButton,
   WorkflowOrchestratorErrorHeader,
   WorkflowOrchestratorErrorDismissBtn,
   WorkflowOrchestratorErrorMessageWrapper,
