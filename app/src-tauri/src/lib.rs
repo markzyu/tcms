@@ -55,7 +55,11 @@ async fn ensure_os_data_dir(app_handle: AppHandle) -> Result<PathBuf, String> {
 }
 
 #[tauri::command]
-async fn read_template_schema(app_handle: AppHandle, template_scope: String, template_name: String) -> Result<String, String> {
+async fn read_template_schema(
+  app_handle: AppHandle,
+  template_scope: String,
+  template_name: String,
+) -> Result<String, String> {
   lcdnfs::read_template_schema(&app_handle, &template_scope, &template_name)
 }
 

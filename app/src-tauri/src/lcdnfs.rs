@@ -1,5 +1,5 @@
-use std::path::PathBuf;
 use std::io::Read;
+use std::path::PathBuf;
 use tauri::{AppHandle, Manager};
 use tauri_plugin_fs::FsExt;
 use tauri_plugin_os::platform;
@@ -97,7 +97,11 @@ pub(crate) fn unzip_app_asset_to_fs(
   Ok(())
 }
 
-pub(crate) fn read_template_schema(app_handle: &AppHandle, template_scope: &String, template_name: &String) -> Result<String, String> {
+pub(crate) fn read_template_schema(
+  app_handle: &AppHandle,
+  template_scope: &String,
+  template_name: &String,
+) -> Result<String, String> {
   let mut template_asset_path = PathBuf::from("templates");
   template_asset_path.push(template_scope);
   template_asset_path.push(template_name);
@@ -109,8 +113,12 @@ pub(crate) fn read_template_schema(app_handle: &AppHandle, template_scope: &Stri
   let mut schema_file_path = PathBuf::from("dist");
   schema_file_path.push("schema");
   schema_file_path.push("main.schema.json");
-  let mut schema_file = zip.by_path(&schema_file_path).map_err(|e| format!("read_template_schema: {}", e))?;
+  let mut schema_file = zip
+    .by_path(&schema_file_path)
+    .map_err(|e| format!("read_template_schema: {}", e))?;
   let mut schema_data = String::new();
-  schema_file.read_to_string(&mut schema_data).map_err(|e| format!("read_template_schema: {}", e))?;
+  schema_file
+    .read_to_string(&mut schema_data)
+    .map_err(|e| format!("read_template_schema: {}", e))?;
   Ok(schema_data)
 }
