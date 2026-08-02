@@ -260,7 +260,7 @@ const allFieldGroups = computed<(FieldGroupDescriptor | null)[]>(() => {
   let leftGroups = singletonFieldGroups.value;
   let rightGroups = arrayFieldGroups.value;
   if (rightGroups.length === 0) {
-    const halfLength = Math.floor(leftGroups.length / 2);
+    const halfLength = Math.ceil(leftGroups.length / 2);
     rightGroups = leftGroups.slice(halfLength);
     leftGroups = leftGroups.slice(0, halfLength);
   }
