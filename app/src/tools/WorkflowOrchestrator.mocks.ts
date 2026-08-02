@@ -166,13 +166,13 @@ export const MockOrchestratorWrapper = defineComponent({
       editorUiSchema,
       savePath: {
         type: "miniAppContent",
-        instanceId: props.inputJson.instanceId,
+        instanceId: "mock-instance-id",
         _pathAsUrl: '/content/main.en.json',
       },
     } : {
       type: "miniAppInstance",
-      instanceId: props.inputJson.instanceId,
-      instanceUrl: `https://mock.instance.url/${props.inputJson.instanceId}`,
+      instanceId: "mock-instance-id",
+      instanceUrl: `https://mock.instance.url/mock-instance-id`,
     });
     return {
       unmounted,

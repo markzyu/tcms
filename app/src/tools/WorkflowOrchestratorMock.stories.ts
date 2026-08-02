@@ -70,3 +70,10 @@ export const ErrorDuringToolRerender: Story = {
     workflowToolIds: 'mock-error-during-tool-rerender',
   },
 }
+
+export const InvalidInput: Story = {
+  args: {
+    workflowToolIds: 'json-objects-editor',
+    inputType: 'nonExistentType' as any,
+  },
+}

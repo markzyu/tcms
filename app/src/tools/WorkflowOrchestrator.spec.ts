@@ -218,6 +218,16 @@ describe("WorkflowOrchestrator", () => {
       );
     });
 
+    it("reports input validation error when input is invalid", async () => {
+      await renderOrchestrator({
+        workflowToolIds: "json-objects-editor",
+        inputType: "nonExistentType" as any,
+        inputJson: {
+          name: 123,
+        },
+      });
+    });
+
     it("reports input type mismatch when workflow expects miniAppInstance", async () => {
       await renderOrchestrator({
         inputType: "miniAppInstance",

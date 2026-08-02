@@ -1,6 +1,6 @@
 import { Component, defineComponent, Ref, watchEffect } from 'vue';
 import { convertJsonSchemaToZod } from 'zod-from-json-schema';
-import { ToolInput, ToolInputTypes, ToolProps, ToolRegistry } from './toolTypes';
+import { ToolInput, ToolInputSchema, ToolInputTypes, ToolProps, ToolRegistry } from './toolTypes';
 import { alertController } from '@ionic/vue';
 import * as Keys from './contentKeys';
 import { useToolsContent } from './content';
@@ -71,6 +71,11 @@ export const workflowOrchestratorErrorComponent = defineComponent({
  * @returns An error message if the input is invalid, or `undefined` if the input is valid.
  */
 export const validateWorkflowInput = (input: ToolInput, inputType: ToolInputTypes) => {
+  const inputError = ToolInputSchema.safeParse(input).error;
+  if (inputError) {
+    return `Workflow input is invalid: ${inputError.message}`;
+  }
+
   if (input.type !== inputType) {
     return `Workflow input type mismatch: ${input.type} !== ${inputType}.`;
   }
