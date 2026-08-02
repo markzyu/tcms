@@ -4,11 +4,18 @@ import { useRoute } from 'vue-router';
 import { WorkflowRegistry } from '../tools/workflowTypes';
 import { ToolAction, ToolRegistry } from '../tools/toolTypes';
 import { JsonObjectsEditorTool } from '../tools/JsonObjectsEditor.tool';
+import { onMounted } from 'vue';
 
 const route = useRoute();
 const workflowId = route.params.workflowId as string;
-const inputJson = route.params.inputJson as string;
-const input = JSON.parse(inputJson);
+const inputKey = route.params.inputKey as string;
+const inputJson = sessionStorage.getItem(inputKey);
+const input = inputJson && JSON.parse(inputJson);
+
+onMounted(() => {
+  // clean up session storage for privacy reasons
+  sessionStorage.removeItem(inputKey);
+});
 
 const workflowRegistry: WorkflowRegistry = {
   "template-editor": {

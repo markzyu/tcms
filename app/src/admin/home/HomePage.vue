@@ -5,6 +5,12 @@
   import { useEditableInstanceConfigs, useLocalCDNControls } from './hooks';
   import { useAdminHomePageContent } from './content';
   import { adminHomePageContentKeys } from './contentKeys';
+  import { useRouter } from 'vue-router';
+  import { ToolInput } from '../../tools/toolTypes';
+  import { invokeWithType } from '../types';
+  import { z } from 'zod';
+  import { PageContentSchemaJson } from '@tcms/mini-app-common';
+  import { v4 as uuidv4 } from 'uuid';
 
   const [
     instanceStartBtnLabel, instanceStopBtnLabel, instanceEditBtnLabel, instanceShareBtnLabel,
@@ -45,6 +51,30 @@
   const dismissErrorTooltip = () => {
     localCDNError.value = null;
     showErrorTooltip.value = false;
+  };
+
+  const router = useRouter();
+  const openEditWorkflow = async () => {
+    const schemaString = await invokeWithType(z.string(), 'read_template_schema', {
+      templateScope: '@tcms',
+      templateName: 'template-example-info-card1',
+    });
+    const schema: PageContentSchemaJson = JSON.parse(schemaString);
+    const input: ToolInput = {
+      type: "jsonWithSchema",
+      json: contentJson.value,
+      savePath: {
+        type: "miniAppContent",
+        instanceId: cardInstanceId,
+        _pathAsUrl: '/content/main.en.json',
+      },
+      jsonSchema: schema.jsonSchema,
+      editorUiSchema: schema.editorUiSchema,
+    };
+    const inputString = JSON.stringify(input);
+    const uuid = uuidv4();
+    sessionStorage.setItem(`workflow-${uuid}`, inputString);
+    router.push(`/tools/template-editor/workflow-${uuid}`);
   };
 </script>
 
@@ -93,7 +123,7 @@
             <div class="pointer-events-none absolute bottom-10 left-20 right-20 bg-white p-2 rounded-md shadow-md" v-if="localCDNError && showErrorTooltip">
               {{ localCDNError }}
             </div>
-            <ion-button size="small" fill="clear" data-testid="edit-button">{{ instanceEditBtnLabel }}</ion-button>
+            <ion-button size="small" fill="clear" data-testid="edit-button" @click="openEditWorkflow">{{ instanceEditBtnLabel }}</ion-button>
             <ion-button size="small" fill="clear" data-testid="share-button">{{ instanceShareBtnLabel }}</ion-button>
           </div>
         </ion-card>

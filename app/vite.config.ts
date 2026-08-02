@@ -18,7 +18,21 @@ export default defineConfig(() => ({
 
   build: {
     // Ionic takes up 1MB. For now, we don't expect anything else to take 1MB.
-    chunkSizeWarningLimit: 2048
+    chunkSizeWarningLimit: 2048,
+    // This sets the browser compatibility target for the production build
+    target: 'es2021'
+  },
+
+  // This is needed during dev mode
+  optimizeDeps: {
+    rolldownOptions: {
+      transform: {
+        target: 'es2021'
+      }
+    }
+  },
+  esbuild: {
+    target: 'es2021'
   },
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`

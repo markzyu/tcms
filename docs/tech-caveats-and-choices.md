@@ -25,6 +25,12 @@ This uses Media Queries v4 syntax (media query ranges) as well as Native CSS Nes
 
 Both of these are not supported by older devices. And this project cares about supporting older devices.
 
+## ES2021 Build Targets
+
+To support browsers as old as Safari 15, we need to use ES2021 build targets.
+
+Specifically this is needed because `intl-messageformat` uses the class static initializer syntax.
+
 ## Tauri FS and Path plugin, workaround 1: appDir path
 
 As of the time of project creation, Tauri doesn't have mature support for the App Data folder of mobile OS: https://github.com/tauri-apps/tauri/issues/12276

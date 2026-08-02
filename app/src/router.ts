@@ -29,7 +29,7 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('./admin/settings/SettingsPage.vue'),
       },
       {
-        path: 'tools/:workflowId/:inputJson',
+        path: 'tools/:workflowId/:inputKey',
         component: () => import('./admin/ToolsScreen.vue'),
       },
     ],
