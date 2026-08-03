@@ -44,11 +44,11 @@ export const useWorkflowOrchestratorErrorAlert = (rawErrorMessage: string | null
       }
       history.back();
     });
-    await alert.present();
     onCleanup(() => {
       selfDismiss = true;
       alert.dismiss();
     });
+    await alert.present();
   });
 };
 
