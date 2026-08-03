@@ -175,11 +175,13 @@ describe("WorkflowOrchestrator", () => {
       await expectErrorMatching(/There was no eligible tool to load/);
       expect(spyHistoryBack).not.toHaveBeenCalled();
 
-      const btn = screen.getByTestId("workflow-orchestrator-unmount-btn");
-      await userEvent.setup().click(btn);
-      await waitFor(() => {
-        expect(screen.queryByTestId("workflow-orchestrator-error-alert")).not.toBeInTheDocument();
+      await waitFor(async () => {
+        const btn = screen.getByTestId("workflow-orchestrator-unmount-btn");
+        await userEvent.setup().click(btn);
+        await flushPromises();
+        expect(btn).not.toBeInTheDocument();
       });
+      expect(screen.queryByTestId("workflow-orchestrator-error-alert")).not.toBeInTheDocument();
       expect(spyHistoryBack).not.toHaveBeenCalled();
     });
 

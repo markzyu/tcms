@@ -186,7 +186,7 @@ export const MockOrchestratorWrapper = defineComponent({
     };
   },
   template: `
-    <button class="hidden" @click="unmounted = true" data-testid="workflow-orchestrator-unmount-btn">Unmount</button>
+    <button class="hidden" v-if="!unmounted" @click="unmounted = true" data-testid="workflow-orchestrator-unmount-btn">Unmount</button>
     <WorkflowOrchestrator
       v-if="!unmounted"
       :workflow-id="workflowId"
