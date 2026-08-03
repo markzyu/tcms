@@ -162,8 +162,16 @@ describe("WorkflowOrchestrator", () => {
       await expectErrorMatching(/There was no eligible tool to load/);
       expect(spyHistoryBack).not.toHaveBeenCalled();
 
-      const btn = within(screen.getByTestId("workflow-orchestrator-error-alert")).getByText("Go back");
-      await userEvent.setup().click(btn);
+      await waitFor(async () => {
+        const alert = screen.queryByTestId("workflow-orchestrator-error-alert");
+        if (!alert) {
+          return;
+        }
+        const btn = within(alert).getByText("Go back");
+        await userEvent.setup().click(btn);
+        await flushPromises();
+        expect(btn).not.toBeInTheDocument();
+      });
       expect(spyHistoryBack).toHaveBeenCalled();
     });
 
@@ -175,8 +183,12 @@ describe("WorkflowOrchestrator", () => {
       await expectErrorMatching(/There was no eligible tool to load/);
       expect(spyHistoryBack).not.toHaveBeenCalled();
 
+      expect(screen.getByTestId("workflow-orchestrator-unmount-btn")).toBeInTheDocument();
       await waitFor(async () => {
-        const btn = screen.getByTestId("workflow-orchestrator-unmount-btn");
+        const btn = screen.queryByTestId("workflow-orchestrator-unmount-btn");
+        if (!btn) {
+          return;
+        }
         await userEvent.setup().click(btn);
         await flushPromises();
         expect(btn).not.toBeInTheDocument();

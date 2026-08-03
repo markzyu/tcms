@@ -3,6 +3,7 @@ import { ToolAction, ToolInput, ToolInputTypes, ToolProps, ToolRegistry } from "
 import { WorkflowRegistry } from "./workflowTypes";
 import { EditorUiSchemaJson } from "@tcms/mini-app-common";
 import WorkflowOrchestrator from "./WorkflowOrchestrator.vue";
+import { setWorkflowOrchestratorHasAnimation } from "./WorkflowOrchestratorUtils.ts";
 
 // Mock Tool components and registry for testing
 export const mockToolRegistry: ToolRegistry = {
@@ -174,6 +175,9 @@ export const MockOrchestratorWrapper = defineComponent({
       instanceId: "mock-instance-id",
       instanceUrl: `https://mock.instance.url/mock-instance-id`,
     });
+    
+    // This is necessary because animations break vitest
+    setWorkflowOrchestratorHasAnimation(false);
     return {
       unmounted,
       workflowId: "mock-workflow",

@@ -1,4 +1,4 @@
-import { Component, defineComponent, Ref, watchEffect } from 'vue';
+import { Component, defineComponent, inject, provide, Ref, watchEffect } from 'vue';
 import { convertJsonSchemaToZod } from 'zod-from-json-schema';
 import { ToolInput, ToolInputSchema, ToolInputTypes, ToolProps, ToolRegistry } from './toolTypes';
 import { alertController } from '@ionic/vue';
@@ -7,7 +7,18 @@ import { useToolsContent } from './content';
 import IntlMessageFormat from 'intl-messageformat';
 import { useAppLanguageLocale } from '../utils/i18n';
 
+// This "hasAnimation" flag is necessary because animations break vitest
+const WorkflowOrchestratorHasAnimationKey = Symbol('WorkflowOrchestratorHasAnimation');
+export const useWorkflowOrchestratorHasAnimation = () => {
+  const value = inject<boolean>(WorkflowOrchestratorHasAnimationKey);
+  return value === undefined ? true : value;
+};
+export const setWorkflowOrchestratorHasAnimation = (hasAnimation: boolean) => {
+  provide<boolean>(WorkflowOrchestratorHasAnimationKey, hasAnimation);
+};
+
 export const useWorkflowOrchestratorErrorAlert = (rawErrorMessage: string | null | Ref<string | null>) => {
+  const hasAnimation = useWorkflowOrchestratorHasAnimation();
   const locale = useAppLanguageLocale();
   const [
     header,
@@ -25,6 +36,7 @@ export const useWorkflowOrchestratorErrorAlert = (rawErrorMessage: string | null
     }
 
     const alert = await alertController.create({
+      animated: hasAnimation,
       header: header.value,
       message: String(new IntlMessageFormat(errorMessageWrapper.value, locale.value).format({errorMessage})),
       buttons: [
