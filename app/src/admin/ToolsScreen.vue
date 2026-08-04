@@ -18,8 +18,8 @@ import { z } from 'zod';
 
 const route = useRoute();
 const workflowId = route.params.workflowId as string;
-const inputKey = route.params.inputKey as string;
-const inputJson = sessionStorage.getItem(inputKey);
+const inputId = route.params.inputId as string;
+const inputJson = sessionStorage.getItem(inputId);
 const input = inputJson && JSON.parse(inputJson);
 
 onMounted(() => {
@@ -28,7 +28,7 @@ onMounted(() => {
   }
 
   // clean up session storage for privacy reasons
-  sessionStorage.removeItem(inputKey);
+  sessionStorage.removeItem(inputId);
 });
 
 const workflowRegistry: WorkflowRegistry = {
@@ -72,6 +72,7 @@ const onAction = async (action: ToolAction) => {
       const data: WorkflowFinishedEventData = {
         ...action,
         workflowId,
+        inputId,
       };
       window.dispatchEvent(new WorkflowFinishedEvent(data));
       history.back();
@@ -91,14 +92,18 @@ export const useWorkflow = () => {
   const startWorkflow = async (workflowId: string, input: ToolInput): Promise<void> => {
     const inputString = JSON.stringify(input);
     const uuid = uuidv4();
-    sessionStorage.setItem(`workflow-${uuid}`, inputString);
-    router.push(`/tools/template-editor/workflow-${uuid}`);
+    const inputId = `workflow-${uuid}`;
+    sessionStorage.setItem(inputId, inputString);
+    router.push(`/tools/${workflowId}/${inputId}`);
     return new Promise((resolve, reject) => {
       window.addEventListener("workflow-finished", (event: CustomEvent) => {
         if (!(event instanceof WorkflowFinishedEvent)) {
           return;
         }
         if (event.detail.workflowId !== workflowId) {
+          return;
+        }
+        if (event.detail.inputId !== inputId) {
           return;
         }
         if (!event.detail.isSuccessful) {

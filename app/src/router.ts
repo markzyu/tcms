@@ -9,7 +9,7 @@ const routes: Array<RouteRecordRaw> = [
     redirect: '/home',
   },
   {
-    path: '/tools/:workflowId/:inputKey',
+    path: '/tools/:workflowId/:inputId',
     component: () => import('./admin/ToolsScreen.vue'),
   },
   {

@@ -59,6 +59,7 @@ export const invokeWithTypeAsMaybe = async <T>(resultSchema: z.ZodSchema<T>, com
 
 export type WorkflowFinishedEventData = z.infer<typeof ToolCloseWorkflowActionSchema> & {
   workflowId: string;
+  inputId: string;
 };
 
 export class WorkflowFinishedEvent extends CustomEvent<WorkflowFinishedEventData> {
