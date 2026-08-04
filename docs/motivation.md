@@ -8,17 +8,17 @@ Why this project exists, who it is for, and how the use cases fit together. Comp
 
 I picked the name "Thor" because Hammer is already a CMS on macOS. And I just happened to like the character Thor.
 
-Thor CMS started as “**why can’t we package great desktop web frameworks and relevant tools for everyday phone users?**”. Phones since Android 8 have always been able to run as a low-wattage server. But they are only ever used in harmful phone farms. Let's change that.
+Thor CMS started as “**why can’t we package great web development frameworks and relevant desktop tools for everyday phone users?**”. Phones since Android 8 have always been able to run as a low-wattage server. But they are only ever used in harmful phone farms. Let's change that.
+
+-----
+
+(The following part of the documentation is an AI summary)
 
 This software aims to bridge the gap for normal people to use their phones more productively:
 
 > Local-first — author on phone, preview on device or LAN, **ship** via pack drop, wall board, or synced static bucket when online.
 
 > Phone as a LAN server — foreground only, LAN only for everyday, private sharing; But reverse proxying, pack drop exports, and reverse CDN are also provided, as the scalable options for power users.
-
------
-
-(The following part of the documentation is an AI summary)
 
 ## Potential use cases
 

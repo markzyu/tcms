@@ -1,8 +1,8 @@
 This project makes use of AI in the following ways:
 
-* Most of the markdown documentations files are generated initially by AI, based on a summary of my original ideas.
+* Most of the documentations / markdown files are generated initially by AI, based on a summary of my original ideas.
 * Most of the code, except unit tests, is written by a human with indirect AI assistance, including:
-  * Using Cursor Tab alongside Vim mode to bulk edit code and long variable names/paths.
+  * Using Cursor Tab alongside Vim mode to bulk edit code and to complete long variable names/paths.
   * Using AI Agent to generate boilerplate or to perform repetitive refactors.
   * Using AI modes to review and suggest changes to the code.
 * Unit tests are written by AI and reviewed by a human.
