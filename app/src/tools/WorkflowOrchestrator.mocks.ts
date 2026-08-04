@@ -185,12 +185,16 @@ export const MockOrchestratorWrapper = defineComponent({
       toolRegistry: mockToolRegistry,
       input,
       onAction: props.onAction ?? (async (action: ToolAction) => {
+        if (action.type === "closeWorkflow") {
+          unmounted.value = true;
+          return;
+        }
         console.log(action);
       }),
     };
   },
   template: `
-    <button class="hidden" @click="unmounted = true" data-testid="workflow-orchestrator-unmount-btn">Unmount</button>
+    <button v-if="!unmounted" class="hidden" @click="unmounted = true" data-testid="workflow-orchestrator-unmount-btn">Unmount</button>
     <WorkflowOrchestrator
       v-if="!unmounted"
       :workflow-id="workflowId"

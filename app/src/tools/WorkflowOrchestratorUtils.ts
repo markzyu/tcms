@@ -1,6 +1,6 @@
-import { Component, defineComponent, inject, provide, Ref, watchEffect } from 'vue';
+import { Component, defineComponent, inject, PropType, provide, Ref, watchEffect } from 'vue';
 import { convertJsonSchemaToZod } from 'zod-from-json-schema';
-import { ToolInput, ToolInputSchema, ToolInputTypes, ToolProps, ToolRegistry } from './toolTypes';
+import { ToolAction, ToolInput, ToolInputSchema, ToolInputTypes, ToolProps, ToolRegistry } from './toolTypes';
 import { alertController } from '@ionic/vue';
 import * as Keys from './contentKeys';
 import { useToolsContent } from './content';
@@ -17,7 +17,9 @@ export const setWorkflowOrchestratorHasAnimation = (hasAnimation: boolean) => {
   provide<boolean>(WorkflowOrchestratorHasAnimationKey, hasAnimation);
 };
 
-export const useWorkflowOrchestratorErrorAlert = (rawErrorMessage: string | null | Ref<string | null>) => {
+type ActionFunction = (action: ToolAction) => Promise<void>;
+
+export const useWorkflowOrchestratorErrorAlert = (rawErrorMessage: string | null | Ref<string | null>, onAction: ActionFunction) => {
   const hasAnimation = useWorkflowOrchestratorHasAnimation();
   const locale = useAppLanguageLocale();
   const [
@@ -49,21 +51,18 @@ export const useWorkflowOrchestratorErrorAlert = (rawErrorMessage: string | null
         "data-testid": "workflow-orchestrator-error-alert",
       }
     });
-    let selfDismiss = false;
     alert.onDidDismiss().finally(() => {
-      if (selfDismiss) {
-        return;
-      }
-      history.back();
+      onAction({
+        type: "closeWorkflow",
+        isSuccessful: false,
+      });
     });
     await alert.present();
     onCleanup(() => {
-      selfDismiss = true;
       alert.dismiss();
     });
   });
 };
-
 
 export const workflowOrchestratorErrorComponent = defineComponent({
   name: 'WorkflowOrchestratorErrorComponent',
@@ -72,9 +71,13 @@ export const workflowOrchestratorErrorComponent = defineComponent({
       type: String,
       required: true,
     },
+    onAction: {
+      type: Function as PropType<ActionFunction>,
+      required: true,
+    },
   },
-  setup({ errorMessage }) {
-    useWorkflowOrchestratorErrorAlert(errorMessage);
+  setup({ errorMessage, onAction }) {
+    useWorkflowOrchestratorErrorAlert(errorMessage, onAction);
   },
   template: `<div/>`,
 });

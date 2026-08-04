@@ -146,6 +146,7 @@ export const ToolOpenToolActionSchema = z.object({
  */
 export const ToolCloseWorkflowActionSchema = z.object({
   type: z.literal("closeWorkflow"),
+  isSuccessful: z.boolean(),
 });
 
 /**

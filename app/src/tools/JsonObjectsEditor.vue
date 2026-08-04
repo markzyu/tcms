@@ -436,6 +436,7 @@ const onSave = async () => {
   });
   await props.onAction({
     type: "closeWorkflow",
+    isSuccessful: true,
   });
 };
 
@@ -451,6 +452,7 @@ const onBack = async () => {
       handler: () => {
         props.onAction({
           type: "closeWorkflow",
+          isSuccessful: true,
         });
       },
     },
@@ -470,6 +472,7 @@ const onBack = async () => {
   }
   props.onAction({
     type: "closeWorkflow",
+    isSuccessful: true,
   });
 };
 

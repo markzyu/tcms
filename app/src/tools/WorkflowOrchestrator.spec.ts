@@ -70,13 +70,7 @@ async function renderOrchestrator(overrides: Partial<OrchestratorTestProps> = {}
   return { onAction };
 }
 
-const spyHistoryBack = vi.spyOn(history, "back");
-
 describe("WorkflowOrchestrator", () => {
-  beforeEach(() => {
-    spyHistoryBack.mockClear();
-  });
-
   describe("happy paths", () => {
     it("loads the first eligible tool with the storybook default args", async () => {
       const { onAction } = await renderOrchestrator();
@@ -155,28 +149,32 @@ describe("WorkflowOrchestrator", () => {
     });
 
     it("dismisses the error alert when WorkflowOrchestrator is unmounted from the outside", async () => {
-      await renderOrchestrator({
+      const { onAction } = await renderOrchestrator({
         workflowToolIds: "",
       });
 
       await expectErrorMatching(/There was no eligible tool to load/);
-      expect(spyHistoryBack).not.toHaveBeenCalled();
+      expect(onAction).not.toHaveBeenCalled();
 
       const btn = screen.getByTestId("workflow-orchestrator-unmount-btn");
       await userEvent.setup().click(btn);
       await waitFor(() => {
-        expect(screen.queryByTestId("workflow-orchestrator-error-alert")).not.toBeInTheDocument();
+
       });
-      expect(spyHistoryBack).not.toHaveBeenCalled();
+      expect(screen.queryByTestId("workflow-orchestrator-error-alert")).not.toBeInTheDocument();
+      expect(onAction).toHaveBeenCalledWith(expect.objectContaining({
+        type: "closeWorkflow",
+        isSuccessful: false,
+      }));
     });
 
     it("goes back to the previous page when the error alert is dismissed", async () => {
-      await renderOrchestrator({
+      const { onAction } = await renderOrchestrator({
         workflowToolIds: "",
       });
 
       await expectErrorMatching(/There was no eligible tool to load/);
-      expect(spyHistoryBack).not.toHaveBeenCalled();
+      expect(onAction).not.toHaveBeenCalled();
 
       await waitFor(async () => {
         const alert = screen.queryByTestId("workflow-orchestrator-error-alert");
@@ -188,7 +186,10 @@ describe("WorkflowOrchestrator", () => {
         await flushPromises();
         expect(btn).not.toBeInTheDocument();
       });
-      expect(spyHistoryBack).toHaveBeenCalled();
+      expect(onAction).toHaveBeenCalledWith(expect.objectContaining({
+        type: "closeWorkflow",
+        isSuccessful: false,
+      }));
     });
 
     it("reports skip reason when json-arrays-editor cannot handle object input", async () => {

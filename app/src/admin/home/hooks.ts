@@ -4,7 +4,7 @@ import { invokeWithType, LcdnConfig, LcdnInstanceConfig, LcdnInstanceConfigSchem
 import { join } from "@tauri-apps/api/path";
 import { z } from "zod";
 import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
-import { onIonViewDidEnter, toastController } from "@ionic/vue";
+import { toastController } from "@ionic/vue";
 import { debounce } from "lodash";
 
 /**
@@ -111,7 +111,6 @@ export const useEditableInstanceConfigs = (instanceId: string, onUrlUpdate: (url
   }
 
   onMounted(updateConfigsFromDisk);
-  onIonViewDidEnter(updateConfigsFromDisk);
 
   const updateConfigsOnDisk = debounce(async (slug: string, rawContentJson: string) => {
     if (!instanceConfig.value) return;
@@ -143,5 +142,6 @@ export const useEditableInstanceConfigs = (instanceId: string, onUrlUpdate: (url
     contentJson,
     urlSlug,
     updateConfigsOnDisk,
+    updateConfigsFromDisk,
   }
 };

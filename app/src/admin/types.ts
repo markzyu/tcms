@@ -1,5 +1,6 @@
 import { invoke, InvokeArgs } from "@tauri-apps/api/core";
 import { z } from "zod";
+import { ToolCloseWorkflowActionSchema } from "../tools/toolTypes";
 
 export const LcdnStatusSchema = z.object({
   port: z.number().int().positive().nullable(),
@@ -55,3 +56,19 @@ export const invokeWithTypeAsMaybe = async <T>(resultSchema: z.ZodSchema<T>, com
     return null;
   }
 };
+
+export type WorkflowFinishedEventData = z.infer<typeof ToolCloseWorkflowActionSchema> & {
+  workflowId: string;
+};
+
+export class WorkflowFinishedEvent extends CustomEvent<WorkflowFinishedEventData> {
+  constructor(data: WorkflowFinishedEventData) {
+    super("workflow-finished", { detail: data });
+  }
+}
+
+declare global {
+  interface WindowEventMap {
+    "workflow-finished": WorkflowFinishedEvent;
+  }
+}

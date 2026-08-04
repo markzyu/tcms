@@ -4,13 +4,12 @@
   import { computed, ref, watch } from 'vue';
   import { useEditableInstanceConfigs, useLocalCDNControls } from './hooks';
   import { useAdminHomePageContent } from './content';
+  import { useWorkflow } from '../ToolsScreen.vue';
   import { adminHomePageContentKeys } from './contentKeys';
-  import { useRouter } from 'vue-router';
   import { ToolInput } from '../../tools/toolTypes';
   import { invokeWithType } from '../types';
   import { z } from 'zod';
   import { PageContentSchemaJson } from '@tcms/mini-app-common';
-  import { v4 as uuidv4 } from 'uuid';
 
   const [
     instanceStartBtnLabel, instanceStopBtnLabel, instanceEditBtnLabel, instanceShareBtnLabel,
@@ -35,6 +34,7 @@
   const {
     isLoadingInstanceConfig,
     contentJson,
+    updateConfigsFromDisk,
     urlSlug,
   } = useEditableInstanceConfigs(cardInstanceId, (url) => {
     urlToVisit.value = url;
@@ -53,28 +53,30 @@
     showErrorTooltip.value = false;
   };
 
-  const router = useRouter();
+  const { startWorkflow } = useWorkflow();
   const openEditWorkflow = async () => {
-    const schemaString = await invokeWithType(z.string(), 'read_template_schema', {
-      templateScope: '@tcms',
-      templateName: 'template-example-info-card1',
-    });
-    const schema: PageContentSchemaJson = JSON.parse(schemaString);
-    const input: ToolInput = {
-      type: "jsonWithSchema",
-      json: JSON.parse(contentJson.value ?? "{}"),
-      filePath: {
-        type: "miniAppContent",
-        instanceId: cardInstanceId,
-        _pathAsUrl: '/content/main.en.json',
-      },
-      jsonSchema: schema.jsonSchema,
-      editorUiSchema: schema.editorUiSchema,
-    };
-    const inputString = JSON.stringify(input);
-    const uuid = uuidv4();
-    sessionStorage.setItem(`workflow-${uuid}`, inputString);
-    router.push(`/tools/template-editor/workflow-${uuid}`);
+    try {
+      const schemaString = await invokeWithType(z.string(), 'read_template_schema', {
+        templateScope: '@tcms',
+        templateName: 'template-example-info-card1',
+      });
+      const schema: PageContentSchemaJson = JSON.parse(schemaString);
+      const input: ToolInput = {
+        type: "jsonWithSchema",
+        json: JSON.parse(contentJson.value ?? "{}"),
+        filePath: {
+          type: "miniAppContent",
+          instanceId: cardInstanceId,
+          _pathAsUrl: '/content/main.en.json',
+        },
+        jsonSchema: schema.jsonSchema,
+        editorUiSchema: schema.editorUiSchema,
+      };
+      await startWorkflow('template-editor', input);
+      await updateConfigsFromDisk();
+    } catch (error) {
+      console.error(error);
+    }
   };
 </script>
 

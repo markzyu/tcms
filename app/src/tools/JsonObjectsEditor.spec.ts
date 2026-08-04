@@ -256,7 +256,7 @@ describe("JsonObjectsEditor", () => {
       await userEvent.click(within(alert2).getByText("OK"));
       await flushPromises();
       expect(onAction).toHaveBeenCalledWith(
-        expect.objectContaining({ type: "closeWorkflow" }),
+        expect.objectContaining({ type: "closeWorkflow", isSuccessful: true }),
       );
     });
 
@@ -395,7 +395,7 @@ describe("JsonObjectsEditor", () => {
         }),
       );
       expect(onAction).toHaveBeenCalledWith(
-        expect.objectContaining({ type: "closeWorkflow" }),
+        expect.objectContaining({ type: "closeWorkflow", isSuccessful: true }),
       );
     });
 

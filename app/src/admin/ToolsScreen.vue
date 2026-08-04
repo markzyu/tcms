@@ -1,14 +1,19 @@
+<!--
+  This is a wrapper of WorkflowOrchestrator, integrated into the admin shell, including the actual 
+  implementation of onAction handlers, and Ionic routing logics.
+-->
 <script setup lang="ts">
 import WorkflowOrchestrator from '../tools/WorkflowOrchestrator.vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { WorkflowRegistry } from '../tools/workflowTypes';
-import { GenericFilePath, ToolAction, ToolRegistry } from '../tools/toolTypes';
+import { GenericFilePath, ToolAction, ToolInput, ToolRegistry } from '../tools/toolTypes';
 import { JsonObjectsEditorTool } from '../tools/JsonObjectsEditor.tool';
 import { onMounted } from 'vue';
 import { IonPage, IonRouterOutlet } from '@ionic/vue';
 import { exists, writeTextFile } from '@tauri-apps/plugin-fs';
 import { join } from '@tauri-apps/api/path';
-import { invokeWithType } from './types.ts';
+import { invokeWithType, WorkflowFinishedEvent, WorkflowFinishedEventData } from './types.ts';
+import { v4 as uuidv4 } from 'uuid';
 import { z } from 'zod';
 
 const route = useRoute();
@@ -63,6 +68,14 @@ const convertPath = async (path: GenericFilePath): Promise<string> => {
 
 const onAction = async (action: ToolAction) => {
   switch (action.type) {
+    case "closeWorkflow":
+      const data: WorkflowFinishedEventData = {
+        ...action,
+        workflowId,
+      };
+      window.dispatchEvent(new WorkflowFinishedEvent(data));
+      history.back();
+      return;
     case "saveText":
       const path = await convertPath(action.filePath);
       await writeTextFile(path, action.text);
@@ -70,6 +83,34 @@ const onAction = async (action: ToolAction) => {
   }
   console.log(action);
 };
+</script>
+
+<script lang="ts">
+export const useWorkflow = () => {
+  const router = useRouter();
+  const startWorkflow = async (workflowId: string, input: ToolInput): Promise<void> => {
+    const inputString = JSON.stringify(input);
+    const uuid = uuidv4();
+    sessionStorage.setItem(`workflow-${uuid}`, inputString);
+    router.push(`/tools/template-editor/workflow-${uuid}`);
+    return new Promise((resolve, reject) => {
+      window.addEventListener("workflow-finished", (event: CustomEvent) => {
+        if (!(event instanceof WorkflowFinishedEvent)) {
+          return;
+        }
+        if (event.detail.workflowId !== workflowId) {
+          return;
+        }
+        if (!event.detail.isSuccessful) {
+          reject(new Error("Workflow failed"));
+          return;
+        }
+        resolve();
+      });
+    });
+  };
+  return { startWorkflow };
+}
 </script>
 
 <template>

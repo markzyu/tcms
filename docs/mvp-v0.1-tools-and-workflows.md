@@ -28,9 +28,20 @@ Actions are a descriptive data created such that, individual tools do not need t
 
 (Workflows are not limited to Actions, and in fact have access to session storage, because they are just a data type that tell the workflow orchestrator what to do. All tooling code lives in Tool components. And the workflow orchestrator itself lives in the Admin shell)
 
+### Workflow Orchestrator
+
+The `WorkflowOrchestrator` handles the lifecycle of a workflow and its tools. There are technically two different WorkflowOrchestrator implementations:
+
+1. Core lifecycle management: `WorkflowOrchestrator` component in `app/src/tools` handles loading and error handling, but should not have direct access to admin shell APIs. (Eventually this component will be loaded inside a sandboxed iframe instead)
+2. Wrapper for admin shell integration: The `ToolsScreen` component in `app/src/admin` is an `ion-page` with a registered route. It is also where `onAction` handlers are implemented.
+
 ### Connecting workflows to each other
 
-Tools and workflows **do not return anything** other than the promise of the boolean "isSuccess" flag, indicating when/whether the workflow completed successfully. Instead of outputting the result in the promise, they rely on Actions to write output files, or to start secondary workflows.
+Tools and workflows **do not return anything** directly. Instead of outputting the result in a promise, they rely on Actions to write output files, or to start secondary workflows.
+
+The success/failure boolean result is returned via the `isSuccessful` field of the `closeWorkflow` action.
+
+Any newly created files and data are sent to storage via other Actions.
 
 When a secondary workflow finishes, the workflow orchestrator / admin shell doesn't actually "resume" from the original workflow as if the components were never unmounted. Instead, the original workflow will restart from the saved input states (which are just references) + the new input data.
 

@@ -28,7 +28,7 @@ const toolsToLoad = computed(() => workflow.value?.toolIds ?? []);
 const currentToolId = ref<string | null>(null);
 const errorMessage = ref<string | null>(null);
 const errorMessageForErrorComponent = ref<string | null>(null);
-useWorkflowOrchestratorErrorAlert(errorMessage);
+useWorkflowOrchestratorErrorAlert(errorMessage, props.onAction);
 
 const locale = useAppLanguageLocale();
 const [loadingMessageWrapper] = useToolsContent([Keys.WorkflowOrchestratorLoadingMessageWrapper]);
@@ -42,8 +42,6 @@ onErrorCaptured((error) => {
 const onAction = async (action: ToolAction) => {
   switch (action.type) {
     case "closeWorkflow":
-      history.back();
-      break;
     case "chooseMedia":
     case "openTool":
     case "reloadLcdnConfigs":
