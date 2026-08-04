@@ -34,7 +34,7 @@ const meta = {
       },
       jsonSchema: schema.jsonSchema,
       editorUiSchema: schema.editorUiSchema as any,
-      savePath: {
+      filePath: {
         type: 'miniAppContent',
         instanceId: '123',
         _pathAsUrl: '/content/main.en.json',
@@ -63,7 +63,7 @@ export const WithArrayFields: Story = {
       },
       jsonSchema: schema.jsonSchema,
       editorUiSchema: schema.editorUiSchema as any,
-      savePath: {
+      filePath: {
         type: 'miniAppContent',
         instanceId: '123',
         _pathAsUrl: '/content/main.en.json',

@@ -58,9 +58,10 @@ export const ToolJsonWithSchemaInputSchema = z.object({
   json: z.any(),
   /** The path within the json object that is being edited */
   jsonPath: z.string().optional(),
+  /** The location of json data on disk, for writing / refreshing the data from / to RAM */
+  filePath: GenericFilePathSchema,
   jsonSchema: z.object<Record<string, unknown>>(),
   editorUiSchema: EditorUiSchemaJsonSchema,
-  savePath: GenericFilePathSchema,
 });
 
 /** Input as a mini app instance (id and url) */

@@ -63,7 +63,7 @@
     const input: ToolInput = {
       type: "jsonWithSchema",
       json: JSON.parse(contentJson.value ?? "{}"),
-      savePath: {
+      filePath: {
         type: "miniAppContent",
         instanceId: cardInstanceId,
         _pathAsUrl: '/content/main.en.json',

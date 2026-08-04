@@ -431,7 +431,7 @@ const onSave = async () => {
     type: "saveText",
     text: JSON.stringify(jsonData.value, null, 2),
     filePath: {
-      ...props.input.savePath
+      ...props.input.filePath
     }
   });
   await props.onAction({

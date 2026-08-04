@@ -165,7 +165,7 @@ export const MockOrchestratorWrapper = defineComponent({
       json: props.inputJson,
       jsonSchema: props.inputJsonSchema,
       editorUiSchema,
-      savePath: {
+      filePath: {
         type: "miniAppContent",
         instanceId: "mock-instance-id",
         _pathAsUrl: '/content/main.en.json',

@@ -8,7 +8,7 @@ import JsonObjectsEditor from "./JsonObjectsEditor.vue";
 
 import {
   allGroupNames,
-  defaultSavePath,
+  defaultFilePath,
   singletonOnlyGroupNames,
   withArrayFieldsInitialDebugJson,
   withArrayFieldsInitialRender,
@@ -390,7 +390,7 @@ describe("JsonObjectsEditor", () => {
       expect(onAction).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "saveText",
-          filePath: defaultSavePath,
+          filePath: defaultFilePath,
           text: expect.stringContaining("\"email\": \"valid@example.com\""),
         }),
       );

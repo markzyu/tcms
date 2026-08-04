@@ -1,6 +1,6 @@
 import schema from "./JsonObjectsEditor.schema1.json";
 
-export const defaultSavePath = {
+export const defaultFilePath = {
   type: "miniAppContent" as const,
   instanceId: "123",
   _pathAsUrl: "/content/main.en.json",
@@ -36,7 +36,7 @@ export const withArrayFieldsProps = {
     json: withArrayFieldsJson,
     jsonSchema: schema.jsonSchema,
     editorUiSchema: schema.editorUiSchema,
-    savePath: defaultSavePath,
+    filePath: defaultFilePath,
   },
 };
 
