@@ -154,6 +154,22 @@ describe("WorkflowOrchestrator", () => {
       await expectErrorMatching(/There was no eligible tool to load/);
     });
 
+    it("dismisses the error alert when WorkflowOrchestrator is unmounted from the outside", async () => {
+      await renderOrchestrator({
+        workflowToolIds: "",
+      });
+
+      await expectErrorMatching(/There was no eligible tool to load/);
+      expect(spyHistoryBack).not.toHaveBeenCalled();
+
+      const btn = screen.getByTestId("workflow-orchestrator-unmount-btn");
+      await userEvent.setup().click(btn);
+      await waitFor(() => {
+        expect(screen.queryByTestId("workflow-orchestrator-error-alert")).not.toBeInTheDocument();
+      });
+      expect(spyHistoryBack).not.toHaveBeenCalled();
+    });
+
     it("goes back to the previous page when the error alert is dismissed", async () => {
       await renderOrchestrator({
         workflowToolIds: "",
@@ -173,22 +189,6 @@ describe("WorkflowOrchestrator", () => {
         expect(btn).not.toBeInTheDocument();
       });
       expect(spyHistoryBack).toHaveBeenCalled();
-    });
-
-    it("dismisses the error alert when WorkflowOrchestrator is unmounted from the outside", async () => {
-      await renderOrchestrator({
-        workflowToolIds: "",
-      });
-
-      await expectErrorMatching(/There was no eligible tool to load/);
-      expect(spyHistoryBack).not.toHaveBeenCalled();
-
-      const btn = screen.getByTestId("workflow-orchestrator-unmount-btn");
-      await userEvent.setup().click(btn);
-      await waitFor(() => {
-        expect(screen.queryByTestId("workflow-orchestrator-error-alert")).not.toBeInTheDocument();
-      });
-      expect(spyHistoryBack).not.toHaveBeenCalled();
     });
 
     it("reports skip reason when json-arrays-editor cannot handle object input", async () => {
