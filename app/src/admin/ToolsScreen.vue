@@ -12,7 +12,7 @@ import { onMounted } from 'vue';
 import { IonPage, IonRouterOutlet } from '@ionic/vue';
 import { exists, writeTextFile } from '@tauri-apps/plugin-fs';
 import { join } from '@tauri-apps/api/path';
-import { invokeWithType, WorkflowFinishedEvent, WorkflowFinishedEventData } from './types.ts';
+import { invokeWithType, WorkflowFinishedEvent, WorkflowFinishedEventData, WorkflowFinishedPromise } from './types.ts';
 import { v4 as uuidv4 } from 'uuid';
 import { z } from 'zod';
 
@@ -89,28 +89,29 @@ const onAction = async (action: ToolAction) => {
 <script lang="ts">
 export const useWorkflow = () => {
   const router = useRouter();
-  const startWorkflow = async (workflowId: string, input: ToolInput): Promise<void> => {
+  const startWorkflow = async (workflowId: string, input: ToolInput): WorkflowFinishedPromise => {
     const inputString = JSON.stringify(input);
     const uuid = uuidv4();
     const inputId = `workflow-${uuid}`;
     sessionStorage.setItem(inputId, inputString);
     router.push(`/tools/${workflowId}/${inputId}`);
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       window.addEventListener("workflow-finished", (event: CustomEvent) => {
         if (!(event instanceof WorkflowFinishedEvent)) {
           return;
         }
-        if (event.detail.workflowId !== workflowId) {
+        const {
+          workflowId: eventWorkflowId,
+          inputId: eventInputId,
+          ...result
+        } = event.detail;
+        if (workflowId !== eventWorkflowId) {
           return;
         }
-        if (event.detail.inputId !== inputId) {
+        if (inputId !== eventInputId) {
           return;
         }
-        if (!event.detail.isSuccessful) {
-          reject(new Error("Workflow failed"));
-          return;
-        }
-        resolve();
+        resolve(result);
       });
     });
   };

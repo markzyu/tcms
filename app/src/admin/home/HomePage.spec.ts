@@ -1,18 +1,17 @@
-import "./mocks.ts";
-
 import { flushPromises, type VueWrapper } from "@vue/test-utils";
 import { screen, waitFor } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
 
+import {
+  getAdminTestMocks,
+  INITIAL_SLUG,
+  resetAdminTestMocks,
+} from "../mocks.ts";
+
 import { clickIonButton, renderTest } from "../../utils/testUtils.ts";
 import HomePage from "./HomePage.vue";
-import {
-  getHomeTestMocks,
-  INITIAL_SLUG,
-  resetHomeTestMocks,
-} from "./mocks.ts";
 
-const { mockFs, mockTauri } = getHomeTestMocks();
+const { mockFs, mockTauri } = getAdminTestMocks();
 
 async function getUrlSlugNativeInput() {
   const ionInputElement = screen.getByTestId("url-slug-input") as unknown as HTMLIonInputElement;
@@ -68,7 +67,7 @@ async function setContentJson(_page: VueWrapper, contentJson: string) {
 
 describe("HomePage", () => {
   beforeEach(() => {
-    resetHomeTestMocks();
+    resetAdminTestMocks();
   });
 
   it("renders all components", async () => {

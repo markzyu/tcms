@@ -1,5 +1,5 @@
 import { vi, type Mock } from "vitest";
-import { LcdnInstanceConfig, LcdnStatus } from "../types";
+import { LcdnInstanceConfig, LcdnStatus } from "./types";
 
 export const INITIAL_SLUG = "my-contact-card";
 export const INSTANCE_ID = "6fa27a2f-2f1e-413d-a842-424242424242";
@@ -30,7 +30,7 @@ function createReadTextFileImplementation() {
   });
 }
 
-const homeTestMocks = vi.hoisted(() => {
+const adminTestMocks = vi.hoisted(() => {
   let wantStartError = false;
   let wantStopError = false;
   let wantStatusError = false;
@@ -114,11 +114,14 @@ const homeTestMocks = vi.hoisted(() => {
   const mockFs = {
     readTextFile: createReadTextFileImplementation(),
     writeTextFile: vi.fn().mockResolvedValue(undefined),
+    exists: vi.fn().mockResolvedValue(true),
     reset: vi.fn().mockImplementation(() => {
       mockFs.readTextFile.mockReset();
       mockFs.readTextFile.mockImplementation(createReadTextFileImplementation());
       mockFs.writeTextFile.mockReset();
       mockFs.writeTextFile.mockResolvedValue(undefined);
+      mockFs.exists.mockReset();
+      mockFs.exists.mockResolvedValue(true);
     }),
   };
 
@@ -144,29 +147,40 @@ const homeTestMocks = vi.hoisted(() => {
   };
 });
 
-export function getHomeTestMocks() {
-  return homeTestMocks;
+export function getAdminTestMocks() {
+  return adminTestMocks;
 }
 
+/** @deprecated Use getAdminTestMocks */
+export function getHomeTestMocks() {
+  return adminTestMocks;
+}
+
+export function resetAdminTestMocks() {
+  adminTestMocks.mockTauri.methods.reset();
+  adminTestMocks.mockTauri.methods.ensure_os_data_dir.mockClear();
+  adminTestMocks.mockTauri.methods.lcdn_start.mockClear();
+  adminTestMocks.mockTauri.methods.lcdn_stop.mockClear();
+  adminTestMocks.mockTauri.methods.lcdn_status.mockClear();
+  adminTestMocks.mockTauri.methods.lcdn_reload_configs.mockClear();
+  adminTestMocks.mockTauri.mockInvoke.mockClear();
+  adminTestMocks.mockFs.reset();
+  adminTestMocks.mockToast.reset();
+}
+
+/** @deprecated Use resetAdminTestMocks */
 export function resetHomeTestMocks() {
-  homeTestMocks.mockTauri.methods.reset();
-  homeTestMocks.mockTauri.methods.ensure_os_data_dir.mockClear();
-  homeTestMocks.mockTauri.methods.lcdn_start.mockClear();
-  homeTestMocks.mockTauri.methods.lcdn_stop.mockClear();
-  homeTestMocks.mockTauri.methods.lcdn_status.mockClear();
-  homeTestMocks.mockTauri.methods.lcdn_reload_configs.mockClear();
-  homeTestMocks.mockTauri.mockInvoke.mockClear();
-  homeTestMocks.mockFs.reset();
-  homeTestMocks.mockToast.reset();
+  resetAdminTestMocks();
 }
 
 vi.mock("@tauri-apps/api/core", () => ({
-  invoke: homeTestMocks.mockTauri.mockInvoke,
+  invoke: adminTestMocks.mockTauri.mockInvoke,
 }));
 
 vi.mock("@tauri-apps/plugin-fs", () => ({
-  readTextFile: (...args: unknown[]) => homeTestMocks.mockFs.readTextFile(...args),
-  writeTextFile: (...args: unknown[]) => homeTestMocks.mockFs.writeTextFile(...args),
+  readTextFile: (...args: unknown[]) => adminTestMocks.mockFs.readTextFile(...args),
+  writeTextFile: (...args: unknown[]) => adminTestMocks.mockFs.writeTextFile(...args),
+  exists: (...args: unknown[]) => adminTestMocks.mockFs.exists(...args),
 }));
 
 vi.mock("@tauri-apps/api/path", () => ({
@@ -178,7 +192,7 @@ vi.mock("@ionic/vue", async (importOriginal) => {
   return {
     ...actual,
     toastController: {
-      create: (...args: unknown[]) => homeTestMocks.mockToast.create(...args),
+      create: (...args: unknown[]) => adminTestMocks.mockToast.create(...args),
     },
   };
 });

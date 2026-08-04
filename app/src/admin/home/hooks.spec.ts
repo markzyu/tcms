@@ -1,25 +1,23 @@
 import { expect, vi } from "vitest";
-import "./mocks";
-
 import { defineComponent, nextTick } from "vue";
 import { flushPromises, mount } from "@vue/test-utils";
 import { IonicVue } from "@ionic/vue";
 
 import {
   defaultInstanceConfig,
-  getHomeTestMocks,
+  getAdminTestMocks,
   INITIAL_CONTENT_JSON,
   INITIAL_SLUG,
   INSTANCE_ID,
-  resetHomeTestMocks,
-} from "./mocks";
+  resetAdminTestMocks,
+} from "../mocks";
 import { useEditableInstanceConfigs, useLocalCDNControls } from "./hooks";
 
-const { mockTauri, mockFs, mockToast } = getHomeTestMocks();
+const { mockTauri, mockFs, mockToast } = getAdminTestMocks();
 
 describe("useLocalCDNControls", () => {
   beforeEach(() => {
-    resetHomeTestMocks();
+    resetAdminTestMocks();
   });
 
   it("exports all fields and manages starting, stopping, and running flags", async () => {
@@ -92,7 +90,7 @@ describe("useLocalCDNControls", () => {
 
 describe("useEditableInstanceConfigs", () => {
   beforeEach(() => {
-    resetHomeTestMocks();
+    resetAdminTestMocks();
     vi.useFakeTimers();
   });
 

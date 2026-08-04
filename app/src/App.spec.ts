@@ -30,11 +30,7 @@ vi.mock("@tauri-apps/api/path", () => ({
 const TAB_NAMES = ["Library", "Home", "Settings"] as const;
 
 async function renderApp() {
-  renderTest(App, {
-    global: {
-      plugins: [router],
-    },
-  });
+  renderTest(App, { router });
 
   await router.isReady();
   await flushPromises();

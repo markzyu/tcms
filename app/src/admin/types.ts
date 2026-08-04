@@ -57,7 +57,9 @@ export const invokeWithTypeAsMaybe = async <T>(resultSchema: z.ZodSchema<T>, com
   }
 };
 
-export type WorkflowFinishedEventData = z.infer<typeof ToolCloseWorkflowActionSchema> & {
+type ToolCloseWorkflowAction = z.infer<typeof ToolCloseWorkflowActionSchema>;
+export type WorkflowFinishedPromise = Promise<ToolCloseWorkflowAction>;
+export type WorkflowFinishedEventData = ToolCloseWorkflowAction & {
   workflowId: string;
   inputId: string;
 };
