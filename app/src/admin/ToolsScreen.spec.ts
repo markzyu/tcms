@@ -8,11 +8,11 @@ import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 
 import { clickIonButton } from "../utils/testUtils";
 import {
-  getExpectedContentFilePath,
-  queueWorkflowRun,
-  renderToolsScreenHarness,
-  resetToolsScreenTestState,
-  workflowPromises,
+  TEST_INSTANCE_ID,
+  mockWorkflowPromises,
+  queueMockWorkflowRun,
+  renderTestHarness,
+  resetTestHarnessState,
 } from "./ToolsScreen.mocks";
 import { getAdminTestMocks } from "./mocks";
 import { WorkflowFinishedPromise } from "./types.ts";
@@ -51,7 +51,7 @@ describe("ToolsScreen", () => {
   let historyBackSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    resetToolsScreenTestState();
+    resetTestHarnessState();
     mockFs.exists.mockResolvedValue(true);
     historyBackSpy = vi.spyOn(history, "back");
   });
@@ -61,7 +61,7 @@ describe("ToolsScreen", () => {
   });
 
   it("starts template-editor, shows JsonObjectsEditor with the input, saves via writeTextFile, and resolves startWorkflow on close", async () => {
-    await renderToolsScreenHarness();
+    await renderTestHarness();
     await clickStartButton("start-template-editor");
 
     await waitForLoadingGone();
@@ -73,13 +73,13 @@ describe("ToolsScreen", () => {
     await clickIonButton("json-objects-editor-save-button");
     await flushPromises();
 
-    const expectedPath = getExpectedContentFilePath();
+    const expectedPath = `./public/public/instances/${TEST_INSTANCE_ID}//content/main.en.json`;
     expect(mockFs.writeTextFile).toHaveBeenCalledWith(
       expectedPath,
       expect.stringContaining('"name": "John Doe"'),
     );
 
-    const workflowPromise = workflowPromises.value.get("template-editor-run");
+    const workflowPromise = mockWorkflowPromises.value.get("template-editor-run");
     expect(workflowPromise).toBeDefined();
     await expect(workflowPromise!).resolves.toEqual({
       type: "closeWorkflow",
@@ -89,7 +89,7 @@ describe("ToolsScreen", () => {
   });
 
   it("resolves false when a non-existent workflow shows an error alert that is dismissed", async () => {
-    await renderToolsScreenHarness();
+    await renderTestHarness();
     await clickStartButton("start-bad-workflow");
 
     await waitFor(() => {
@@ -98,7 +98,7 @@ describe("ToolsScreen", () => {
 
     await dismissWorkflowErrorAlert();
 
-    const workflowPromise = workflowPromises.value.get("bad-workflow-run");
+    const workflowPromise = mockWorkflowPromises.value.get("bad-workflow-run");
     expect(workflowPromise).toBeDefined();
     await expect(workflowPromise!).resolves.toEqual({
       type: "closeWorkflow",
@@ -108,15 +108,15 @@ describe("ToolsScreen", () => {
   });
 
   it("resolves true only for the closed workflow when two template-editor runs share a workflow id but have different input ids", async () => {
-    await renderToolsScreenHarness();
-    queueWorkflowRun("run-1", "template-editor");
+    await renderTestHarness();
+    queueMockWorkflowRun("run-1", "template-editor");
     await waitForLoadingGone();
 
-    queueWorkflowRun("run-2", "template-editor");
+    queueMockWorkflowRun("run-2", "template-editor");
     await waitForLoadingGone();
 
-    const run1Promise = workflowPromises.value.get("run-1");
-    const run2Promise = workflowPromises.value.get("run-2");
+    const run1Promise = mockWorkflowPromises.value.get("run-1");
+    const run2Promise = mockWorkflowPromises.value.get("run-2");
     expect(run1Promise).toBeDefined();
     expect(run2Promise).toBeDefined();
 
@@ -136,17 +136,17 @@ describe("ToolsScreen", () => {
   });
 
   it("resolves false only for the failed workflow when two concurrent runs use different workflow ids", async () => {
-    await renderToolsScreenHarness();
-    queueWorkflowRun("concurrent-template-1", "template-editor");
+    await renderTestHarness();
+    queueMockWorkflowRun("concurrent-template-1", "template-editor");
     await waitForLoadingGone();
 
-    queueWorkflowRun("concurrent-bad-2", "bad-workflow");
+    queueMockWorkflowRun("concurrent-bad-2", "bad-workflow");
     await waitFor(() => {
       expect(screen.getAllByTestId("workflow-orchestrator-error-alert").length).toBeGreaterThan(0);
     });
 
-    const templatePromise = workflowPromises.value.get("concurrent-template-1");
-    const badWorkflowPromise = workflowPromises.value.get("concurrent-bad-2");
+    const templatePromise = mockWorkflowPromises.value.get("concurrent-template-1");
+    const badWorkflowPromise = mockWorkflowPromises.value.get("concurrent-bad-2");
     expect(templatePromise).toBeDefined();
     expect(badWorkflowPromise).toBeDefined();
 

@@ -15,9 +15,9 @@ export const TEST_INSTANCE_ID = "test-instance";
 export const TEST_CONTENT_PATH = "/content/main.en.json";
 export const TEST_JSON = { name: "John Doe" };
 
-export const workflowPromises = ref(new Map<string, WorkflowFinishedPromise>());
+export const mockWorkflowPromises = ref(new Map<string, WorkflowFinishedPromise>());
 
-export function createTemplateEditorInput(): ToolInput {
+function createTemplateEditorInput(): ToolInput {
   return {
     type: "jsonWithSchema",
     json: TEST_JSON,
@@ -44,7 +44,7 @@ export function createTemplateEditorInput(): ToolInput {
 
 let queueWorkflowFromHarness: ((runId: string, workflowId: string, input?: ToolInput) => void) | null = null;
 
-export function queueWorkflowRun(
+export function queueMockWorkflowRun(
   runId: string,
   workflowId: string,
   input: ToolInput = createTemplateEditorInput(),
@@ -62,7 +62,7 @@ const WorkflowStarterBridge = defineComponent({
 
     onMounted(() => {
       queueWorkflowFromHarness = (runId: string, workflowId: string, input?: ToolInput) => {
-        workflowPromises.value.set(
+        mockWorkflowPromises.value.set(
           runId,
           startWorkflow(workflowId, input ?? createTemplateEditorInput()),
         );
@@ -82,7 +82,7 @@ const MockWorkflowPage = defineComponent({
   },
   setup() {
     return {
-      queueWorkflowRun,
+      queueMockWorkflowRun,
     };
   },
   template: `
@@ -90,13 +90,13 @@ const MockWorkflowPage = defineComponent({
       <ion-content>
         <ion-button
           data-testid="start-template-editor"
-          @click="queueWorkflowRun('template-editor-run', 'template-editor')"
+          @click="queueMockWorkflowRun('template-editor-run', 'template-editor')"
         >
           Start template-editor
         </ion-button>
         <ion-button
           data-testid="start-bad-workflow"
-          @click="queueWorkflowRun('bad-workflow-run', 'bad-workflow')"
+          @click="queueMockWorkflowRun('bad-workflow-run', 'bad-workflow')"
         >
           Start bad-workflow
         </ion-button>
@@ -139,8 +139,8 @@ export function createToolsScreenTestRouter() {
   });
 }
 
-export async function renderToolsScreenHarness(initialPath = "/mockpage") {
-  resetToolsScreenTestState();
+export async function renderTestHarness(initialPath = "/mockpage") {
+  resetTestHarnessState();
 
   const router = createToolsScreenTestRouter();
   renderTest(ToolsScreenTestApp, { router });
@@ -158,12 +158,8 @@ async function waitForHarnessReady() {
   });
 }
 
-export function resetToolsScreenTestState() {
-  workflowPromises.value = new Map();
+export function resetTestHarnessState() {
+  mockWorkflowPromises.value = new Map();
   queueWorkflowFromHarness = null;
   sessionStorage.clear();
-}
-
-export function getExpectedContentFilePath() {
-  return `./public/public/instances/${TEST_INSTANCE_ID}//content/main.en.json`;
 }
