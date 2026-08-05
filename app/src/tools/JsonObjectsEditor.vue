@@ -136,6 +136,7 @@ const confirmDeletionOfGroupName = ref<string | null>(null);
 const initialJsonData = ref<any>(JSON.parse(JSON.stringify(props.input.json)));
 
 // These are "abstract" because array indices are not yet resolved.
+// This compuation should NOT need access to jsonData.value because it is only used to derive group names and field labels.
 const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
   const knownPaths = new Set<string>();
   const fieldPathToGroupName: Record<string, string | undefined> = {};

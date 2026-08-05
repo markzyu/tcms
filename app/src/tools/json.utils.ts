@@ -20,9 +20,14 @@ export type FieldGroupDescriptor = {
 export type FieldDescriptor = {
   // The i18n name. This is also the UI key within the current field group.
   name: string;
-  // This is the full path to the actual field in the input JSON
+  // When fully computed, this is the full path to the actual field in the input JSON
   fullPath: string;
-  // This is the same as fullPath, but with some of the {index} placeholders instantiated if JSON Editor's root path contains an index.
+  // This is an intermediary state, needed because we need to distinguish between array paths with known index and arrays to iterate over.
+  // During early computation of states,
+  //   * fullPathArrFilter != fullPath
+  //   * fullPath stores the schema path, which contains all original {index} placeholders for i18n label lookups.
+  //   * fullPathArrFilter replaces some of the {index} if the JSON Editor UI is actively looking at a known index of those arrays.
+  // However, the final, computed UI state should store fullPath = fullPathArrFilter with some (not all) of the indices replaced.
   fullPathArrFilter: string;
   jsonSchema: any;
   isRequired: boolean;
