@@ -253,7 +253,10 @@ const performFieldValidations = (field: FieldDescriptor) => {
 const singletonFieldGroups = computed<FieldGroupDescriptor[]>(() => {
   return abstractFieldGroups.value.filter((group) => group.isSingleton).map((group) => ({
     ...group,
-    fields: group.fields.map(performFieldValidations),
+    fields: group.fields.map((field) => ({
+      ...field,
+      fullPath: field.fullPathArrFilter
+    })).map(performFieldValidations)
   }));
 });
 
@@ -271,7 +274,7 @@ const arrayFieldGroups = computed<FieldGroupDescriptor[]>(() => {
       const arrayItemGroup = newFieldGroup(group.nameTemplate, locale.value, i);
       arrayItemGroup.fields = group.fields.map((field) => ({
         ...field,
-        fullPath: field.fullPath.replace("{index}", String(i)),
+        fullPath: field.fullPathArrFilter.replace("{index}", String(i)),
         arrayIndex: i,
       })).map(performFieldValidations);
       return arrayItemGroup;
@@ -280,6 +283,7 @@ const arrayFieldGroups = computed<FieldGroupDescriptor[]>(() => {
 });
 
 const allFieldGroups = computed<(FieldGroupDescriptor | null)[]>(() => {
+  console.log("arrayFieldGroups", arrayFieldGroups.value);
   let leftGroups = singletonFieldGroups.value;
   let rightGroups = arrayFieldGroups.value;
   if (rightGroups.length === 0) {

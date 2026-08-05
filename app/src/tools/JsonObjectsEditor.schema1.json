@@ -80,7 +80,8 @@
         "projects.{index}.title": "Title",
         "projects.{index}.description": "Description",
         "projects.{index}.url": "URL",
-        "projects.{index}.tasks": "Tasks"
+        "projects.{index}.tasks": "Task",
+        "projects.{index}.tasks.{index}": "Details"
       },
       "ja": {
         "name": "名前",
@@ -101,7 +102,8 @@
         "projects.{index}.title": "タイトル",
         "projects.{index}.description": "説明",
         "projects.{index}.url": "URL",
-        "projects.{index}.tasks": "タスク"
+        "projects.{index}.tasks": "タスク",
+        "projects.{index}.tasks.{index}": "詳細"
       }
     }
   },

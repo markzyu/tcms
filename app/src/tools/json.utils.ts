@@ -84,7 +84,7 @@ export const walkJsonSchemaForFieldsWithin = (
         // We don't handle tuple types, for now
         return newResults;
       }
-      if (rootPath && rootPath.includes("{index}")) {
+      if (rootPathArrFilter && rootPathArrFilter.includes("{index}")) {
         // The JsonObjectsEditor does not handle nested arrays.
         return newResults;
       }
@@ -175,8 +175,8 @@ export const getShallowArrayPath = (fullPath: string) => {
 }
 
 export const getShallowArrayPaths = (group: FieldGroupDescriptor) => {
-  return group.fields.flatMap(({ fullPath }) => {
-    const result = getShallowArrayPath(fullPath);
+  return group.fields.flatMap(({ fullPathArrFilter }) => {
+    const result = getShallowArrayPath(fullPathArrFilter);
     if (result) {
       return [result];
     }
