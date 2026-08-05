@@ -23,6 +23,8 @@ import { z } from "zod";
 //   - Explicit naming takes precedence over implicit naming.
 //   - Lastly but optionally, Typescript types like `FooBar` should have a `FooBarSchema` which is a Zod schema object.
 
+// Side note: Workflow Orchestrator will always remount the Tool component when updating its props
+
 // ------- Generic File Path Types -------
 
 export const MiniAppContentFilePathSchema = z.object({

@@ -22,6 +22,8 @@ export type FieldDescriptor = {
   name: string;
   // This is the full path to the actual field in the input JSON
   fullPath: string;
+  // This is the same as fullPath, but with some of the {index} placeholders instantiated if JSON Editor's root path contains an index.
+  fullPathArrFilter: string;
   jsonSchema: any;
   isRequired: boolean;
 
@@ -41,47 +43,93 @@ export type FieldDescriptor = {
 
 // ----------------------------- Utility Functions -----------------------------
 
-export const walkJsonSchemaForAllFields = (schema: JSONSchema7Definition, requiredFields: string[], results?: FieldDescriptor[], rootPath?: string, notSingleton?: boolean): FieldDescriptor[] => {
+/**
+ * @param filterPathsReversed A jsonpath split by "." or [] if not using a filter (starting from root) in reverse order. For example "abc.def" becomes ["def", "abc"].
+ * @param schema JsonSchema 
+ * @param requiredFields A pre calculated list of required fields (as absolute json paths)
+ * @param results An array to store results in. Can be undefined to create a new array.
+ * @param rootPath A prefix to be appended. Used as a recursion state.
+ * @param notSingleton True only if current field is an array item with a {index} placeholder.
+ * @param rootPathArrFilter Same as rootPath except the {index} placeholder is left untouched even if filterPathsReversed contains an index.
+ * @returns The results array, with new fields added.
+ */
+export const walkJsonSchemaForFieldsWithin = (
+  filterPathsReversed: string[], schema: JSONSchema7Definition, requiredFields: string[],
+  results?: FieldDescriptor[], rootPath?: string, notSingleton?: boolean,
+  rootPathArrFilter?: string,
+): FieldDescriptor[] => {
+  const maybeFilter = filterPathsReversed.pop();
   const newResults = results ?? [];
-  if (typeof schema === "boolean") {
-    return newResults;
-  } else if (schema.oneOf) {
-    // We don't handle union types, for now
-    return newResults;
-  } else if (schema.type === "object") {
-    for (const [key, value] of Object.entries(schema.properties ?? {})) {
-      walkJsonSchemaForAllFields(value, requiredFields, newResults, rootPath ? `${rootPath}.${key}` : key, notSingleton);
-    }
-  } else if (schema.type === "array") {
-    if (Array.isArray(schema.items)) {
-      // We don't handle tuple types, for now
+  try {
+    if (maybeFilter === "{index}") {
+      // We do not allow filters to contain a non determined index.
       return newResults;
     }
-    if (rootPath && rootPath.includes("{index}")) {
-      // The JsonObjectsEditor does not handle nested arrays.
+    if (typeof schema === "boolean") {
       return newResults;
+    } else if (schema.oneOf) {
+      // We don't handle union types, for now
+      return newResults;
+    } else if (schema.type === "object") {
+      for (const [key, value] of Object.entries(schema.properties ?? {})) {
+        if (maybeFilter && key !== maybeFilter) {
+          continue;
+        }
+        const newRootPath = rootPath ? `${rootPath}.${key}` : key;
+        const newRootPathArrFilter = rootPathArrFilter ? `${rootPathArrFilter}.${key}` : key;
+        walkJsonSchemaForFieldsWithin(filterPathsReversed, value, requiredFields, newResults, newRootPath, notSingleton, newRootPathArrFilter);
+      }
+    } else if (schema.type === "array") {
+      if (Array.isArray(schema.items)) {
+        // We don't handle tuple types, for now
+        return newResults;
+      }
+      if (rootPath && rootPath.includes("{index}")) {
+        // The JsonObjectsEditor does not handle nested arrays.
+        return newResults;
+      }
+      const newRootPath = rootPath ? `${rootPath}.{index}` : "{index}";
+      let newRootPathArrFilter = rootPathArrFilter ? `${rootPathArrFilter}.{index}` : "{index}";
+      let newNotSingleton: boolean | undefined = true;
+      if (maybeFilter) {
+        const index = Number(maybeFilter);
+        if (!Number.isInteger(index) || index < 0) {
+          return newResults;
+        }
+        newRootPathArrFilter = rootPathArrFilter ? `${rootPathArrFilter}.${index}` : String(index);
+        newNotSingleton = notSingleton;
+      }
+      walkJsonSchemaForFieldsWithin(filterPathsReversed, schema.items ?? {}, requiredFields, newResults, newRootPath, newNotSingleton, newRootPathArrFilter);
+    } else if (schema.type !== "null") {
+      let extras: EditorUiFieldTypes = {};
+      if (schema.type === "boolean") {
+        extras = { type: "toggle" };
+      } else if (schema.type === "string" && Array.isArray(schema.enum)) {
+        extras = { type: "segment" };
+        extras.choices = schema.enum.map((choice) => String(choice));
+        extras.defaultValue = schema.default ? String(schema.default) : undefined;
+      }
+      newResults.push({
+        ...extras,
+        name: rootPath ?? "",
+        fullPath: rootPath ?? "",
+        fullPathArrFilter: rootPathArrFilter ?? "",
+        arrayPath: notSingleton ? getShallowArrayPath(rootPath ?? "") : undefined,
+        isSingleton: !notSingleton,
+        jsonSchema: schema,
+        isRequired: rootPath ? requiredFields.includes(rootPath) : true,
+      });
     }
-    walkJsonSchemaForAllFields(schema.items ?? {}, requiredFields, newResults, rootPath ? `${rootPath}.{index}` : "{index}", true);
-  } else if (schema.type !== "null") {
-    let extras: EditorUiFieldTypes = {};
-    if (schema.type === "boolean") {
-      extras = { type: "toggle" };
-    } else if (schema.type === "string" && Array.isArray(schema.enum)) {
-      extras = { type: "segment" };
-      extras.choices = schema.enum.map((choice) => String(choice));
-      extras.defaultValue = schema.default ? String(schema.default) : undefined;
+    return newResults;
+  } finally {
+    if (maybeFilter) {
+      filterPathsReversed.push(maybeFilter);
     }
-    newResults.push({
-      ...extras,
-      name: rootPath ?? "",
-      fullPath: rootPath ?? "",
-      arrayPath: notSingleton ? getShallowArrayPath(rootPath ?? "") : undefined,
-      isSingleton: !notSingleton,
-      jsonSchema: schema,
-      isRequired: rootPath ? requiredFields.includes(rootPath) : true,
-    });
   }
-  return newResults;
+};
+
+export const walkJsonSchemaForAllFields = (schema: JSONSchema7Definition, requiredFields: string[], results?: FieldDescriptor[], rootPath?: string, notSingleton?: boolean): FieldDescriptor[] => {
+  return walkJsonSchemaForFieldsWithin([], schema, requiredFields, results, rootPath, notSingleton);
 }
 
 export const getRequiredFields = (schema: JSONSchema7Definition, requiredFields?: string[], rootPath?: string) => {

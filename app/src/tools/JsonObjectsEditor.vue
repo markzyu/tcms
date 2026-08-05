@@ -24,7 +24,7 @@
           <div class="mx-3 h-10 flex items-center gap-2">
             {{ fieldGroup.name }}
             <div class="w-full flex-shrink flex-1" />
-            <ion-button v-if="!fieldGroup.isSingleton" size="small" fill="outline">{{ editDetailsButtonText }}</ion-button>
+            <ion-button v-if="!fieldGroup.isSingleton" size="small" fill="outline" @click="onEditDetails(fieldGroup)">{{ editDetailsButtonText }}</ion-button>
             <ion-button v-if="!fieldGroup.isSingleton && confirmDeletionOfGroupName !== fieldGroup.name" size="small" fill="outline" color="danger" @click="onDeleteArrayItem(fieldGroup)">{{ deleteButtonText }}</ion-button>
             <ion-button v-if="!fieldGroup.isSingleton && confirmDeletionOfGroupName === fieldGroup.name" size="small" color="danger" @click="onDeleteArrayItem(fieldGroup)">{{ deleteConfirmButtonText }}</ion-button>
           </div>
@@ -99,7 +99,7 @@ import { ToolProps } from './toolTypes';
 import { get, isEqual, set } from 'lodash';
 import { IonIcon, IonInput, IonItem, IonLabel, IonList, IonNote, IonSegment, IonSegmentButton, IonTextarea, IonToggle, IonFab, IonFabButton, IonActionSheet, ActionSheetButton, IonButton, alertController, AlertButton } from '@ionic/vue';
 import { camera, add, arrowBack } from 'ionicons/icons';
-import { newFieldGroup, FieldGroupDescriptor, FieldDescriptor, walkJsonSchemaForAllFields, getShallowArrayPaths, getShallowArrayPath, getRequiredFields } from './json.utils';
+import { newFieldGroup, FieldGroupDescriptor, FieldDescriptor, walkJsonSchemaForAllFields, getShallowArrayPaths, getShallowArrayPath, getRequiredFields, walkJsonSchemaForFieldsWithin } from './json.utils';
 import { useAppLanguageLocale } from '../utils/i18n';
 import { useToolsContent } from './content';
 import { toolContentKeys } from './contentKeys';
@@ -126,6 +126,8 @@ const hintsByInputType = computed(() => ({
 } as Partial<Record<string, string>>));
 
 const locale = useAppLanguageLocale();
+
+// Side note: Workflow Orchestrator will always remount the Tool when updating props
 const props = defineProps<ToolProps<"jsonWithSchema">>();
 const jsonData = ref<any>(JSON.parse(JSON.stringify(props.input.json)));
 const confirmDeletionOfGroupName = ref<string | null>(null);
@@ -156,7 +158,11 @@ const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
 
   // Then, derive remaining groups based on JSON Schema (misc group and groups organized by parent)
   const requiredFields = getRequiredFields(props.input.jsonSchema);
-  const allFields = walkJsonSchemaForAllFields(props.input.jsonSchema, requiredFields);
+  const requiredPath = props.input.jsonPath || "";
+  const requiredPaths = requiredPath.replace(/^\./, "").split(".").reverse();
+  const allFields = requiredPaths.length > 0
+    ? walkJsonSchemaForFieldsWithin(requiredPaths, props.input.jsonSchema, requiredFields)
+    : walkJsonSchemaForAllFields(props.input.jsonSchema, requiredFields);
   const allNamedGroups: string[] = Object.keys(fieldLabels[locale.value] ?? {});
   allNamedGroups.sort((a, b) => b.length - a.length);
   allFields.forEach((field) => {
@@ -200,8 +206,11 @@ const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
     const { isSingleton, labelByLanguage, fields: rawFields } = fieldGroup;
     const groupName = labelByLanguage?.[locale.value];
     const group = groupName ? groupsByName[groupName] : miscGroup;
+    if (!group) {
+      return;
+    }
     rawFields.forEach(({ path, ...field }) => {
-      const fieldToWrite = group.fields.find((f) => f.fullPath === path);
+      const fieldToWrite = group.fields.find((f) => f.fullPath === path && f.fullPathArrFilter.startsWith(requiredPath));
       if (fieldToWrite) {
         Object.assign(fieldToWrite, field);
         fieldToWrite.name = fieldLabels[locale.value]?.[path] ?? path;
@@ -210,7 +219,13 @@ const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
       }
     });
   });
-  return [...Object.values(groupsByName), miscGroup];
+  console.log("groupsByName", groupsByName, miscGroup);
+
+  const nonMiscGroups = Object.values(groupsByName);
+  if (miscGroup.fields.length === 0) {
+    return nonMiscGroups;
+  }
+  return [...nonMiscGroups, miscGroup];
 });
 
 const performFieldValidations = (field: FieldDescriptor) => {
@@ -382,32 +397,66 @@ const onAction = (event: CustomEvent) => {
   }
 }
 
-const onDeleteArrayItem = (group: FieldGroupDescriptor) => {
-  if (confirmDeletionOfGroupName.value !== group.name) {
-    confirmDeletionOfGroupName.value = group.name;
-    return;
-  }
+const getRelevantArrayPaths = (group: FieldGroupDescriptor) => {
   const visitedArrayPaths = new Set<string>();
-  group.fields.forEach(({ arrayPath, arrayIndex }) => {
+  return group.fields.flatMap(({ arrayPath, arrayIndex }) => {
     if (!arrayPath || typeof arrayIndex !== "number") {
-      return;
+      return [];
     }
     const oldArr = get(jsonData.value, arrayPath);
     if (!oldArr || !Array.isArray(oldArr)) {
-      return;
+      return [];
     }
 
     // In the edge case where one refers to both {index} and {index +/- 1} of the same array,
     //    we delete only the index matching the group path (note: displayed index is 1-based)
     const groupNameAtIndex = new IntlMessageFormat(group.nameTemplate, locale.value).format({ index: arrayIndex + 1 });
     if (groupNameAtIndex !== group.name) {
-      return;
+      return [];
     }
 
     if (visitedArrayPaths.has(arrayPath)) {
-      return;
+      return [];
     }
     visitedArrayPaths.add(arrayPath);
+    return [{arrayPath, arrayIndex}];
+  });
+};
+
+const onEditDetails = (group: FieldGroupDescriptor) => {
+  const arrayPaths = getRelevantArrayPaths(group);
+  const uniqueArrayPaths: typeof arrayPaths = Array.from(
+    new Set(arrayPaths.map((value) => JSON.stringify(value)))
+  ).map((value) => JSON.parse(value));
+  if (uniqueArrayPaths.length !== 1) {
+    return;
+  }
+
+  const { arrayPath, arrayIndex } = uniqueArrayPaths[0];
+  props.onAction({
+    type: "startWorkflow",
+    workflowId: "template-editor",
+    inputJson: {
+      ...props.input,
+      jsonPath: `${arrayPath}.${arrayIndex}`,
+    }
+  });
+
+  // Note: There is no need to update current Tools's jsonData.value
+  // (The workflow orchestrator will remount current Tool upon returning from the sub-workflow)
+};
+
+const onDeleteArrayItem = (group: FieldGroupDescriptor) => {
+  if (confirmDeletionOfGroupName.value !== group.name) {
+    confirmDeletionOfGroupName.value = group.name;
+    return;
+  }
+  const arrayPathsToDelete = getRelevantArrayPaths(group);
+  arrayPathsToDelete.forEach(({arrayPath, arrayIndex}) => {
+    const oldArr = get(jsonData.value, arrayPath);
+    if (!oldArr || !Array.isArray(oldArr)) {
+      return;
+    }
     const newArr = oldArr.filter((_, i) => i !== arrayIndex);
     if (newArr.length === oldArr.length) {
       return;

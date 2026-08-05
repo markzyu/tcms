@@ -72,3 +72,28 @@ export const WithArrayFields: Story = {
     onAction,
   },
 }
+
+export const InsideArrayField: Story = {
+  args: {
+    input: {
+      type: 'jsonWithSchema',
+      json: {
+        name: 'John Doe',
+        projects: [
+          { title: 'Art', description: 'Drawings and sketches', url: 'https://example.com/art', tasks: ['Task 1', 'Task 2'] },
+          { title: 'Music', description: 'Compositions and recordings', url: 'https://example.com/music', tasks: ['Task 3', 'Task 4'] },
+          { title: 'Programming', description: 'Software development', url: 'https://example.com/programming', tasks: ['Task 5', 'Task 6'] },
+        ],
+      },
+      jsonSchema: schema.jsonSchema,
+      editorUiSchema: schema.editorUiSchema as any,
+      jsonPath: 'projects.1',
+      filePath: {
+        type: 'miniAppContent',
+        instanceId: '123',
+        _pathAsUrl: '/content/main.en.json',
+      },
+    },
+    onAction,
+  },
+}
