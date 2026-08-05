@@ -57,7 +57,6 @@ export const contactCardSchemaPathPromise = definePageContentSchema({
           { path: "headline" },
           { path: "bio", type: "textarea" },
         ],
-        isSingleton: true,
       },
       {
         labelByLanguage: {
@@ -68,10 +67,8 @@ export const contactCardSchemaPathPromise = definePageContentSchema({
           { path: "email", type: "input", inputType: "email" },
           { path: "phone", type: "input", inputType: "tel" },
         ],
-        isSingleton: true,
       },
       {
-        isSingleton: true,
         fields: [
           { path: "heroImage", type: "media" },
         ],

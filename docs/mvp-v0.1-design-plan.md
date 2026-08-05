@@ -146,15 +146,12 @@ Aligned with example-info-card1 Phase 0 — flat fields only, minimal editor UI 
       {
         "name": "Basic Information",
         "paths": ["name", "headline", "bio"],
-        "isSingleton": true
       },
       {
         "name": "Contact Information",
         "paths": ["email", "phone"],
-        "isSingleton": true
       },
       {
-        "isSingleton": true,
         "paths": ["heroImage"]
       }
     ]
@@ -427,7 +424,6 @@ fieldGroups: [
   {
     "name": "Basic Information",
     "paths": ["name", "headline", "bio"],
-    "isSingleton": true
   },
 ]
 ```
@@ -442,7 +438,6 @@ fieldGroups: [
       "ja": "基本情報"
     },
     "paths": ["name", "headline", "bio"],
-    "isSingleton": true
   },
 ]
 ```

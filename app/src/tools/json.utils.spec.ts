@@ -290,6 +290,7 @@ describe("getShallowArrayPaths", () => {
         {
           name: "Title",
           fullPath: "projects.{index}.title",
+          fullPathArrFilter: "projects.{index}.title",
           jsonSchema: { type: "string" },
           isRequired: false,
           isSingleton: false,
@@ -297,6 +298,7 @@ describe("getShallowArrayPaths", () => {
         {
           name: "Description",
           fullPath: "projects.{index}.description",
+          fullPathArrFilter: "projects.{index}.description",
           jsonSchema: { type: "string" },
           isRequired: false,
           isSingleton: false,

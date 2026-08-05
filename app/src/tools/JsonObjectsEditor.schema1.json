@@ -18,8 +18,7 @@
             "type": "textarea",
             "path": "bio"
           }
-        ],
-        "isSingleton": true
+        ]
       },
       {
         "labelByLanguage": {
@@ -37,8 +36,7 @@
             "inputType": "tel",
             "path": "phone"
           }
-        ],
-        "isSingleton": true
+        ]
       },
       {
         "fields": [
@@ -46,8 +44,7 @@
             "type": "media",
             "path": "heroImage"
           }
-        ],
-        "isSingleton": true
+        ]
       },
       {
         "labelByLanguage": {
@@ -60,8 +57,7 @@
             "inputType": "password",
             "path": "exampleDeepField.field1"
           }
-        ],
-        "isSingleton": true
+        ]
       }
     ],
     "fieldLabels": {

@@ -139,21 +139,17 @@ const initialJsonData = ref<any>(JSON.parse(JSON.stringify(props.input.json)));
 const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
   const knownPaths = new Set<string>();
   const fieldPathToGroupName: Record<string, string | undefined> = {};
-  const singletonGroups: Set<string> = new Set();
   const groupsByName: Record<string, FieldGroupDescriptor> = {};
   const miscGroup = newFieldGroup(miscGroupName.value, locale.value);
 
   // First, find relationship between field paths and group names
   const { fieldLabels } = props.input.editorUiSchema;
   props.input.editorUiSchema.fieldGroups.forEach((fieldGroup) => {
-    const { isSingleton, labelByLanguage, fields: rawFields } = fieldGroup;
+    const { labelByLanguage, fields: rawFields } = fieldGroup;
     const groupName = labelByLanguage?.[locale.value] || undefined;
     rawFields.forEach(({ path }) => {
       fieldPathToGroupName[path] = groupName;
     });
-    if (isSingleton && groupName) {
-      singletonGroups.add(groupName);
-    }
   });
 
   // Then, derive remaining groups based on JSON Schema (misc group and groups organized by parent)
@@ -177,9 +173,9 @@ const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
     }
     knownPaths.add(field.fullPath);
 
+    const isSingleton = field.isSingleton;
     const preferredGroupName = fieldPathToGroupName[field.fullPath];
     if (preferredGroupName) {
-      const isSingleton = singletonGroups.has(preferredGroupName);
       const group = groupsByName[preferredGroupName] ||= newFieldGroup(preferredGroupName, locale.value, isSingleton ? undefined : 0);
       group.fields.push(field);
       return;
@@ -189,7 +185,6 @@ const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
     const longestMatchingGroupPath = allNamedGroups.find((groupName) => field.fullPath.startsWith(groupName + "."));
     const matchingGroupName = longestMatchingGroupPath && fieldLabels[locale.value]?.[longestMatchingGroupPath];
     if (matchingGroupName) {
-      const isSingleton = !matchingGroupName.includes("{index}");
       groupsByName[matchingGroupName] ||= newFieldGroup(matchingGroupName, locale.value, isSingleton ? undefined : 0);
       groupsByName[matchingGroupName].fields.push(field);
       return;
@@ -203,7 +198,7 @@ const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
 
   // Then, copy the uiEditorSchema field groups as overrides of json schema behaviors
   props.input.editorUiSchema.fieldGroups.forEach((fieldGroup) => {
-    const { isSingleton, labelByLanguage, fields: rawFields } = fieldGroup;
+    const { labelByLanguage, fields: rawFields } = fieldGroup;
     const groupName = labelByLanguage?.[locale.value];
     const group = groupName ? groupsByName[groupName] : miscGroup;
     if (!group) {
@@ -215,13 +210,12 @@ const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
         Object.assign(fieldToWrite, field);
         fieldToWrite.name = fieldLabels[locale.value]?.[path] ?? path;
         fieldToWrite.arrayPath = getShallowArrayPath(path);
-        fieldToWrite.isSingleton = !!isSingleton;
       }
     });
   });
-  console.log("groupsByName", groupsByName, miscGroup);
 
   const nonMiscGroups = Object.values(groupsByName);
+  console.log("nonMiscGroups", nonMiscGroups, miscGroup);
   if (miscGroup.fields.length === 0) {
     return nonMiscGroups;
   }

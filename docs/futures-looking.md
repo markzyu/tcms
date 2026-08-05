@@ -128,7 +128,6 @@ Example of how schemas and editor UI may work for multi-page templates with both
           { "path": "headline" },
           { "path": "bio", "type": "textarea" }
         ],
-        "isSingleton": true
       },
       {
         "labelByLanguage": {
@@ -139,10 +138,8 @@ Example of how schemas and editor UI may work for multi-page templates with both
           { "path": "email" },
           { "path": "phone" }
         ],
-        "isSingleton": true
       },
       {
-        "isSingleton": true,
         "fields": [
           { "path": "heroImage" }
         ]
