@@ -275,6 +275,7 @@ const arrayFieldGroups = computed<FieldGroupDescriptor[]>(() => {
       arrayItemGroup.fields = group.fields.map((field) => ({
         ...field,
         fullPath: field.fullPathArrFilter.replace("{index}", String(i)),
+        fullPathArrFilter: field.fullPathArrFilter.replace("{index}", String(i)),
         arrayIndex: i,
       })).map(performFieldValidations);
       return arrayItemGroup;
@@ -387,7 +388,8 @@ const onAction = (event: CustomEvent) => {
     }
     new Set(arrayPathsToUpdate).forEach((path) => {
       const oldArr = get(jsonData.value, path) || [];
-      set(jsonData.value, path, [...oldArr, {}]);
+      // For type safety it turns out "null" is a safer default than "{}" or than guessing datatypes
+      set(jsonData.value, path, [...oldArr, null]);
     });
     
     // Edge case: clearing all references to group names because indices might have changed
