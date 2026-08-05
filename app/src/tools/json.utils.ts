@@ -114,7 +114,7 @@ export const walkJsonSchemaForFieldsWithin = (
         name: rootPath ?? "",
         fullPath: rootPath ?? "",
         fullPathArrFilter: rootPathArrFilter ?? "",
-        arrayPath: notSingleton ? getShallowArrayPath(rootPath ?? "") : undefined,
+        arrayPath: notSingleton ? getShallowArrayPath(rootPathArrFilter ?? "") : undefined,
         isSingleton: !notSingleton,
         jsonSchema: schema,
         isRequired: rootPath ? requiredFields.includes(rootPath) : true,

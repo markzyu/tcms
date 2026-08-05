@@ -209,7 +209,7 @@ const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
       if (fieldToWrite) {
         Object.assign(fieldToWrite, field);
         fieldToWrite.name = fieldLabels[locale.value]?.[path] ?? path;
-        fieldToWrite.arrayPath = getShallowArrayPath(path);
+        fieldToWrite.arrayPath = getShallowArrayPath(fieldToWrite.fullPathArrFilter);
       }
     });
   });
