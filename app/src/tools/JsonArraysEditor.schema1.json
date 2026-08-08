@@ -1,0 +1,149 @@
+{
+  "schemaVersion": "0.1.0",
+  "editorUiSchema": {
+    "fieldLabels": {
+      "en": {
+        "name": "Name",
+        "headline": "Headline",
+        "email": "Email",
+        "phone": "Phone",
+        "heroImage": "Hero Image",
+        "heroAltText": "Hero Alt Text",
+        "heroAlignment": "Hero Alignment",
+        "heroAlignment.left": "Left",
+        "heroAlignment.right": "Right",
+        "menus": "Menus",
+        "menus.{index}": "Menu {index}",
+        "menus.{index}.title": "Title",
+        "menus.{index}.description": "Description",
+        "menus.{index}.menuItems": "Dishes",
+        "menus.{index}.menuItems.{index}": "Dish {index}",
+        "menus.{index}.menuItems.{index}.title": "Name",
+        "menus.{index}.menuItems.{index}.price": "Price",
+        "menus.{index}.menuItems.{index}.imageUrl": "Image URL",
+        "menus.{index}.menuItems.{index}.discounts": "Discounts",
+        "menus.{index}.menuItems.{index}.discounts.{index}": "Discount {index}",
+        "menus.{index}.menuItems.{index}.discounts.{index}.title": "Title",
+        "menus.{index}.menuItems.{index}.discounts.{index}.newPrice": "New Price",
+        "reviews": "Reviews",
+        "reviews.{index}": "Review {index}",
+        "reviews.{index}.rating": "Rating",
+        "reviews.{index}.username": "Username",
+        "reviews.{index}.comment": "Comment"
+      },
+      "ja": {
+        "name": "名前",
+        "headline": "職業",
+        "email": "メールアドレス",
+        "phone": "電話番号",
+        "heroImage": "写真",
+        "heroAltText": "写真の代替テキスト",
+        "heroAlignment": "写真の配置",
+        "heroAlignment.left": "左",
+        "heroAlignment.right": "右",
+        "menus.{index}": "メニュー {index}",
+        "menus.{index}.title": "タイトル",
+        "menus.{index}.description": "説明",
+        "menus.{index}.menuItems": "メニュー項目",
+        "menus.{index}.menuItems.{index}": "料理 {index}",
+        "menus.{index}.menuItems.{index}.title": "名前",
+        "menus.{index}.menuItems.{index}.price": "価格",
+        "menus.{index}.menuItems.{index}.imageUrl": "画像URL",
+        "menus.{index}.menuItems.{index}.discounts": "割引",
+        "menus.{index}.menuItems.{index}.discounts.{index}": "割引 {index}",
+        "menus.{index}.menuItems.{index}.discounts.{index}.title": "タイトル",
+        "menus.{index}.menuItems.{index}.discounts.{index}.newPrice": "新しい価格",
+        "reviews": "レビュー",
+        "reviews.{index}": "レビュー {index}",
+        "reviews.{index}.rating": "評価",
+        "reviews.{index}.username": "ユーザー名",
+        "reviews.{index}.comment": "コメント"
+      }
+    },
+    "keyFieldsOfArrays": [
+      "menus.{index}.title",
+      "menus.{index}.menuItems.{index}.title",
+      "menus.{index}.menuItems.{index}.discounts.{index}.title",
+      "reviews.{index}.username"
+    ],
+    "displayAsInnerArrays": [
+      "menus.{index}.menuItems.{index}"
+    ]
+  },
+  "jsonSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "headline": {
+        "type": "string"
+      },
+      "email": {
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+      },
+      "phone": {
+        "type": "string"
+      },
+      "heroImage": {
+        "type": "string"
+      },
+      "heroAltText": {
+        "type": "string"
+      },
+      "heroAlignment": {
+        "default": "left",
+        "type": "string",
+        "enum": [
+          "left",
+          "right"
+        ]
+      },
+      "menus": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "title": { "type": "string" },
+            "description": { "type": "string" },
+            "menuItems": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string" },
+                  "price": { "type": "number" },
+                  "imageUrl": { "type": "string" },
+                  "discounts": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "title": { "type": "string" },
+                        "newPrice": { "type": "number" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "reviews": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "rating": { "type": "number" },
+            "username": { "type": "string" },
+            "comment": { "type": "string" }
+          }
+        }
+      }
+    },
+    "additionalProperties": false
+  }
+}

@@ -28,6 +28,8 @@ export const toolsContent: Content<Keys.ToolContentKey> = {
       "An internal error occurred while loading the workflow. Details: {errorMessage}",
     [Keys.WorkflowOrchestratorLoadingMessageWrapper]:
       "Loading workflow: {workflowId}...",
+    [Keys.JsonArrEditorOuterGroupNameTemplate]: "\"{valueAtKey}\" {arrayLabel}",
+    [Keys.JsonArrEditorClickHereForFullOuterItem]: "Click here for full {outerArraySingularName}",
   },
   ja: {
     [Keys.TemplateEditorMiscGroupLabel]: "その他の質問",
@@ -36,7 +38,7 @@ export const toolsContent: Content<Keys.ToolContentKey> = {
     [Keys.TemplateEditorPasswordHint]: "********",
     [Keys.TemplateEditorTelHint]: "(00) 0000-0000",
     [Keys.TemplateEditorNumberHint]: "000",
-    [Keys.TemplateEditorAddFlatArray]: "\"{name}\" を追加",
+    [Keys.TemplateEditorAddFlatArray]: "「{name}」を追加",
     [Keys.TemplateEditorCancelButton]: "キャンセル",
     [Keys.TemplateEditorSaveButton]: "保存",
     [Keys.JsonObjEditorEditDetailsButton]: "詳細を編集",
@@ -55,6 +57,8 @@ export const toolsContent: Content<Keys.ToolContentKey> = {
       "ワークフローの読み込み中に内部エラーが発生しました。詳細: 「{errorMessage}」",
     [Keys.WorkflowOrchestratorLoadingMessageWrapper]:
       "ワークフローの読み込み中: {workflowId}...",
+    [Keys.JsonArrEditorOuterGroupNameTemplate]: "「{valueAtKey}」{arrayLabel}",
+    [Keys.JsonArrEditorClickHereForFullOuterItem]: "ここをクリックして全ての{outerArraySingularName}を表示",
   },
 };
 

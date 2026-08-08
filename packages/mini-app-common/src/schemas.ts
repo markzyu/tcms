@@ -63,6 +63,8 @@ export const EditorUiFieldLabelsSchema = z.record(
 export const EditorUiSchemaJsonSchema = z.object({
   fieldGroups: z.array(EditorUiFieldGroupSchema),
   fieldLabels: EditorUiFieldLabelsSchema,
+  keyFieldsOfArrays: z.array(z.string()).optional(),
+  displayAsInnerArrays: z.array(z.string()).optional(),
 });
 
 export type EditorUiFieldGroup = z.infer<typeof EditorUiFieldGroupSchema>;

@@ -105,7 +105,11 @@
         "projects.{index}.tasks": "タスク{index}",
         "projects.{index}.tasks.{index}": "詳細"
       }
-    }
+    },
+    "keyFieldsOfArrays": [
+      "projects.{index}.title",
+      "projects.{index}.tasks.{index}"
+    ]
   },
   "jsonSchema": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",

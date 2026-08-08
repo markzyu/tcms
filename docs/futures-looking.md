@@ -154,26 +154,10 @@ Example of how schemas and editor UI may work for multi-page templates with both
         ]
       }
     ],
-    "arrayGroups": [
-      {
-        "labelByLanguage": {
-          "en": "\"{groupName}\" Project",
-          "ja": "「{groupName}」プロジェクト"
-        },
-        "groupsPath": "projects",
-        "groupName": "projects.{groupIndex}.name",
-        "itemsPath": "projects.{groupIndex}.richTextList",
-        "itemName": "projects.{groupIndex}.richTextList.{itemIndex}.text"
-      },
-      {
-        "isSingleArray": true,
-        "labelByLanguage": {
-          "en": "Biography Rich Text",
-          "ja": "自己紹介 (リッチテキスト)"
-        },
-        "itemsPath": "richTextList",
-        "itemName": "richTextList.{itemIndex}.text"
-      }
+    "keyFieldsOfArrays": [
+      "projects.{index}.name",
+      "projects.{index}.richTextList.{index}.text",
+      "richTextList.{index}.text"
     ]
   },
   "fieldLabels": {
@@ -186,7 +170,10 @@ Example of how schemas and editor UI may work for multi-page templates with both
       "heroImage": "Hero Image",
       "heroAlignment": "Hero Alignment",
       "heroAlignment.left": "Left",
-      "heroAlignment.right": "Right"
+      "heroAlignment.right": "Right",
+      "projects": "Projects",
+      "projects.{index}": "Project {index}",
+      "projects.{index}.title": "Title"
     },
     "ja": {
       "name": "名前",
@@ -197,7 +184,9 @@ Example of how schemas and editor UI may work for multi-page templates with both
       "heroImage": "写真",
       "heroAlignment": "写真の配置",
       "heroAlignment.left": "左",
-      "heroAlignment.right": "右"
+      "heroAlignment.right": "右",
+      "projects.{index}": "プロジェクト {index}",
+      "projects.{index}.title": "タイトル"
     }
   },
   "jsonSchema": {

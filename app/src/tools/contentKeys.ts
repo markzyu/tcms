@@ -21,6 +21,8 @@ export const WorkflowOrchestratorErrorHeader = "tools.workflowOrchestrator.error
 export const WorkflowOrchestratorErrorDismissBtn = "tools.workflowOrchestrator.errorDismissBtn" as const;
 export const WorkflowOrchestratorErrorMessageWrapper = "tools.workflowOrchestrator.errorMessageWrapper" as const;
 export const WorkflowOrchestratorLoadingMessageWrapper = "tools.workflowOrchestrator.loadingMessageWrapper" as const;
+export const JsonArrEditorOuterGroupNameTemplate = "tools.jsonArraysEditor.outerGroupNameTemplate" as const;
+export const JsonArrEditorClickHereForFullOuterItem = "tools.jsonArraysEditor.clickHereForFullOuterItem" as const;
 
 export const toolContentKeys = [
   TemplateEditorMiscGroupLabel,
@@ -46,6 +48,8 @@ export const toolContentKeys = [
   WorkflowOrchestratorErrorDismissBtn,
   WorkflowOrchestratorErrorMessageWrapper,
   WorkflowOrchestratorLoadingMessageWrapper,
+  JsonArrEditorOuterGroupNameTemplate,
+  JsonArrEditorClickHereForFullOuterItem,
 ] as const;
 
 export type ToolContentKey = typeof toolContentKeys[number];

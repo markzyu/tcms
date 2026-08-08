@@ -188,3 +188,35 @@ export const getShallowArrayPaths = (group: FieldGroupDescriptor) => {
     return [];
   });
 }
+
+export const getDeepestArrayPath = (fullPath: string) => {
+  const parts = fullPath.split(".");
+  const lastIndex = parts.lastIndexOf("{index}");
+  if (lastIndex === -1) {
+    return undefined;
+  }
+  return parts.slice(0, lastIndex).join(".");
+}
+
+export const getDeepestArrayItemPath = (fullPath: string) => {
+  const parts = fullPath.split(".");
+  const lastIndex = parts.lastIndexOf("{index}");
+  if (lastIndex === -1) {
+    return undefined;
+  }
+  const idx = Math.min(lastIndex + 1, parts.length);
+  return parts.slice(0, idx).join(".");
+}
+
+const numericStrings = new Set<string>("0123456789");
+
+export const getDeepestArrayItemPathWithIndex = (fullPath: string) => {
+  const parts = fullPath.split(".");
+  for (let i = parts.length - 1; i >= 0; i--) {
+    if (numericStrings.has(parts[i])) {
+      const endIndex = Math.min(i + 1, parts.length);
+      return parts.slice(0, endIndex).join(".");
+    }
+  }
+  return undefined;
+}
