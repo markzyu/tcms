@@ -345,7 +345,7 @@ describe("JsonObjectsEditor", () => {
         "Project 4",
       ]);
       expect(getDebugJson().projects).toHaveLength(4);
-      expect(getDebugJson().projects[3]).toEqual({});
+      expect(getDebugJson().projects[3]).toEqual(null);
     });
 
     it("clears deletion confirmation when adding an array item", async () => {
@@ -456,7 +456,7 @@ describe("JsonObjectsEditor", () => {
 
       expect(getArrayGroupNames()).toEqual(["Project 1"]);
       expect(getDebugJson().projects).toHaveLength(1);
-      expect(getDebugJson().projects[0]).toEqual({});
+      expect(getDebugJson().projects[0]).toEqual(null);
     });
   });
 });
