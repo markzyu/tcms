@@ -136,4 +136,74 @@ export const allGroupNames = [
   "Project 3",
   "Project 4",
   "Project 5",
+  "Project {index}",
+  "Project ",
+  "Task 1",
+  "Task 2",
+  "Task 3",
+  "Task {index}",
+  "Task ",
 ];
+
+/** Matches the FieldsInsideArray story: edit projects[1] only. */
+export const fieldsInsideArrayJsonPath = "projects.1";
+
+export const fieldsInsideArrayProps = {
+  input: {
+    ...withArrayFieldsProps.input,
+    jsonPath: fieldsInsideArrayJsonPath,
+  },
+};
+
+export const fieldsInsideArrayInitialDebugJson = {
+  name: "John Doe",
+  projects: withArrayFieldsJson.projects,
+};
+
+export const fieldsInsideArrayInitialRender = {
+  groupNames: ["Project ", "Task 1", "Task 2"],
+  groups: [
+    {
+      name: "Project ",
+      fields: [
+        { testId: "field-undefined-projects.1.title", label: "Title", value: "Music" },
+        { testId: "field-undefined-projects.1.description", label: "Description", value: "Compositions and recordings" },
+        { testId: "field-undefined-projects.1.url", label: "URL", value: "https://example.com/music" },
+      ],
+    },
+    {
+      name: "Task 1",
+      fields: [
+        { testId: "field-undefined-projects.1.tasks.0", label: "Details", value: "Task 3" },
+      ],
+    },
+    {
+      name: "Task 2",
+      fields: [
+        { testId: "field-undefined-projects.1.tasks.1", label: "Details", value: "Task 4" },
+      ],
+    },
+  ],
+};
+
+/** Edit a single task string at projects[1].tasks[0]. */
+export const fieldsInsideTaskJsonPath = "projects.1.tasks.0";
+
+export const fieldsInsideTaskProps = {
+  input: {
+    ...withArrayFieldsProps.input,
+    jsonPath: fieldsInsideTaskJsonPath,
+  },
+};
+
+export const fieldsInsideTaskInitialRender = {
+  groupNames: ["Task "],
+  groups: [
+    {
+      name: "Task ",
+      fields: [
+        { testId: "field-undefined-projects.1.tasks.0", label: "Details", value: "Task 3" },
+      ],
+    },
+  ],
+};

@@ -9,6 +9,11 @@ import JsonObjectsEditor from "./JsonObjectsEditor.vue";
 import {
   allGroupNames,
   defaultFilePath,
+  fieldsInsideArrayInitialDebugJson,
+  fieldsInsideArrayInitialRender,
+  fieldsInsideArrayProps,
+  fieldsInsideTaskInitialRender,
+  fieldsInsideTaskProps,
   singletonOnlyGroupNames,
   withArrayFieldsInitialDebugJson,
   withArrayFieldsInitialRender,
@@ -84,6 +89,10 @@ async function clickMediaPicker(fieldTestId: string) {
 
 function getArrayGroupNames() {
   return getRenderedGroupNames().filter((name) => name.startsWith("Project "));
+}
+
+function getTaskGroupNames() {
+  return getRenderedGroupNames().filter((name) => name.startsWith("Task "));
 }
 
 async function setSegmentValue(fieldTestId: string, value: string) {
@@ -169,7 +178,9 @@ async function deleteArrayGroup(groupName: string) {
 async function renderEditor(
   overrides: {
     json?: Record<string, unknown>;
+    jsonPath?: string;
     onAction?: Mock;
+    waitForText?: string;
   } = {},
 ) {
   const onAction = overrides.onAction ?? vi.fn(async (action) => {
@@ -183,13 +194,65 @@ async function renderEditor(
       input: {
         ...withArrayFieldsProps.input,
         json: structuredClone(overrides.json ?? withArrayFieldsJson),
+        ...(overrides.jsonPath !== undefined ? { jsonPath: overrides.jsonPath } : {}),
       },
       onAction,
     },
   });
   await flushPromises();
   await waitFor(() => {
-    expect(screen.getByText("Basic Information")).toBeInTheDocument();
+    expect(screen.getByText(overrides.waitForText ?? "Basic Information")).toBeInTheDocument();
+  });
+  return { onAction };
+}
+
+async function renderFieldsInsideArrayEditor(
+  overrides: {
+    json?: Record<string, unknown>;
+    jsonPath?: string;
+    onAction?: Mock;
+    waitForTestId?: string;
+  } = {},
+) {
+  const onAction = overrides.onAction ?? vi.fn();
+  renderTest(JsonObjectsEditor, {
+    props: {
+      ...fieldsInsideArrayProps,
+      input: {
+        ...fieldsInsideArrayProps.input,
+        json: structuredClone(overrides.json ?? withArrayFieldsJson),
+        ...(overrides.jsonPath !== undefined ? { jsonPath: overrides.jsonPath } : {}),
+      },
+      onAction,
+    },
+  });
+  await flushPromises();
+  await waitFor(() => {
+    expect(screen.getByTestId(overrides.waitForTestId ?? "field-undefined-projects.1.title")).toBeInTheDocument();
+  });
+  return { onAction };
+}
+
+async function renderFieldsInsideTaskEditor(
+  overrides: {
+    json?: Record<string, unknown>;
+    onAction?: Mock;
+  } = {},
+) {
+  const onAction = overrides.onAction ?? vi.fn();
+  renderTest(JsonObjectsEditor, {
+    props: {
+      ...fieldsInsideTaskProps,
+      input: {
+        ...fieldsInsideTaskProps.input,
+        json: structuredClone(overrides.json ?? withArrayFieldsJson),
+      },
+      onAction,
+    },
+  });
+  await flushPromises();
+  await waitFor(() => {
+    expect(screen.getByTestId("field-undefined-projects.1.tasks.0")).toBeInTheDocument();
   });
   return { onAction };
 }
@@ -457,6 +520,104 @@ describe("JsonObjectsEditor", () => {
       expect(getArrayGroupNames()).toEqual(["Project 1"]);
       expect(getDebugJson().projects).toHaveLength(1);
       expect(getDebugJson().projects[0]).toEqual(null);
+    });
+  });
+
+  describe("editing fields inside array item", () => {
+    it("renders project singleton fields and nested task groups when jsonPath is projects.1", async () => {
+      await renderFieldsInsideArrayEditor();
+
+      expect(screen.queryByText("Basic Information")).not.toBeInTheDocument();
+      expect(getRenderedGroupNames()).toEqual(fieldsInsideArrayInitialRender.groupNames);
+      expect(getDebugJson()).toEqual(fieldsInsideArrayInitialDebugJson);
+
+      for (const group of fieldsInsideArrayInitialRender.groups) {
+        const groupContainer = getGroupContainer(group.name);
+        expect(groupContainer).toBeInTheDocument();
+
+        for (const field of group.fields) {
+          expect(within(groupContainer).getByTestId(field.testId)).toBeInTheDocument();
+          if (field.value !== undefined) {
+            const input = await getNativeInput(field.testId);
+            expect(input).toHaveValue(String(field.value));
+          }
+        }
+      }
+    });
+
+    it("adds and edits a task within the scoped project", async () => {
+      await renderFieldsInsideArrayEditor();
+
+      await dispatchAddArrayItem("Task 1");
+
+      expect(getTaskGroupNames()).toEqual(["Task 1", "Task 2", "Task 3"]);
+      expect(getDebugJson().projects[1].tasks).toEqual(["Task 3", "Task 4", null]);
+
+      await setFieldInputValue("field-undefined-projects.1.tasks.2", "New Task");
+
+      expect(getDebugJson().projects[1]).toMatchObject({
+        title: "Music",
+        description: "Compositions and recordings",
+        url: "https://example.com/music",
+        tasks: ["Task 3", "Task 4", "New Task"],
+      });
+      expect(getDebugJson().projects[0]).toEqual(withArrayFieldsJson.projects[0]);
+      expect(getDebugJson().projects[2]).toEqual(withArrayFieldsJson.projects[2]);
+      expect(getDebugJson().name).toBe("John Doe");
+    });
+
+    it("removes task #0 without changing sibling data or other projects", async () => {
+      await renderFieldsInsideArrayEditor();
+
+      await deleteArrayGroup("Task 1");
+
+      expect(getTaskGroupNames()).toEqual(["Task 1"]);
+      expect(getDebugJson().projects[1]).toMatchObject({
+        title: "Music",
+        description: "Compositions and recordings",
+        url: "https://example.com/music",
+        tasks: ["Task 4"],
+      });
+      expect(getDebugJson().projects[0]).toEqual(withArrayFieldsJson.projects[0]);
+      expect(getDebugJson().projects[2]).toEqual(withArrayFieldsJson.projects[2]);
+      expect(getDebugJson().name).toBe("John Doe");
+    });
+
+    it("renders a singleton Details field when jsonPath is projects.1.tasks.0", async () => {
+      await renderFieldsInsideTaskEditor();
+
+      expect(screen.queryByText("Basic Information")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("field-undefined-projects.1.title")).not.toBeInTheDocument();
+      expect(getRenderedGroupNames()).toEqual(fieldsInsideTaskInitialRender.groupNames);
+
+      for (const group of fieldsInsideTaskInitialRender.groups) {
+        const groupContainer = getGroupContainer(group.name);
+        expect(groupContainer).toBeInTheDocument();
+
+        for (const field of group.fields) {
+          expect(within(groupContainer).getByTestId(field.testId)).toBeInTheDocument();
+          if (field.value !== undefined) {
+            const input = await getNativeInput(field.testId);
+            expect(input).toHaveValue(String(field.value));
+          }
+        }
+      }
+    });
+
+    it("reads and writes the task string at projects.1.tasks.0 without mutating siblings", async () => {
+      await renderFieldsInsideTaskEditor();
+
+      await setFieldInputValue("field-undefined-projects.1.tasks.0", "Updated detail");
+
+      expect(getDebugJson().projects[1].tasks).toEqual(["Updated detail", "Task 4"]);
+      expect(getDebugJson().projects[1]).toMatchObject({
+        title: "Music",
+        description: "Compositions and recordings",
+        url: "https://example.com/music",
+      });
+      expect(getDebugJson().projects[0]).toEqual(withArrayFieldsJson.projects[0]);
+      expect(getDebugJson().projects[2]).toEqual(withArrayFieldsJson.projects[2]);
+      expect(getDebugJson().name).toBe("John Doe");
     });
   });
 });

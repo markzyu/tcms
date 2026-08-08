@@ -73,7 +73,7 @@ export const WithArrayFields: Story = {
   },
 }
 
-export const InsideArrayField: Story = {
+export const FieldsInsideArray: Story = {
   args: {
     input: {
       type: 'jsonWithSchema',

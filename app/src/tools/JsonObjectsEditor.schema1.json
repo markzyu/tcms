@@ -80,7 +80,7 @@
         "projects.{index}.title": "Title",
         "projects.{index}.description": "Description",
         "projects.{index}.url": "URL",
-        "projects.{index}.tasks": "Task",
+        "projects.{index}.tasks": "Task {index}",
         "projects.{index}.tasks.{index}": "Details"
       },
       "ja": {
@@ -102,7 +102,7 @@
         "projects.{index}.title": "タイトル",
         "projects.{index}.description": "説明",
         "projects.{index}.url": "URL",
-        "projects.{index}.tasks": "タスク",
+        "projects.{index}.tasks": "タスク{index}",
         "projects.{index}.tasks.{index}": "詳細"
       }
     }
