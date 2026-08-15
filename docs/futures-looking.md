@@ -326,3 +326,20 @@ Page short names are defined in the `pages` object. Templates can declare patter
 
 * **cspRules:** variable replacement follows `Intl.MessageFormat` syntax.
 * **apiPaths:** API paths from sidecar/builtin backends enabled for this template. HTML paths are not listed here.
+
+
+## Tools using WASM, WebGPU etc
+
+There are a lot of nice Rust crates that can compile to a single standalone binary on wasm32-unknown-unknown. They would be especially helpful for image processing, AI embedding search, etc.
+
+Depending on OS and JIT support, WASM alone might require AltStore and JIT fix on iOS.
+
+But in the context of TCMS, OS support of WASM itself is in question:
+
+* Newer devices can run Wasm and WebGPU directly in Tauri webview, likely without JIT fix (iOS 26+, Android version 12+)
+* Older devices cannot support WebGPU, and WASM might need to run in external, sideloaded browsers
+
+As a result:
+
+* power tools must be built in a way that separates the Tool component's renderer from Tauri. (And the current ToolAction, ToolInput schemas are half way there)
+* power tools could choose to ship WASM binaries. But WebGPU should be optional. It's a performance improvement. All tools should have a fallback to CPU-based compute.
