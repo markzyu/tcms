@@ -9,6 +9,16 @@ const WORKDIR = IS_NODE ? process.cwd() : "";
 export const AppLanguagesSchema = z.enum(["en", "ja"]);
 export type AppLanguages = z.infer<typeof AppLanguagesSchema>;
 
+const unionDiscriminatorLabel: Record<AppLanguages, string> = {
+  en: "Kind",
+  ja: "種類",
+};
+
+const arrayGroupLabel: Record<AppLanguages, string> = {
+  en: "{title} #{index}",
+  ja: "{index}番目の{title}",
+};
+
 export const EditorUiTextareaFieldSchema = z.object({
   type: z.literal("textarea"),
 });
@@ -136,7 +146,6 @@ type PredefinedField<T extends z.ZodType> = {
   zodSchema: T;
   fieldGroup: EditorUiFieldGroup;
   fieldLabels: Record<AppLanguages, Record<string, string>>;
-  _isStringEnum?: boolean;
 }
 export const defineEditorUiField = <T extends z.ZodType>(
   zodSchema: T,
@@ -158,7 +167,7 @@ export const defineEditorUiField = <T extends z.ZodType>(
         fieldLabels[language as AppLanguages][newPath] = label;
       });
     } else if (field && typeof field === "object" && "fieldGroup" in field) {
-      const { fieldGroup, fieldLabels: inputFieldLabels, _isStringEnum } = field as PredefinedField<any>;
+      const { fieldGroup, fieldLabels: inputFieldLabels } = field as PredefinedField<any>;
       fieldGroup.fields.forEach((field) => {
         const newPath = Array.isArray(rawField) ? `${key}.{index}.${field.path}` : `${key}.${field.path}`;
         fields.push({
@@ -173,13 +182,14 @@ export const defineEditorUiField = <T extends z.ZodType>(
         });
       });
 
-      // String enums only store individual variant labels. We handle the parent group label here.
-      if (_isStringEnum) {
-        const newPath = Array.isArray(rawField) ? `${key}.{index}` : key;
-        Object.entries(fieldGroup.labelByLanguage || {}).forEach(([language, label]) => {
-          fieldLabels[language as AppLanguages][newPath] = label;
-        });
-      }
+      // It's helpful to copy the current group name to the final fieldLabels.
+      // * Arrays can reuse the item type's group name as Array item name
+      // * String enums only store individual variant labels. We handle the parent group label here.
+      const groupPath = Array.isArray(rawField) ? `${key}.{index}` : key;
+      Object.entries(fieldGroup.labelByLanguage || {}).forEach(([language, label]) => {
+        const arrLabel = arrayGroupLabel[language as AppLanguages].replace("{title}", label);
+        fieldLabels[language as AppLanguages][groupPath] = Array.isArray(rawField) ? arrLabel : label;
+      });
     }
   });
   const fieldGroup = {
@@ -187,11 +197,6 @@ export const defineEditorUiField = <T extends z.ZodType>(
     fields,
   };
   return { zodSchema, fieldGroup, fieldLabels };
-};
-
-const unionDiscriminatorLabel: Record<AppLanguages, string> = {
-  en: "Kind",
-  ja: "種類",
 };
 
 type UnionType<DP extends string> = z.ZodType<Record<DP, string> & unknown>;
@@ -261,7 +266,7 @@ export const defineEditorUiStringEnumField = <T extends string>(
     labelByLanguage: groupName || unionDiscriminatorLabel,
     fields: [],
   };
-  return { zodSchema, fieldGroup, fieldLabels, _isStringEnum: true };
+  return { zodSchema, fieldGroup, fieldLabels };
 };
 
 export const relativeFieldGroup = (path: string, group: EditorUiFieldGroup) => {
