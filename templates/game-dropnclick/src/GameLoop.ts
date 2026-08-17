@@ -14,10 +14,6 @@ export type GameEntity = {
   startX: number;
   startY: number;
 
-  /* The (x, y) change from starting position to the future position at the next tick */
-  deltaX: number;
-  deltaY: number;
-
   text: string;
   textStyle: TextStyle;
   drop: Drop;
@@ -30,10 +26,16 @@ const TICK_INTERVAL = 500;
 const SPAWN_INTERVAL = 1000;
 const CHANGE_MOVEMENT_INTERVAL = 4000;
 
+type Point2D = {
+  x: number;
+  y: number;
+}
+
 export type GameLoopProps = {
   gameConfig: GameConfig;
   setEntities: (_callback: (entities: GameEntity[]) => GameEntity[]) => void;
-  setMovementSpeed: (_callback: (speed: { x: number; y: number }) => { x: number; y: number }) => void;
+  setMovementSpeed: (_callback: (speed: Point2D) => Point2D) => void;
+  setScreenDeltaToZero: () => void;
   setScore: (_callback: (score: number) => number) => void;
 }
 
@@ -43,8 +45,17 @@ export class GameLoop {
   private speedX: number;
   private speedY: number;
 
-  static _getRandomSpeed() {
-    return (50 + (Math.random() - 0.5) * 50) * (Math.random() < 0.5 ? 1 : -1);
+  // The delta in position of the screen, at the next tick
+  private deltaX: number;
+  private deltaY: number;
+
+  static _getRandomSpeed(): Point2D {
+    const speedScalar = 50;
+    const angle = Math.random() * 2 * Math.PI;
+    return {
+      x: speedScalar * Math.cos(angle),
+      y: speedScalar * Math.sin(angle),
+    };
   }
 
   static _getRandomDrop(gameConfig: GameConfig) {
@@ -60,8 +71,11 @@ export class GameLoop {
   constructor(props: GameLoopProps) {
     this.props = props;
     this.tick = 0;
-    this.speedX = GameLoop._getRandomSpeed();
-    this.speedY = GameLoop._getRandomSpeed();
+    const speed = GameLoop._getRandomSpeed();
+    this.speedX = speed.x;
+    this.speedY = speed.y;
+    this.deltaX = 0;
+    this.deltaY = 0;
   }
 
   /* Returns the setInterval id */
@@ -75,9 +89,8 @@ export class GameLoop {
   }
 
   private _doTick() {
-    const { gameConfig, setEntities, setMovementSpeed, setScore } = this.props;
+    const { gameConfig, setEntities, setMovementSpeed, setScore, setScreenDeltaToZero } = this.props;
     const { drop, variant } = GameLoop._getRandomDrop(gameConfig);
-    const currTime = Date.now();
     setEntities((entities) => {
       let deltaScore = 0;
 
@@ -92,14 +105,13 @@ export class GameLoop {
 
       // Spawn new entities
       if (this.tick % (SPAWN_INTERVAL / TICK_INTERVAL) === 0) {
-        const startX = Math.random() * window.innerWidth * 3 / 4;
-        const startY = Math.random() * window.innerHeight * 3 / 4;
+        // Spawning the new entity, relative to screen space position, by subtracting parent offset
+        const startX = Math.random() * window.innerWidth - this.deltaX;
+        const startY = Math.random() * window.innerHeight - this.deltaY;
         newEntities.push({
           id: uuidv4(),
           startX,
           startY,
-          deltaX: 0,
-          deltaY: 0,
           text: variant?.name || drop.baseName,
           textStyle: variant?.textStyle || drop.baseTextStyle,
           drop,
@@ -107,35 +119,31 @@ export class GameLoop {
         });
       }
 
-      // Update entities' deltaX, deltaY positions
-      newEntities = newEntities.map((entity) => ({
-        ...entity,
-        deltaX: entity.deltaX + this.speedX * TICK_INTERVAL / 1000,
-        deltaY: entity.deltaY + this.speedY * TICK_INTERVAL / 1000,
-      }));
+      // Update screen's delta position
+      this.deltaX += this.speedX * TICK_INTERVAL / 1000;
+      this.deltaY += this.speedY * TICK_INTERVAL / 1000;
 
       // Remove entities that moved out of view (right now, the entities are at their start* positions)
       newEntities = newEntities.filter((entity) => {
-        return (
-          entity.startX + entity.deltaX > 0 && entity.startX + entity.deltaX < window.innerWidth
-          && entity.startY + entity.deltaY > 0 && entity.startY + entity.deltaY < window.innerHeight
-        );
+        return entity.startX + this.deltaX > 0 && entity.startX + this.deltaX < window.innerWidth
+          && entity.startY + this.deltaY > 0 && entity.startY + this.deltaY < window.innerHeight;
       });
 
       // Update movement speed and renormalize entities' startX, startY positions
       if (this.tick % (CHANGE_MOVEMENT_INTERVAL / TICK_INTERVAL) === 0) {
         const oldSpeedX = this.speedX;
         const oldSpeedY = this.speedY;
-        this.speedX = GameLoop._getRandomSpeed();
-        this.speedY = GameLoop._getRandomSpeed();
+        const speed = GameLoop._getRandomSpeed();
+        this.speedX = speed.x;
+        this.speedY = speed.y;
         newEntities = newEntities.map((entity) => ({
           ...entity,
-          id: uuidv4(),
-          startX: entity.startX + entity.deltaX - oldSpeedX * TICK_INTERVAL / 1000,
-          startY: entity.startY + entity.deltaY - oldSpeedY * TICK_INTERVAL / 1000,
-          deltaX: this.speedX * TICK_INTERVAL / 1000,
-          deltaY: this.speedY * TICK_INTERVAL / 1000,
+          startX: entity.startX + this.deltaX - oldSpeedX * TICK_INTERVAL / 1000,
+          startY: entity.startY + this.deltaY - oldSpeedY * TICK_INTERVAL / 1000,
         }));
+        this.deltaX = this.speedX * TICK_INTERVAL / 1000;
+        this.deltaY = this.speedY * TICK_INTERVAL / 1000;
+        setScreenDeltaToZero();
       }
       setMovementSpeed(() => ({
         x: this.speedX,
