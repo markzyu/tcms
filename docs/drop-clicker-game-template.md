@@ -154,3 +154,12 @@ Item drop tables, etc are considered template data. Here we discuss what user-si
   * Score, timestamp, and game mode, and the list of collected items in that run.
   * (+ hopefully a playback json that stores a highlight gameplay as a json to play back)
 * List of rare items collected (and how many items are undiscovered)
+
+
+## Notes: Schema suggestions
+
+Fixed animation names should describe the look and feel, not the 2D/3D implementation. "flyToHud" instead of "moveToRight"
+
+And, though we explicitly said to store "CSS animations" as a field, it's much better to instead store a list of "animation file paths" at the root json, and then reference animations by name. (without assuming whether it's CSS, 2D or 3D)
+
+This would help the schema migrate if we want a 3D non-TCMS game engine later, and if we want to reuse the same content jsons. (Images -> 3D Models and textures. CSS files -> 3D animation files. But names/paths stay the same)
