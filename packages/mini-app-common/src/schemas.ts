@@ -136,54 +136,56 @@ type PredefinedField<T extends z.ZodType> = {
   zodSchema: T;
   fieldGroup: EditorUiFieldGroup;
   fieldLabels: Record<AppLanguages, Record<string, string>>;
+  _isStringEnum?: boolean;
 }
 export const defineEditorUiField = <T extends z.ZodType>(
   zodSchema: T,
   groupName: Record<AppLanguages, string>,
-  rawFields: Record<keyof z.infer<T>, RawFieldDescriptor | PredefinedField<any>>
+  rawFields: Record<keyof z.infer<T>, RawFieldDescriptor | PredefinedField<any> | RawFieldDescriptor[] | PredefinedField<any>[]>
 ): PredefinedField<T> => {
   const fields: EditorUiField[] = [];
-  Object.entries(rawFields).forEach(([key, field]) => {
+  const fieldLabels: Record<AppLanguages, Record<string, string>> = {
+    en: {},
+    ja: {},
+  };
+  Object.entries(rawFields).forEach(([key, rawField]) => {
+    const field = (rawField && Array.isArray(rawField)) ? rawField[0] : rawField;
     if (field && typeof field === "object" && "label" in field) {
       const { label, ...rest } = field as RawFieldDescriptor;
-      fields.push({
-        ...rest,
-        path: key,
+      const newPath = Array.isArray(rawField) ? `${key}.{index}` : key;
+      Object.entries(label).forEach(([language, label]) => {
+        fields.push({ ...rest, path: newPath });
+        fieldLabels[language as AppLanguages][newPath] = label;
       });
     } else if (field && typeof field === "object" && "fieldGroup" in field) {
-      const { fieldGroup: { fields } } = field as PredefinedField<any>;
-      fields.forEach((field) => {
+      const { fieldGroup, fieldLabels: inputFieldLabels, _isStringEnum } = field as PredefinedField<any>;
+      fieldGroup.fields.forEach((field) => {
+        const newPath = Array.isArray(rawField) ? `${key}.{index}.${field.path}` : `${key}.${field.path}`;
         fields.push({
           ...field,
-          path: `${key}.${field.path}`,
+          path: newPath,
         });
       });
+      Object.entries(inputFieldLabels).forEach(([language, labels2]) => {
+        Object.entries(labels2).forEach(([key2, label]) => {
+          const newPath = Array.isArray(rawField) ? `${key}.{index}.${key2}` : `${key}.${key2}`;
+          fieldLabels[language as AppLanguages][newPath] = label;
+        });
+      });
+
+      // String enums only store individual variant labels. We handle the parent group label here.
+      if (_isStringEnum) {
+        const newPath = Array.isArray(rawField) ? `${key}.{index}` : key;
+        Object.entries(fieldGroup.labelByLanguage || {}).forEach(([language, label]) => {
+          fieldLabels[language as AppLanguages][newPath] = label;
+        });
+      }
     }
   });
   const fieldGroup = {
     labelByLanguage: groupName,
     fields,
   };
-
-  const fieldLabels: Record<AppLanguages, Record<string, string>> = {
-    en: {},
-    ja: {},
-  };
-  Object.entries(rawFields).map(([key, field]) => {
-    if (field && typeof field === "object" && "label" in field) {
-      const labels = (field as RawFieldDescriptor).label;
-      Object.entries(labels).forEach(([language, label]) => {
-        fieldLabels[language as AppLanguages][key] = label;
-      });
-    } else if (field && typeof field === "object" && "fieldLabels" in field) {
-      const { fieldLabels } = field as PredefinedField<any>;
-      Object.entries(fieldLabels).forEach(([language, labels2]) => {
-        Object.entries(labels2).forEach(([key2, label]) => {
-          fieldLabels[language as AppLanguages][`${key}.${key2}`] = label;
-        });
-      });
-    }
-  });
   return { zodSchema, fieldGroup, fieldLabels };
 };
 
@@ -205,7 +207,7 @@ export const defineEditorUiUnionField = <DP extends string, T extends readonly U
     ja: {},
   };
   Object.entries(predefinedFields).forEach(([unionKey, obj]) => {
-    const { fieldGroup, fieldLabels } = obj as PredefinedField<T[number]>;
+    const { fieldGroup, fieldLabels: inputFieldLabels } = obj as PredefinedField<T[number]>;
     fieldGroup.fields.forEach((field) => {
       if (discriminatorPath === field.path) {
         return;
@@ -215,12 +217,13 @@ export const defineEditorUiUnionField = <DP extends string, T extends readonly U
       }
       console.warn(`[WARN] Collision amongst union fields: ${field.path}`);
     });
-    Object.entries(fieldLabels).forEach(([language, labels]) => {
+    Object.entries(inputFieldLabels).forEach(([language, labels]) => {
       Object.entries(labels).forEach(([key, label]) => {
+        if (discriminatorPath === key) {
+          fieldLabels[language as AppLanguages][`${key}.${unionKey}`] = label;
+          return;
+        }
         if (key in fieldLabels[language as AppLanguages]) {
-          if (discriminatorPath === key) {
-            fieldLabels[language as AppLanguages][`${key}.${unionKey}`] = label;
-          }
           console.warn(`[WARN] Collision amongst union fields: ${key}`);
         }
 
@@ -242,23 +245,32 @@ export const defineEditorUiUnionField = <DP extends string, T extends readonly U
 type StringEnumType<T extends string> = z.ZodEnum<Record<T, string>>;
 export const defineEditorUiStringEnumField = <T extends string>(
   zodSchema: StringEnumType<T>,
-  names: Record<AppLanguages, Record<T, string>>,
+  groupName: Record<AppLanguages, string> | undefined | null,
+  variantNames: Record<AppLanguages, Record<T, string>>,
 ): PredefinedField<StringEnumType<T>> => {
   const fieldLabels: Record<AppLanguages, Record<string, string>> = {
     en: {},
     ja: {},
   };
-  Object.entries(names).forEach(([language, obj]) => {
+  Object.entries(variantNames).forEach(([language, obj]) => {
     Object.entries(obj).forEach(([name, label]) => {
       fieldLabels[language as AppLanguages][name] = label as string;
     });
   });
   const fieldGroup = {
-    labelByLanguage: unionDiscriminatorLabel,
+    labelByLanguage: groupName || unionDiscriminatorLabel,
     fields: [],
   };
-  return { zodSchema, fieldGroup, fieldLabels };
+  return { zodSchema, fieldGroup, fieldLabels, _isStringEnum: true };
 };
+
+export const relativeFieldGroup = (path: string, group: EditorUiFieldGroup) => {
+  const fields = group.fields.map((field) => ({
+    ...field,
+    path: `${path}.${field.path}`,
+  }));
+  return { ...group, fields };
+}
 
 /**
  * Build step must run this function, from the template package root directory as workdir.
