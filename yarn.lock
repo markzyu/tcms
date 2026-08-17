@@ -2469,6 +2469,29 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@tcms/template-game-dropnclick@workspace:templates/game-dropnclick":
+  version: 0.0.0-use.local
+  resolution: "@tcms/template-game-dropnclick@workspace:templates/game-dropnclick"
+  dependencies:
+    "@tcms/mini-app-react-test-utils": "workspace:*"
+    "@tcms/mini-app-react-utils": "workspace:*"
+    "@types/jest": "npm:^29.5.14"
+    "@types/react": "npm:^18.3.12"
+    "@types/react-dom": "npm:^18.3.1"
+    esbuild: "npm:^0.25.0"
+    jest: "npm:^29.7.0"
+    jest-environment-jsdom: "npm:^29.7.0"
+    npm-run-all: "npm:^4.1.5"
+    react: "npm:^18.3.1"
+    react-dom: "npm:^18.3.1"
+    tailwindcss: "npm:3"
+    ts-jest: "npm:^29.2.5"
+    tsx: "npm:^4.22.4"
+    typescript: "npm:~6.0.3"
+    zod: "npm:^4.4.3"
+  languageName: unknown
+  linkType: soft
+
 "@testing-library/dom@npm:^10.4.0, @testing-library/dom@npm:^10.4.1":
   version: 10.4.1
   resolution: "@testing-library/dom@npm:10.4.1"

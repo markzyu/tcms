@@ -2,14 +2,14 @@ import { cleanUpSchemaDirectory, defineRootManifest } from "@tcms/mini-app-commo
 await cleanUpSchemaDirectory();
 
 // Do not import any schema until cleanup is done.
-import { contactCardSchemaName, contactCardSchemaPathPromise } from "./contactCard";
+import { gameConfigSchemaName, gameConfigSchemaPathPromise } from "./gameConfig";
 defineRootManifest({
   id: "example-info-card1",
   title: "[Example] Contact Card",
   version: "1.0.0",
   pages: {
-    [contactCardSchemaName]: {
-      schema: await contactCardSchemaPathPromise,
+    [gameConfigSchemaName]: {
+      schema: await gameConfigSchemaPathPromise,
     },
   },
 });
