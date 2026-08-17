@@ -239,6 +239,27 @@ export const defineEditorUiUnionField = <DP extends string, T extends readonly U
   return { zodSchema, fieldGroup, fieldLabels };
 };
 
+type StringEnumType<T extends string> = z.ZodEnum<Record<T, string>>;
+export const defineEditorUiStringEnumField = <T extends string>(
+  zodSchema: StringEnumType<T>,
+  names: Record<AppLanguages, Record<T, string>>,
+): PredefinedField<StringEnumType<T>> => {
+  const fieldLabels: Record<AppLanguages, Record<string, string>> = {
+    en: {},
+    ja: {},
+  };
+  Object.entries(names).forEach(([language, obj]) => {
+    Object.entries(obj).forEach(([name, label]) => {
+      fieldLabels[language as AppLanguages][name] = label as string;
+    });
+  });
+  const fieldGroup = {
+    labelByLanguage: unionDiscriminatorLabel,
+    fields: [],
+  };
+  return { zodSchema, fieldGroup, fieldLabels };
+};
+
 /**
  * Build step must run this function, from the template package root directory as workdir.
  */
