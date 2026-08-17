@@ -5,7 +5,7 @@ import { App } from "./App";
 import type { GameConfig } from "./content/gameConfig";
 import { defaultGameConfig } from "./content/gameConfig.mock";
 import {
-  CONTACT_CARD_TEST_IDS,
+  TEST_IDS,
 } from "./constants";
 
 const render = renderWithCdnBridge<GameConfig>;

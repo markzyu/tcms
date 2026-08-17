@@ -5,14 +5,50 @@
   if (!window.tcms.cdnBridge) {
     window.tcms.cdnBridge = {
       initialContentJson: {
-        name: "John Doe",
-        headline: "Photographer",
-        bio: "John is a photographer based in New York City. He is known for his street photography and his use of color. He has been photographing for 10 years. His favorite camera is the Leica M10.",
-        email: "john@example.com",
-        phone: "123-456-7890",
-        heroImage: "/assets/hero.jpg",
-        heroAltText: "Example hero image. Blue Monday. Marina Bay Singapore. Provided by Wikimedia Commons Author: John.wp.phillips.",
-        heroAlignment: "left",
+        tiers: [
+          { weight: 100, baseDropRate: 2, pGlobalEffect: 0.1 },
+          { weight: 10, baseDropRate: 1, pGlobalEffect: 0.05 },
+          { weight: 1, baseDropRate: 0.5, pGlobalEffect: 0.01 },
+        ],
+        rarities: [
+          { name: "Common", weight: 100, textStyle: {} },
+          { name: "Rare", weight: 10, textStyle: {} },
+          { name: "Legendary", weight: 1, textStyle: {} },
+        ],
+        effects: [
+          { type: "movementSpeed", baseValue: 1, maxValue: 10 },
+          { type: "itemVisibility", baseValue: 1, maxValue: 10 },
+          { type: "screenZoom", baseValue: 1, maxValue: 10 },
+        ],
+        player: {
+          directionChangeInterval: 1,
+          directionChangeMaxAngle: 10,
+        },
+        drops: [
+          {
+            baseName: "Plastic Bottle",
+            baseRarity: 0,
+            baseTier: 0,
+            baseWeight: 100,
+            baseTextStyle: { fontColor: "#000000" },
+            baseMedia: [],
+            animationOnPickup: "zoomOutAndFade",
+            animationOnDrop: "zoomOutAndFade",
+            effects: [],
+            variants: [
+              {
+                name: "Glass Bottle",
+                rarity: 1,
+                weight: 10,
+                textStyle: {},
+                media: [],
+              }
+            ]
+          }
+        ],
+        scoreFunction: "A * rarity * B ^ tier",
+        scoreFunctionParamA: 100,
+        scoreFunctionParamB: 1.05,
       },
       getCDNType: () => "localCDN",
       getContentJsonPath: () => "/__query__/content.en.json",

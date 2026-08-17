@@ -4,8 +4,8 @@ await cleanUpSchemaDirectory();
 // Do not import any schema until cleanup is done.
 const { gameConfigSchemaName, gameConfigSchemaPathPromise } = await import("./gameConfig");
 defineRootManifest({
-  id: "example-info-card1",
-  title: "[Example] Contact Card",
+  id: "game-dropnclick",
+  title: "[Example] Game Drop'n Click",
   version: "1.0.0",
   pages: {
     [gameConfigSchemaName]: {

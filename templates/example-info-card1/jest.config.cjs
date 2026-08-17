@@ -6,15 +6,17 @@ module.exports = {
   ],
   testMatch: ["<rootDir>/src/**/*.test.{ts,tsx}"],
   transform: {
-    "^.+\\.tsx?$": [
+    "^.+\\.(ts|tsx|js|mjs)?$": [
       "ts-jest",
       {
         tsconfig: {
           jsx: "react-jsx",
+          module: "commonjs",
           isolatedModules: true,
         },
       },
     ],
   },
+  transformIgnorePatterns: ["/node_modules/(?!any-esm-package/)"],
   clearMocks: true,
 };

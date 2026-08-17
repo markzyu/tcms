@@ -2,3 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+@keyframes movement {
+  from {
+    transform: translateX(0) translateY(0);
+  }
+  to {
+    transform: translateX(var(--speed-x-for-100-secs)) translateY(var(--speed-y-for-100-secs));
+  }
+}
