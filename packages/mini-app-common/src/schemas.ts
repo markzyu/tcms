@@ -132,57 +132,111 @@ export const definePageContentSchema = async (props: DefinePageContentSchemaProp
 };
 
 type RawFieldDescriptor = EditorUiFieldTypes & { label: Record<AppLanguages, string> };
-type PredefinedField = {
-  getFieldGroups: (rootPath: string) => EditorUiFieldGroup;
-  getFieldLabels: (rootPath: string) => Record<AppLanguages, Record<string, string>>;
+type PredefinedField<T extends z.ZodType> = {
+  zodSchema: T;
+  fieldGroup: EditorUiFieldGroup;
+  fieldLabels: Record<AppLanguages, Record<string, string>>;
 }
 export const defineEditorUiField = <T extends z.ZodType>(
   zodSchema: T,
   groupName: Record<AppLanguages, string>,
-  rawFields: Record<keyof z.infer<T>, RawFieldDescriptor | PredefinedField>
-): PredefinedField & { zodSchema: T } => {
-  const getFieldGroups = (rootPath: string) => {
-    const fields: EditorUiField[] = [];
-    Object.entries(rawFields).forEach(([key, field]) => {
-      if (field && typeof field === "object" && "label" in field) {
-        const { label, ...rest } = field as RawFieldDescriptor;
+  rawFields: Record<keyof z.infer<T>, RawFieldDescriptor | PredefinedField<any>>
+): PredefinedField<T> => {
+  const fields: EditorUiField[] = [];
+  Object.entries(rawFields).forEach(([key, field]) => {
+    if (field && typeof field === "object" && "label" in field) {
+      const { label, ...rest } = field as RawFieldDescriptor;
+      fields.push({
+        ...rest,
+        path: key,
+      });
+    } else if (field && typeof field === "object" && "fieldGroup" in field) {
+      const { fieldGroup: { fields } } = field as PredefinedField<any>;
+      fields.forEach((field) => {
         fields.push({
-          ...rest,
-          path: `${rootPath}.${key}`,
+          ...field,
+          path: `${key}.${field.path}`,
         });
-      } else if (field && typeof field === "object" && "getFieldGroups" in field) {
-        const fieldGroups = (field as PredefinedField).getFieldGroups(`${rootPath}.${key}`);
-        fields.push(...fieldGroups.fields);
-      }
-    });
-    return {
-      labelByLanguage: groupName,
-      fields,
-    };
+      });
+    }
+  });
+  const fieldGroup = {
+    labelByLanguage: groupName,
+    fields,
   };
-  const getFieldLabels = (rootPath: string) => {
-    const result: Record<AppLanguages, Record<string, string>> = {
-      en: {},
-      ja: {},
-    };
-    Object.entries(rawFields).map(([key, field]) => {
-      if (field && typeof field === "object" && "label" in field) {
-        const labels = (field as RawFieldDescriptor).label;
-        Object.entries(labels).forEach(([language, label]) => {
-          result[language as AppLanguages][`${rootPath}.${key}`] = label;
-        });
-      } else if (field && typeof field === "object" && "getFieldLabels" in field) {
-        const labels = (field as PredefinedField).getFieldLabels(`${rootPath}.${key}`);
-        Object.entries(labels).forEach(([language, labels2]) => {
-          Object.entries(labels2).forEach(([key2, label]) => {
-            result[language as AppLanguages][key2] = label;
-          });
-        });
-      }
-    });
-    return result;
+
+  const fieldLabels: Record<AppLanguages, Record<string, string>> = {
+    en: {},
+    ja: {},
   };
-  return { zodSchema, getFieldGroups, getFieldLabels };
+  Object.entries(rawFields).map(([key, field]) => {
+    if (field && typeof field === "object" && "label" in field) {
+      const labels = (field as RawFieldDescriptor).label;
+      Object.entries(labels).forEach(([language, label]) => {
+        fieldLabels[language as AppLanguages][key] = label;
+      });
+    } else if (field && typeof field === "object" && "fieldLabels" in field) {
+      const { fieldLabels } = field as PredefinedField<any>;
+      Object.entries(fieldLabels).forEach(([language, labels2]) => {
+        Object.entries(labels2).forEach(([key2, label]) => {
+          fieldLabels[language as AppLanguages][`${key}.${key2}`] = label;
+        });
+      });
+    }
+  });
+  return { zodSchema, fieldGroup, fieldLabels };
+};
+
+const unionDiscriminatorLabel: Record<AppLanguages, string> = {
+  en: "Kind",
+  ja: "種類",
+};
+
+type UnionType<DP extends string> = z.ZodType<Record<DP, string> & unknown>;
+export const defineEditorUiUnionField = <DP extends string, T extends readonly UnionType<DP>[]>(
+  zodSchema: z.ZodUnion<T>,
+  predefinedFields: Record<z.infer<z.ZodUnion<T>>[DP], PredefinedField<T[number]>>,
+  groupName: Record<AppLanguages, string>,
+  discriminatorPath: DP,
+): PredefinedField<z.ZodUnion<T>> => {
+  const fields: EditorUiField[] = [];
+  const fieldLabels: Record<AppLanguages, Record<string, string>> = {
+    en: {},
+    ja: {},
+  };
+  Object.entries(predefinedFields).forEach(([unionKey, obj]) => {
+    const { fieldGroup, fieldLabels } = obj as PredefinedField<T[number]>;
+    fieldGroup.fields.forEach((field) => {
+      if (discriminatorPath === field.path) {
+        return;
+      }
+      if (fields.some((f) => f.path === field.path)) {
+        return;
+      }
+      console.warn(`[WARN] Collision amongst union fields: ${field.path}`);
+    });
+    Object.entries(fieldLabels).forEach(([language, labels]) => {
+      Object.entries(labels).forEach(([key, label]) => {
+        if (key in fieldLabels[language as AppLanguages]) {
+          if (discriminatorPath === key) {
+            fieldLabels[language as AppLanguages][`${key}.${unionKey}`] = label;
+          }
+          console.warn(`[WARN] Collision amongst union fields: ${key}`);
+        }
+
+        fieldLabels[language as AppLanguages][key] = label;
+      });
+    });
+  });
+  fields.push({ path: discriminatorPath });
+  Object.entries(unionDiscriminatorLabel).forEach(([language, label]) => {
+    fieldLabels[language as AppLanguages][discriminatorPath] = label;
+  });
+  const fieldGroup = {
+    labelByLanguage: groupName,
+    fields,
+  }
+  return { zodSchema, fieldGroup, fieldLabels };
 };
 
 /**
