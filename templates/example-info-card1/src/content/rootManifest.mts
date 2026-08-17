@@ -2,7 +2,7 @@ import { cleanUpSchemaDirectory, defineRootManifest } from "@tcms/mini-app-commo
 await cleanUpSchemaDirectory();
 
 // Do not import any schema until cleanup is done.
-import { contactCardSchemaName, contactCardSchemaPathPromise } from "./contactCard";
+const { contactCardSchemaName, contactCardSchemaPathPromise } = await import("./contactCard");
 defineRootManifest({
   id: "example-info-card1",
   title: "[Example] Contact Card",
