@@ -46,7 +46,7 @@ All effects are stackable and additive. However, some, like item visibility, can
 
 Defining the "Drop Level":
 
-* Rarity: Normal, Rare, Epic, Legendary, Unique, etc.
+* Rarity: Normal, Epic, Legendary, Mythic, etc.
 * Tier: 1, 2, 3, 4, 5, etc.
 * "Drop Level": A joint of rarity and score level. 
   * Example name: "Normal T1".
@@ -83,7 +83,7 @@ Let's first summarize what the game needs to know about drops:
 * Animation On Pickup: A list of possible animations to play when the drop is picked up
   * Provide a few basic predefined ones for now. (Use string enums: "flyToHud", "zoomOutAndFade")
 * Animation On Drop (a similar list)
-* <u>Base Level</u>: This determines the base rarity and tier that is required to drop this base item.
+* <u>Base Rarity/Tier</u>: This determines the base rarity and tier that is required to drop this base item.
 * <u>Base Weight</u>: Given that we want a drop at the same level, how likely is it to be this drop?
 * Effects: This determines all possible in-game effects. And it's also used as a prefix for the item name.
   * Effect type (from a string enum)
@@ -92,7 +92,7 @@ Let's first summarize what the game needs to know about drops:
   * Is hidden (bool. If true, the effect is not shown in name or styles. But it still triggers the effect.)
 * Variants: This determines all visual variations of the item. And it's also used as a suffix for the item name.
   * Variant name (string)
-  * Tier (string enum)
+  * Rarity (string enum)
   * Style (Similar to base styles. Optional. Overrides the base style for this variant.)
   * Variant weight (Similar to base weight)
   * Animation On Pickup: optional override.
@@ -118,9 +118,9 @@ Let's also summarize what the game needs to know about the global attributes:
   * Effects obtained
 * Base Tier rate (How likely is it for a drop to be of each tier. This depends on time.)
   * A list of objs: `{start_time, tiers[]}` where each tier is the following:
-  * Tier ID (1, 2, 3, 4, 5, etc)
-  * Tier name (optional string)
-  * Tier rate (how likely is it for a drop to be of this tier.)
+  * Tier ID (0, 1, 2, 3, 4, 5, ... )
+  * Tier name (optional string, defaults to `T{id + 1}`)
+  * Tier weight (when multiple tiers are eligible, how often can a drop roll this tier)
   * Tier background color (optional)
   * Tier background image/media (optional)
   * Tier background css style (optional)
