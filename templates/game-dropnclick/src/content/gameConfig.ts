@@ -183,13 +183,7 @@ export const gameConfigSchemaPathPromise = definePageContentSchema({
   schemaVersion: gameConfigSchemaVersion,
   editorUiSchema: {
     fieldLabels: gameConfigEditorField.fieldLabels,
-    fieldGroups: [
-      relativeFieldGroup("tiers.{index}", tierEditorField.fieldGroup),
-      relativeFieldGroup("rarities.{index}", rarityEditorField.fieldGroup),
-      relativeFieldGroup("effects.{index}", effectConfigEditorField.fieldGroup),
-      relativeFieldGroup("player", playerConfigEditorField.fieldGroup),
-      relativeFieldGroup("drops.{index}", dropEditorField.fieldGroup),
-    ],
+    fieldGroups: [],
   },
   schema: gameConfigSchema,
 });

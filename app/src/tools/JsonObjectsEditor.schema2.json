@@ -1,0 +1,635 @@
+{
+  "schemaVersion": "0.1.0",
+  "editorUiSchema": {
+    "fieldGroups": [],
+    "fieldLabels": {
+      "en": {
+        "tiers.{index}.name": "Name",
+        "tiers.{index}.weight": "Weight",
+        "tiers.{index}.backgroundMedia.type.png": "PNG Image",
+        "tiers.{index}.backgroundMedia.url": "URL",
+        "tiers.{index}.backgroundMedia.type.basicShape": "Basic Shape",
+        "tiers.{index}.backgroundMedia.shape": "Shape",
+        "tiers.{index}.backgroundMedia.color": "Color",
+        "tiers.{index}.backgroundMedia.type": "Kind",
+        "tiers.{index}.backgroundMedia": "Media",
+        "tiers.{index}.baseDropRate": "Base Drop Rate",
+        "tiers.{index}.pGlobalEffect": "Global Effect Chance",
+        "tiers.{index}": "Tier #{index}",
+        "rarities.{index}.name": "Name",
+        "rarities.{index}.weight": "Weight",
+        "rarities.{index}.textStyle.backgroundColor": "Background Color",
+        "rarities.{index}.textStyle.fontColor": "Font Color",
+        "rarities.{index}.textStyle.fontSize": "Font Size",
+        "rarities.{index}.textStyle.glowColor": "Glow Color",
+        "rarities.{index}.textStyle.glowStrength": "Glow Strength",
+        "rarities.{index}.textStyle.outlineColor": "Outline Color",
+        "rarities.{index}.textStyle.outlineWidth": "Outline Width",
+        "rarities.{index}.textStyle": "Text Style",
+        "rarities.{index}": "Rarity #{index}",
+        "effects.{index}.type": "Effect Type",
+        "effects.{index}.baseValue": "Base Value",
+        "effects.{index}.maxValue": "Max Value",
+        "effects.{index}": "Effect #{index}",
+        "player.directionChangeInterval": "Movement Direction Change Interval",
+        "player.directionChangeMaxAngle": "Movement Direction Change Max Angle",
+        "player": "Player",
+        "drops.{index}.baseName": "Name",
+        "drops.{index}.baseRarity": "Rarity",
+        "drops.{index}.baseTier": "Tier",
+        "drops.{index}.baseWeight": "Probability",
+        "drops.{index}.baseTextStyle.backgroundColor": "Background Color",
+        "drops.{index}.baseTextStyle.fontColor": "Font Color",
+        "drops.{index}.baseTextStyle.fontSize": "Font Size",
+        "drops.{index}.baseTextStyle.glowColor": "Glow Color",
+        "drops.{index}.baseTextStyle.glowStrength": "Glow Strength",
+        "drops.{index}.baseTextStyle.outlineColor": "Outline Color",
+        "drops.{index}.baseTextStyle.outlineWidth": "Outline Width",
+        "drops.{index}.baseTextStyle": "Text Style",
+        "drops.{index}.baseMedia.{index}.type.png": "PNG Image",
+        "drops.{index}.baseMedia.{index}.url": "URL",
+        "drops.{index}.baseMedia.{index}.type.basicShape": "Basic Shape",
+        "drops.{index}.baseMedia.{index}.shape": "Shape",
+        "drops.{index}.baseMedia.{index}.color": "Color",
+        "drops.{index}.baseMedia.{index}.type": "Kind",
+        "drops.{index}.baseMedia.{index}": "Media #{index}",
+        "drops.{index}.animationOnPickup": "Animation on Pickup",
+        "drops.{index}.animationOnDrop": "Animation on Drop",
+        "drops.{index}.effects.{index}.type.movementSpeed": "Movement Speed",
+        "drops.{index}.effects.{index}.type.itemVisibility": "Item Visibility",
+        "drops.{index}.effects.{index}.type.screenZoom": "Screen Zoom",
+        "drops.{index}.effects.{index}.type": "Effect Type",
+        "drops.{index}.effects.{index}.duration": "Duration",
+        "drops.{index}.effects.{index}.weight": "Probability",
+        "drops.{index}.effects.{index}.isHidden": "Is Hidden",
+        "drops.{index}.effects.{index}": "Effect #{index}",
+        "drops.{index}.variants.{index}.name": "Name",
+        "drops.{index}.variants.{index}.rarity": "Rarity",
+        "drops.{index}.variants.{index}.weight": "Probability",
+        "drops.{index}.variants.{index}.textStyle.backgroundColor": "Background Color",
+        "drops.{index}.variants.{index}.textStyle.fontColor": "Font Color",
+        "drops.{index}.variants.{index}.textStyle.fontSize": "Font Size",
+        "drops.{index}.variants.{index}.textStyle.glowColor": "Glow Color",
+        "drops.{index}.variants.{index}.textStyle.glowStrength": "Glow Strength",
+        "drops.{index}.variants.{index}.textStyle.outlineColor": "Outline Color",
+        "drops.{index}.variants.{index}.textStyle.outlineWidth": "Outline Width",
+        "drops.{index}.variants.{index}.textStyle": "Text Style",
+        "drops.{index}.variants.{index}.media.{index}.type.png": "PNG Image",
+        "drops.{index}.variants.{index}.media.{index}.url": "URL",
+        "drops.{index}.variants.{index}.media.{index}.type.basicShape": "Basic Shape",
+        "drops.{index}.variants.{index}.media.{index}.shape": "Shape",
+        "drops.{index}.variants.{index}.media.{index}.color": "Color",
+        "drops.{index}.variants.{index}.media.{index}.type": "Kind",
+        "drops.{index}.variants.{index}.media.{index}": "Media #{index}",
+        "drops.{index}.variants.{index}.animationOnPickup": "Animation on Pickup",
+        "drops.{index}.variants.{index}.animationOnDrop": "Animation on Drop",
+        "drops.{index}.variants.{index}": "Variant #{index}",
+        "drops.{index}": "Drop #{index}",
+        "scoreFunction.A * rarity * tier ^ B": "Multiply rarity by power of tier",
+        "scoreFunction.A * rarity * B ^ tier": "Multiply rarity by exponential of tier",
+        "scoreFunction": "Score Function",
+        "scoreFunctionParamA": "Score Function Param A",
+        "scoreFunctionParamB": "Score Function Param B"
+      },
+      "ja": {
+        "tiers.{index}.name": "名前",
+        "tiers.{index}.weight": "確率",
+        "tiers.{index}.backgroundMedia.type.png": "PNG画像",
+        "tiers.{index}.backgroundMedia.url": "URL",
+        "tiers.{index}.backgroundMedia.type.basicShape": "基本形状",
+        "tiers.{index}.backgroundMedia.shape": "形状",
+        "tiers.{index}.backgroundMedia.color": "色",
+        "tiers.{index}.backgroundMedia.type": "種類",
+        "tiers.{index}.backgroundMedia": "メディア",
+        "tiers.{index}.baseDropRate": "基礎ドロップ率",
+        "tiers.{index}.pGlobalEffect": "グローバル効果の確率",
+        "tiers.{index}": "{index}番目の階層",
+        "rarities.{index}.name": "名前",
+        "rarities.{index}.weight": "確率",
+        "rarities.{index}.textStyle.backgroundColor": "背景色",
+        "rarities.{index}.textStyle.fontColor": "フォント色",
+        "rarities.{index}.textStyle.fontSize": "フォントサイズ",
+        "rarities.{index}.textStyle.glowColor": "グロー色",
+        "rarities.{index}.textStyle.glowStrength": "グロー強度",
+        "rarities.{index}.textStyle.outlineColor": "輪郭線の色",
+        "rarities.{index}.textStyle.outlineWidth": "輪郭線の幅",
+        "rarities.{index}.textStyle": "テキストスタイル",
+        "rarities.{index}": "{index}番目のレアリティ",
+        "effects.{index}.type": "効果タイプ",
+        "effects.{index}.baseValue": "基礎値",
+        "effects.{index}.maxValue": "最大値",
+        "effects.{index}": "{index}番目の効果",
+        "player.directionChangeInterval": "移動方向変更間隔",
+        "player.directionChangeMaxAngle": "移動方向変更最大角度",
+        "player": "プレイヤー",
+        "drops.{index}.baseName": "名前",
+        "drops.{index}.baseRarity": "レアリティ",
+        "drops.{index}.baseTier": "階層",
+        "drops.{index}.baseWeight": "確率",
+        "drops.{index}.baseTextStyle.backgroundColor": "背景色",
+        "drops.{index}.baseTextStyle.fontColor": "フォント色",
+        "drops.{index}.baseTextStyle.fontSize": "フォントサイズ",
+        "drops.{index}.baseTextStyle.glowColor": "グロー色",
+        "drops.{index}.baseTextStyle.glowStrength": "グロー強度",
+        "drops.{index}.baseTextStyle.outlineColor": "輪郭線の色",
+        "drops.{index}.baseTextStyle.outlineWidth": "輪郭線の幅",
+        "drops.{index}.baseTextStyle": "テキストスタイル",
+        "drops.{index}.baseMedia.{index}.type.png": "PNG画像",
+        "drops.{index}.baseMedia.{index}.url": "URL",
+        "drops.{index}.baseMedia.{index}.type.basicShape": "基本形状",
+        "drops.{index}.baseMedia.{index}.shape": "形状",
+        "drops.{index}.baseMedia.{index}.color": "色",
+        "drops.{index}.baseMedia.{index}.type": "種類",
+        "drops.{index}.baseMedia.{index}": "{index}番目のメディア",
+        "drops.{index}.animationOnPickup": "拾得時のアニメーション",
+        "drops.{index}.animationOnDrop": "ドロップ時のアニメーション",
+        "drops.{index}.effects.{index}.type.movementSpeed": "移動速度",
+        "drops.{index}.effects.{index}.type.itemVisibility": "アイテムの表示",
+        "drops.{index}.effects.{index}.type.screenZoom": "画面ズーム",
+        "drops.{index}.effects.{index}.type": "効果タイプ",
+        "drops.{index}.effects.{index}.duration": "持続時間",
+        "drops.{index}.effects.{index}.weight": "確率",
+        "drops.{index}.effects.{index}.isHidden": "非表示",
+        "drops.{index}.effects.{index}": "{index}番目の効果",
+        "drops.{index}.variants.{index}.name": "名前",
+        "drops.{index}.variants.{index}.rarity": "レアリティ",
+        "drops.{index}.variants.{index}.weight": "確率",
+        "drops.{index}.variants.{index}.textStyle.backgroundColor": "背景色",
+        "drops.{index}.variants.{index}.textStyle.fontColor": "フォント色",
+        "drops.{index}.variants.{index}.textStyle.fontSize": "フォントサイズ",
+        "drops.{index}.variants.{index}.textStyle.glowColor": "グロー色",
+        "drops.{index}.variants.{index}.textStyle.glowStrength": "グロー強度",
+        "drops.{index}.variants.{index}.textStyle.outlineColor": "輪郭線の色",
+        "drops.{index}.variants.{index}.textStyle.outlineWidth": "輪郭線の幅",
+        "drops.{index}.variants.{index}.textStyle": "テキストスタイル",
+        "drops.{index}.variants.{index}.media.{index}.type.png": "PNG画像",
+        "drops.{index}.variants.{index}.media.{index}.url": "URL",
+        "drops.{index}.variants.{index}.media.{index}.type.basicShape": "基本形状",
+        "drops.{index}.variants.{index}.media.{index}.shape": "形状",
+        "drops.{index}.variants.{index}.media.{index}.color": "色",
+        "drops.{index}.variants.{index}.media.{index}.type": "種類",
+        "drops.{index}.variants.{index}.media.{index}": "{index}番目のメディア",
+        "drops.{index}.variants.{index}.animationOnPickup": "拾得時のアニメーション",
+        "drops.{index}.variants.{index}.animationOnDrop": "ドロップ時のアニメーション",
+        "drops.{index}.variants.{index}": "{index}番目のバリアント",
+        "drops.{index}": "{index}番目のドロップ",
+        "scoreFunction.A * rarity * tier ^ B": "レアリティを階層の累乗で乗算",
+        "scoreFunction.A * rarity * B ^ tier": "レアリティを階層の指数で乗算",
+        "scoreFunction": "スコア関数",
+        "scoreFunctionParamA": "スコア関数パラメータA",
+        "scoreFunctionParamB": "スコア関数パラメータB"
+      }
+    }
+  },
+  "jsonSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "tiers": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "weight": {
+              "type": "number"
+            },
+            "backgroundMedia": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "const": "png"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "url"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "const": "basicShape"
+                    },
+                    "shape": {
+                      "type": "string",
+                      "enum": [
+                        "circle",
+                        "square",
+                        "triangle",
+                        "diamond"
+                      ]
+                    },
+                    "color": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "shape",
+                    "color"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "baseDropRate": {
+              "default": 2,
+              "type": "number"
+            },
+            "pGlobalEffect": {
+              "default": 0.1,
+              "type": "number"
+            }
+          },
+          "required": [
+            "weight"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "rarities": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "weight": {
+              "type": "number"
+            },
+            "textStyle": {
+              "type": "object",
+              "properties": {
+                "backgroundColor": {
+                  "type": "string"
+                },
+                "fontColor": {
+                  "type": "string"
+                },
+                "fontSize": {
+                  "type": "number"
+                },
+                "glowColor": {
+                  "type": "string"
+                },
+                "glowStrength": {
+                  "type": "number"
+                },
+                "outlineColor": {
+                  "type": "string"
+                },
+                "outlineWidth": {
+                  "type": "number"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name",
+            "weight",
+            "textStyle"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "effects": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "movementSpeed",
+                "itemVisibility",
+                "screenZoom"
+              ]
+            },
+            "baseValue": {
+              "type": "number"
+            },
+            "maxValue": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "type",
+            "baseValue",
+            "maxValue"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "player": {
+        "type": "object",
+        "properties": {
+          "directionChangeInterval": {
+            "type": "number"
+          },
+          "directionChangeMaxAngle": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "directionChangeInterval",
+          "directionChangeMaxAngle"
+        ],
+        "additionalProperties": false
+      },
+      "drops": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "baseName": {
+              "type": "string"
+            },
+            "baseRarity": {
+              "type": "number"
+            },
+            "baseTier": {
+              "default": 0,
+              "type": "number"
+            },
+            "baseWeight": {
+              "default": 100,
+              "type": "number"
+            },
+            "baseTextStyle": {
+              "type": "object",
+              "properties": {
+                "backgroundColor": {
+                  "type": "string"
+                },
+                "fontColor": {
+                  "type": "string"
+                },
+                "fontSize": {
+                  "type": "number"
+                },
+                "glowColor": {
+                  "type": "string"
+                },
+                "glowStrength": {
+                  "type": "number"
+                },
+                "outlineColor": {
+                  "type": "string"
+                },
+                "outlineWidth": {
+                  "type": "number"
+                }
+              },
+              "additionalProperties": false
+            },
+            "baseMedia": {
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "png"
+                      },
+                      "url": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "url"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "basicShape"
+                      },
+                      "shape": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "square",
+                          "triangle",
+                          "diamond"
+                        ]
+                      },
+                      "color": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "shape",
+                      "color"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            },
+            "animationOnPickup": {
+              "type": "string"
+            },
+            "animationOnDrop": {
+              "type": "string"
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "movementSpeed",
+                      "itemVisibility",
+                      "screenZoom"
+                    ]
+                  },
+                  "duration": {
+                    "type": "number"
+                  },
+                  "weight": {
+                    "type": "number"
+                  },
+                  "isHidden": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "type",
+                  "duration",
+                  "weight",
+                  "isHidden"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "variants": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "rarity": {
+                    "type": "number"
+                  },
+                  "weight": {
+                    "default": 100,
+                    "type": "number"
+                  },
+                  "textStyle": {
+                    "type": "object",
+                    "properties": {
+                      "backgroundColor": {
+                        "type": "string"
+                      },
+                      "fontColor": {
+                        "type": "string"
+                      },
+                      "fontSize": {
+                        "type": "number"
+                      },
+                      "glowColor": {
+                        "type": "string"
+                      },
+                      "glowStrength": {
+                        "type": "number"
+                      },
+                      "outlineColor": {
+                        "type": "string"
+                      },
+                      "outlineWidth": {
+                        "type": "number"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "media": {
+                    "type": "array",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "png"
+                            },
+                            "url": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "url"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "basicShape"
+                            },
+                            "shape": {
+                              "type": "string",
+                              "enum": [
+                                "circle",
+                                "square",
+                                "triangle",
+                                "diamond"
+                              ]
+                            },
+                            "color": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "shape",
+                            "color"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
+                  },
+                  "animationOnPickup": {
+                    "type": "string"
+                  },
+                  "animationOnDrop": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "rarity",
+                  "textStyle",
+                  "media"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "baseName",
+            "baseRarity",
+            "baseTextStyle",
+            "baseMedia",
+            "effects",
+            "variants"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "scoreFunction": {
+        "type": "string",
+        "enum": [
+          "A * rarity * tier ^ B",
+          "A * rarity * B ^ tier"
+        ]
+      },
+      "scoreFunctionParamA": {
+        "type": "number"
+      },
+      "scoreFunctionParamB": {
+        "type": "number"
+      }
+    },
+    "required": [
+      "tiers",
+      "rarities",
+      "effects",
+      "player",
+      "drops",
+      "scoreFunction",
+      "scoreFunctionParamA",
+      "scoreFunctionParamB"
+    ],
+    "additionalProperties": false
+  }
+}
