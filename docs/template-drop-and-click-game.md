@@ -1,4 +1,4 @@
-# Idea: Drop-clicker game template
+# Idea: Drop-and-click game template
 
 In order to fully test out the Json Template Editor workflows, I need a more complciated website template. It seems fun to build a basic "cookie clicker" style game
 
@@ -22,7 +22,7 @@ There are 2 score modes (and thus 2 game modes):
 * Lives mode: Certain items must be collected in order to stay alive. There are a limited number of lives. High score is the amount of time the player can survive.
 * (Potential future support for a RPG mode where the items have health and can damage the player)
 
-Note: In all 3 modes, certain items should be able to grant effects to the player:
+Note: In all modes, certain items should be able to grant effects to the player:
 
 Defining Effects:
 
@@ -33,7 +33,7 @@ Defining Effects:
 * Drop rate modification (quantity and rarity only, never tier)
 * Miss chance modifiers (probability to miss the drop)
 * Crit chance modifiers(probability to double the score value of the drop)
-* Crit multiplier modifiers (starts from 2x)
+* Crit multiplier modifiers
 
 Unique effects:
 
@@ -42,7 +42,7 @@ Unique effects:
 
 All effects are stackable and additive. However, some, like item visibility, can start at a negative probability value (and needs enough stacks to trigger unhiding, for example)
 
-## Template data / schema
+## Misc. Definitions
 
 Defining the "Drop Level":
 
@@ -54,14 +54,22 @@ Defining the "Drop Level":
 
 In general, the tier increases slowly as time goes on. But rarity can roll randomly.
 
-To determine what to drop, the game
+To calculate what to drop, the game
 
 * Rolls an effective tier based on the current time using tier probability table.
 * Rolls a rarity based on the rarity probability table (not depending on time)
 * This drop must be an exact match of the effective tier and rarity.
 * List all eligible drops (base and variants) and apply weights. And roll the exact drop.
    * Note: A variant and a base have no relation to each other during this roll. they are just authored together for convenience.
-* Roll the effects/prefix on the drop based on the effect probability table of the BASE type. (Unique effects are included in the roll UNLESS they are on cooldown.)
+* Roll the global effect probability of the current tier. If this allows an effect to exist, then the effects/prefix on the drop is rolled from the effect probability table of the BASE type. (Unique effects are included in the roll UNLESS they are on cooldown.)
+
+To calculate the score value of a hit on a drop:
+
+score_function(Rarity, Tier) * (1 - miss_chance) * (1 + crit_chance * crit_multiplier)
+
+where the score_function comes from per-tier configuration first, and defaults to a global config.
+
+## Template data (Vague preview of schema)
 
 Let's first summarize what the game needs to know about drops:
 
@@ -74,12 +82,13 @@ Let's first summarize what the game needs to know about drops:
   * Or it could be an enum: "brownian" (random movement, and needs a movement speed)
 * Animation On Pickup: A list of possible animations to play when the drop is picked up
   * Provide a few basic predefined ones for now. (Use string enums: "flyToHud", "zoomOutAndFade")
+* Animation On Drop (a similar list)
 * <u>Base Level</u>: This determines the base rarity and tier that is required to drop this base item.
 * <u>Base Weight</u>: Given that we want a drop at the same level, how likely is it to be this drop?
 * Effects: This determines all possible in-game effects. And it's also used as a prefix for the item name.
   * Effect type (from a string enum)
   * Effect duration (seconds. If 0, the effect is permanent.)
-  * Effect probability (probability to roll this prefix)
+  * Effect weight (probability to roll this prefix.)
   * Is hidden (bool. If true, the effect is not shown in name or styles. But it still triggers the effect.)
 * Variants: This determines all visual variations of the item. And it's also used as a suffix for the item name.
   * Variant name (string)
@@ -95,6 +104,7 @@ Let's also summarize what the game needs to know about the global attributes:
 * Scoring control
   * Time limit for max score mode.
   * Lives limit / starting lives count for lives mode.
+  * Lives loss config for lives mode. (String enum: "missesHighestTier", "missesRarest")
   * Score screen content (images, i18n text, etc)
   * Number of high scores to display
   * Screen content for the list of collected items
@@ -114,17 +124,18 @@ Let's also summarize what the game needs to know about the global attributes:
   * Tier background color (optional)
   * Tier background image/media (optional)
   * Tier background css style (optional)
+  * Tier's base drop rate. (quantity / second)
   * Tier's base miss chance
   * Tier's base crit chance
+  * Tier's base global effect probability (Whether a new drop has an effect prefix at all)
   * Override score_function(Rarity) for this tier
 * Rarity catalog
   * Rarity IDs
   * Rarity i18n names
   * Base rarity rate (How likely is it for a drop to be of each rarity. This doesn't depend on time.)
 * Base value for all the in-game effects (before player obtained new effects)
-  * Base drop rate. (quantity / second)
-  * Base movement speed.
-  * Base whirlpool attraction. (should be 0 but can be changed by game authors)
+  * Base player movement speed.
+  * Base player whirlpool attraction. (should be 0 but can be changed by game authors)
   * Base screen zoom ratio.
   * Base item visibility. (probability to highlight important items. probability to show hidden items. probability to hide irrelevant items. these can start at negative.)
   * etc.
