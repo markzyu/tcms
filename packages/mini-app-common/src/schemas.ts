@@ -131,6 +131,35 @@ export const definePageContentSchema = async (props: DefinePageContentSchemaProp
   return `schema/${schemaName}.schema.json`;
 };
 
+type RawFieldDescriptor = EditorUiFieldTypes & { label: Record<AppLanguages, string> };
+export const defineEditorUiField = <T extends z.ZodType>(
+  zodSchema: T,
+  groupName: Record<AppLanguages, string>,
+  rawFields: Record<keyof z.infer<T>, RawFieldDescriptor>
+) => {
+  const getFieldGroups = (rootPath: string) => {
+    const fields: EditorUiField[] = Object.entries(rawFields).map(([key, field]) => {
+      const { label, ...rest } = field as RawFieldDescriptor;
+      return {
+        ...rest,
+        path: `${rootPath}.${key}`,
+      };
+    });
+    return {
+      labelByLanguage: groupName,
+      fields,
+    };
+  };
+  const getFieldLabels = (rootPath: string) => {
+    return Object.entries(rawFields).map(([key, field]) => {
+      return {
+        [`${rootPath}.${key}`]: (field as RawFieldDescriptor).label,
+      };
+    });
+  };
+  return { zodSchema, getFieldGroups, getFieldLabels };
+};
+
 /**
  * Build step must run this function, from the template package root directory as workdir.
  */
