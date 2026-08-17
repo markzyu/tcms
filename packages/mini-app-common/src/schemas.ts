@@ -132,18 +132,28 @@ export const definePageContentSchema = async (props: DefinePageContentSchemaProp
 };
 
 type RawFieldDescriptor = EditorUiFieldTypes & { label: Record<AppLanguages, string> };
+type PredefinedField = {
+  getFieldGroups: (rootPath: string) => EditorUiFieldGroup;
+  getFieldLabels: (rootPath: string) => Record<AppLanguages, Record<string, string>>;
+}
 export const defineEditorUiField = <T extends z.ZodType>(
   zodSchema: T,
   groupName: Record<AppLanguages, string>,
-  rawFields: Record<keyof z.infer<T>, RawFieldDescriptor>
-) => {
+  rawFields: Record<keyof z.infer<T>, RawFieldDescriptor | PredefinedField>
+): PredefinedField & { zodSchema: T } => {
   const getFieldGroups = (rootPath: string) => {
-    const fields: EditorUiField[] = Object.entries(rawFields).map(([key, field]) => {
-      const { label, ...rest } = field as RawFieldDescriptor;
-      return {
-        ...rest,
-        path: `${rootPath}.${key}`,
-      };
+    const fields: EditorUiField[] = [];
+    Object.entries(rawFields).forEach(([key, field]) => {
+      if (field && typeof field === "object" && "label" in field) {
+        const { label, ...rest } = field as RawFieldDescriptor;
+        fields.push({
+          ...rest,
+          path: `${rootPath}.${key}`,
+        });
+      } else if (field && typeof field === "object" && "getFieldGroups" in field) {
+        const fieldGroups = (field as PredefinedField).getFieldGroups(`${rootPath}.${key}`);
+        fields.push(...fieldGroups.fields);
+      }
     });
     return {
       labelByLanguage: groupName,
@@ -151,11 +161,26 @@ export const defineEditorUiField = <T extends z.ZodType>(
     };
   };
   const getFieldLabels = (rootPath: string) => {
-    return Object.entries(rawFields).map(([key, field]) => {
-      return {
-        [`${rootPath}.${key}`]: (field as RawFieldDescriptor).label,
-      };
+    const result: Record<AppLanguages, Record<string, string>> = {
+      en: {},
+      ja: {},
+    };
+    Object.entries(rawFields).map(([key, field]) => {
+      if (field && typeof field === "object" && "label" in field) {
+        const labels = (field as RawFieldDescriptor).label;
+        Object.entries(labels).forEach(([language, label]) => {
+          result[language as AppLanguages][`${rootPath}.${key}`] = label;
+        });
+      } else if (field && typeof field === "object" && "getFieldLabels" in field) {
+        const labels = (field as PredefinedField).getFieldLabels(`${rootPath}.${key}`);
+        Object.entries(labels).forEach(([language, labels2]) => {
+          Object.entries(labels2).forEach(([key2, label]) => {
+            result[language as AppLanguages][key2] = label;
+          });
+        });
+      }
     });
+    return result;
   };
   return { zodSchema, getFieldGroups, getFieldLabels };
 };
