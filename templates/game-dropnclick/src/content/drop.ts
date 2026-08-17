@@ -44,7 +44,7 @@ export const variantEditorField = defineEditorUiField(variantSchema, {
     }
   },
   textStyle: textStyleEditorField,
-  media: mediaEditorField,
+  media: [mediaEditorField],
   animationOnPickup: {
     label: {
       en: "Animation on Pickup",
@@ -142,7 +142,7 @@ export const dropEditorField = defineEditorUiField(dropSchema, {
     }
   },
   baseTextStyle: textStyleEditorField,
-  baseMedia: mediaEditorField,
+  baseMedia: [mediaEditorField],
   animationOnPickup: {
     label: {
       en: "Animation on Pickup",
@@ -155,6 +155,6 @@ export const dropEditorField = defineEditorUiField(dropSchema, {
       ja: "ドロップ時のアニメーション",
     }
   },
-  effects: effectEditorField,
-  variants: variantEditorField,
+  effects: [effectEditorField],
+  variants: [variantEditorField],
 });

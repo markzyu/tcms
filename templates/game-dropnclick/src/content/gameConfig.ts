@@ -1,4 +1,4 @@
-import { defineEditorUiField, defineEditorUiStringEnumField, definePageContentSchema } from "../../../../packages/mini-app-common/src/schemas";
+import { defineEditorUiField, defineEditorUiStringEnumField, definePageContentSchema, relativeFieldGroup } from "../../../../packages/mini-app-common/src/schemas";
 import { effectTypeSchema, mediaEditorField, mediaSchema, textStyleEditorField, textStyleSchema } from "./basicTypes";
 import { z } from "zod";
 import { dropEditorField, dropSchema } from "./drop";
@@ -8,6 +8,9 @@ export const scoreFunctionSchema = z.enum([
   "A * rarity * B ^ tier"
 ]);
 const scoreFunctionEditorField = defineEditorUiStringEnumField(scoreFunctionSchema, {
+  en: "Score Function",
+  ja: "スコア関数",
+}, {
   en: {
     "A * rarity * tier ^ B": "Multiply rarity by power of tier",
     "A * rarity * B ^ tier": "Multiply rarity by exponential of tier",
@@ -153,11 +156,11 @@ const gameConfigEditorField = defineEditorUiField(gameConfigSchema, {
   en: "Game Config",
   ja: "ゲーム設定",
 }, {
-  tiers: tierEditorField,
-  rarities: rarityEditorField,
-  effects: effectConfigEditorField,
+  tiers: [tierEditorField],
+  rarities: [rarityEditorField],
+  effects: [effectConfigEditorField],
   player: playerConfigEditorField,
-  drops: dropEditorField,
+  drops: [dropEditorField],
   scoreFunction: scoreFunctionEditorField,
   scoreFunctionParamA: {
     label: {
@@ -181,12 +184,11 @@ export const gameConfigSchemaPathPromise = definePageContentSchema({
   editorUiSchema: {
     fieldLabels: gameConfigEditorField.fieldLabels,
     fieldGroups: [
-      tierEditorField.fieldGroup,
-      rarityEditorField.fieldGroup,
-      effectConfigEditorField.fieldGroup,
-      playerConfigEditorField.fieldGroup,
-      dropEditorField.fieldGroup,
-      scoreFunctionEditorField.fieldGroup,
+      relativeFieldGroup("tiers.{index}", tierEditorField.fieldGroup),
+      relativeFieldGroup("rarities.{index}", rarityEditorField.fieldGroup),
+      relativeFieldGroup("effects.{index}", effectConfigEditorField.fieldGroup),
+      relativeFieldGroup("player", playerConfigEditorField.fieldGroup),
+      relativeFieldGroup("drops.{index}", dropEditorField.fieldGroup),
     ],
   },
   schema: gameConfigSchema,

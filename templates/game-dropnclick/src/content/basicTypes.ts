@@ -8,6 +8,9 @@ export const effectTypeSchema = z.enum([
 ]);
 export type EffectType = z.infer<typeof effectTypeSchema>;
 export const effectTypeEditorField = defineEditorUiStringEnumField(effectTypeSchema, {
+  en: "Effect Type",
+  ja: "効果タイプ",
+}, {
   en: {
     movementSpeed: "Movement Speed",
     itemVisibility: "Item Visibility",
