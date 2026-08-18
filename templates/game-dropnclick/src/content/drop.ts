@@ -66,6 +66,8 @@ export const effectSchema = z.strictObject({
   duration: z.number(),
   weight: z.number(),
   isHidden: z.boolean(),
+  minPctChange: z.number().default(0),
+  maxPctChange: z.number().default(10),
 });
 export type Effect = z.infer<typeof effectSchema>;
 export const effectEditorField = defineEditorUiField(effectSchema, {
@@ -90,7 +92,19 @@ export const effectEditorField = defineEditorUiField(effectSchema, {
       en: "Is Hidden",
       ja: "非表示",
     }
-  }
+  },
+  minPctChange: {
+    label: {
+      en: "Min Adjustment Percentage",
+      ja: "最小調整度",
+    }
+  },
+  maxPctChange: {
+    label: {
+      en: "Max Adjustment Percentage",
+      ja: "最大調整度",
+    }
+  },
 });
 
 export const dropSchemaName = "drop";

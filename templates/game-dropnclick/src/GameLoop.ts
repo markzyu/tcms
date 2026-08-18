@@ -1,6 +1,6 @@
-import { Drop, Variant } from "./content/drop";
+import { Drop, Effect, Variant } from "./content/drop";
 import { GameConfig } from "./content/gameConfig";
-import { TextStyle } from "./content/basicTypes";
+import { EffectType, TextStyle } from "./content/basicTypes";
 
 import { v4 as uuidv4 } from 'uuid';
 import { sortedIndexBy } from "lodash";
@@ -10,7 +10,13 @@ type Point2D = {
   y: number;
 }
 
-type Item = Drop & Partial<Variant>;
+export type EffectStatus = {
+  expirationTick: number;
+  stackCount: number;
+  totalPctChange: number;
+}
+
+type Item = Drop & Partial<Variant> & { baseDropIndex: number };
 
 export type GameEntity = {
   /* This is a UUID. And it can be abused to trigger a rerender/restart of any entity's animation */
@@ -29,6 +35,7 @@ export type GameEntity = {
 
   rarity: number;
   tier: number;
+  effect?: Effect;
 
   wasClicked?: boolean;
 }
@@ -39,6 +46,7 @@ const DEFAULT_RANDOM_SPEED = 50;
 export type GameLoopProps = {
   gameConfig: GameConfig;
   setEntities: (_callback: (entities: GameEntity[]) => GameEntity[]) => void;
+  setEffects: (_callback: (effects: Partial<Record<EffectType, EffectStatus>>) => Partial<Record<EffectType, EffectStatus>>) => void;
   setMovementSpeed: (_callback: (speed: Point2D) => Point2D) => void;
   setScreenDeltaToZero: () => void;
   setScore: (_callback: (score: number) => number) => void;
@@ -51,6 +59,7 @@ export class GameLoop {
   // --- Game state ---
   private directionAngleRadian: number;
   private maxTier: number;   // eligible tier is [0, maxTier)
+  private effects: Partial<Record<EffectType, EffectStatus>>;   // effect type -> expiration tick
 
   // The current speed of the player / of the canvas screen
   private speedX: number;
@@ -64,11 +73,15 @@ export class GameLoop {
   private directionChangeTicks: number;
   private directionChangeMaxDeltaRadians: number;
   private dropTable: Record<number, Record<number, [number, Item][]>>;    // [tier][rarity] -> [CDF of P(drop), drop] sorted by CDF
+  private effectTable: Record<number, [number, Effect][]>;     // [index of drop] -> [CDF of P(effect), effect type] sorted by CDF
   private rarityTable: number[];    // rarity -> CDF of P(rarity)
 
   _getRandomSpeed(): Point2D {
     const { effects } = this.props.gameConfig;
-    const speedScalar = effects.find((effect) => effect.type === "movementSpeed")?.baseValue || DEFAULT_RANDOM_SPEED;
+    const baseSpeedScalar = effects.find((effect) => effect.type === "movementSpeed")?.baseValue || DEFAULT_RANDOM_SPEED;
+    const maxSpeedScalar = effects.find((effect) => effect.type === "movementSpeed")?.maxValue;
+    const speedEffectPct = this.effects.movementSpeed?.totalPctChange || 0;
+    const speedScalar = Math.min(baseSpeedScalar * (1 + speedEffectPct / 100), maxSpeedScalar ?? Infinity);
     const deltaAngle = (Math.random() * 2 - 1) * this.directionChangeMaxDeltaRadians;
     this.directionAngleRadian = (this.directionAngleRadian + deltaAngle) % (2 * Math.PI);
     return {
@@ -77,7 +90,7 @@ export class GameLoop {
     };
   }
 
-  _getRandomDrop(): Item {
+  _getRandomDrop(): [Item, Effect | undefined] {
     let effectiveTier = Math.floor(Math.random() * this.maxTier);
     let effectiveRarity = sortedIndexBy(this.rarityTable, Math.random());
     let table = this.dropTable[effectiveTier]?.[effectiveRarity];
@@ -94,7 +107,16 @@ export class GameLoop {
       [Math.random(), undefined as any],
       ([cdf]) => cdf
     );
-    return table[effectiveDropIndex][1];
+    const effectiveDrop = table[effectiveDropIndex][1];
+
+    const hasEffect = this.props.gameConfig.tiers[this.maxTier - 1].pGlobalEffect > Math.random();
+    const rolledEffectIndex = sortedIndexBy(
+      this.effectTable[effectiveDropIndex],
+      [Math.random(), undefined as any],
+      ([cdf]) => cdf
+    );
+    const rolledEffect = this.effectTable[effectiveDrop.baseDropIndex][rolledEffectIndex][1];
+    return [effectiveDrop, hasEffect ? rolledEffect : undefined];
   }
 
   _getSpawnsThisTick(spawnRate: number): number {
@@ -121,6 +143,7 @@ export class GameLoop {
     this.props = props;
     this.tick = 0;
     this.maxTier = 1;
+    this.effects = {};
     this.directionAngleRadian = Math.random() * 2 * Math.PI;
     this.directionChangeTicks = Math.ceil(
       gameConfig.player.directionChangeInterval * 1000 / TICK_INTERVAL
@@ -143,18 +166,31 @@ export class GameLoop {
       this.rarityTable[index] /= _rarityCdfSum;
     });
 
+    this.effectTable = {};
+    Object.values(gameConfig.drops).forEach((drop, index) => {
+      this.effectTable[index] = [];
+      let sum = 0;
+      drop.effects.forEach((effect) => {
+        sum += effect.weight;
+        this.effectTable[index].push([sum, effect]);
+      });
+      this.effectTable[index].forEach((item) => {
+        item[0] /= sum;
+      });
+    });
+
     this.dropTable = {};
-    Object.values(gameConfig.drops).forEach((drop) => {
+    Object.values(gameConfig.drops).forEach((drop, baseDropIndex) => {
       const tier = drop.baseTier;
       const existingCdf = this.dropTable[tier]?.[drop.baseRarity]?.reduce((acc, [cdf, _]) => acc + cdf, 0) || 0;
       let cdf = existingCdf + drop.baseWeight;
       this.dropTable[tier] ||= {};
       this.dropTable[tier][drop.baseRarity] ||= [];
-      this.dropTable[tier][drop.baseRarity].push([cdf, drop]);
+      this.dropTable[tier][drop.baseRarity].push([cdf, { ...drop, baseDropIndex }]);
       drop.variants.forEach((variant) => {
         cdf += variant.weight;
         this.dropTable[tier][variant.rarity] ||= [];
-        this.dropTable[tier][variant.rarity].push([cdf, { ...drop, ...variant }]);
+        this.dropTable[tier][variant.rarity].push([cdf, { ...drop, ...variant, baseDropIndex }]);
       });
     });
 
@@ -180,18 +216,48 @@ export class GameLoop {
   }
 
   private _doTick() {
-    const { gameConfig, setEntities, setMovementSpeed, setScore, setScreenDeltaToZero } = this.props;
+    const {
+      gameConfig,
+      setEntities,
+      setMovementSpeed,
+      setScore,
+      setScreenDeltaToZero,
+      setEffects,
+    } = this.props;
+
     setEntities((entities) => {
-      let deltaScore = 0;
 
       // Remove clicked entities
+      let deltaScore = 0;
       let newEntities = entities.filter((entity) => {
         if (entity.wasClicked) {
           deltaScore += Math.ceil(this._getScore(entity.drop));
         }
+        if (entity.wasClicked && entity.effect) {
+          const ticks = Math.ceil(entity.effect.duration * 1000 / TICK_INTERVAL);
+          this.effects[entity.effect.type] ||= {
+            expirationTick: this.tick + ticks,
+            stackCount: 0,
+            totalPctChange: 0,
+          };
+          this.effects[entity.effect.type]!.totalPctChange += entity.effect.minPctChange
+            + Math.random() * (entity.effect.maxPctChange - entity.effect.minPctChange);
+          this.effects[entity.effect.type]!.expirationTick = this.tick + ticks;
+          this.effects[entity.effect.type]!.stackCount += 1;
+        }
         return !entity.wasClicked;
       });
+
+      // Remove expired effects
+      Object.keys(this.effects).forEach((effectType) => {
+        const key = effectType as EffectType;
+        if (this.tick >= this.effects[key]!.expirationTick) {
+          delete this.effects[key];
+        }
+      });
+
       setScore((score) => score + deltaScore);
+      setEffects(() => ({...this.effects}));
 
       // Spawn new entities
       const spawnRate = gameConfig.tiers[this.maxTier - 1].baseDropRate;
@@ -200,7 +266,7 @@ export class GameLoop {
         // Spawning the new entity, relative to screen space position, by subtracting parent offset
         const startX = Math.random() * window.innerWidth - this.deltaX;
         const startY = Math.random() * window.innerHeight - this.deltaY;
-        const item = this._getRandomDrop();
+        const [item, effect] = this._getRandomDrop();
         const dropIsVariant = "name" in item;
         newEntities.push({
           id: uuidv4(),
@@ -210,6 +276,7 @@ export class GameLoop {
           textStyle: dropIsVariant ? item.textStyle : item.baseTextStyle,
           drop: item,
           dropIsVariant,
+          effect,
           rarity: item.rarity || item.baseRarity,
           tier: item.baseTier,
         });

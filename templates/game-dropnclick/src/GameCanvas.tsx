@@ -1,10 +1,10 @@
 import { GameConfig } from "./content/gameConfig";
 import { TEST_IDS } from "./constants";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { usePageContentContext } from "@tcms/mini-app-react-utils";
-import { GameEntity, GameLoop } from "./GameLoop";
-import { TextStyle } from "./content/basicTypes";
+import { EffectStatus, GameEntity, GameLoop } from "./GameLoop";
+import { EffectType, TextStyle } from "./content/basicTypes";
 
 const HITBOX_SIZE = 10;
 
@@ -27,6 +27,7 @@ export const GameCanvas = () => {
   const [entities, setEntities] = useState<GameEntity[]>([]);
   const [movementSpeed, setMovementSpeed] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [score, setScore] = useState(0);
+  const [effects, setEffects] = useState<Partial<Record<EffectType, EffectStatus>>>({});
   const screenRef = useRef<HTMLDivElement>(null);
   if (!contentJson || isLoading) return "Loading...";
 
@@ -38,7 +39,14 @@ export const GameCanvas = () => {
       void screenRef.current.offsetWidth;
       screenRef.current.style.animation = backupAnimation;
     }
-    const gameLoop = new GameLoop({ gameConfig: contentJson, setEntities, setMovementSpeed, setScore, setScreenDeltaToZero });
+    const gameLoop = new GameLoop({
+      gameConfig: contentJson,
+      setEntities,
+      setMovementSpeed,
+      setScore,
+      setScreenDeltaToZero,
+      setEffects,
+    });
     const interval = gameLoop.run();
     return () => clearInterval(interval);
   }, [contentJson, setEntities, setMovementSpeed, setScore]);
@@ -54,12 +62,18 @@ export const GameCanvas = () => {
     });
   };
 
+  const effectsText = useMemo(() => {
+    return Object.entries(effects).map(([effectType, { stackCount }]) => {
+      return <span className="mx-2" key={effectType}>{effectType} x{stackCount}</span>;
+    });
+  }, [effects]);
+
   return (
     <div
       className="bg-blue-500 w-full h-full overflow-hidden"
       data-testid={TEST_IDS.gameRoot}
     >
-      <div className="absolute top-0 left-0 w-full bg-red-500">Score: {score}</div>
+      <div className="absolute top-0 left-0 w-full bg-red-500">Score: {score}. {effectsText}</div>
       <div ref={screenRef} className="relative w-full h-full" style={{
         animation: `movement 100s linear`,
         '--speed-x-for-100-secs': `${movementSpeed.x * 100}px`,

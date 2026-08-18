@@ -6,7 +6,7 @@
     window.tcms.cdnBridge = {
       initialContentJson: {
         tiers: [
-          { weight: 100, baseDropRate: 2, pGlobalEffect: 0.1 },
+          { weight: 100, baseDropRate: 2, pGlobalEffect: 0.5 },
           { weight: 10, baseDropRate: 1, pGlobalEffect: 0.05 },
           { weight: 1, baseDropRate: 0.5, pGlobalEffect: 0.01 },
         ],
@@ -52,7 +52,24 @@
             baseMedia: [],
             animationOnPickup: "zoomOutAndFade",
             animationOnDrop: "zoomOutAndFade",
-            effects: [],
+            effects: [
+              {
+                type: "movementSpeed",
+                duration: 20,
+                weight: 100,
+                isHidden: false,
+                minPctChange: 50,
+                maxPctChange: 70,
+              },
+              {
+                type: "itemVisibility",
+                duration: 20,
+                weight: 100,
+                isHidden: false,
+                minPctChange: 2,
+                maxPctChange: 10,
+              }
+            ],
             variants: [
               {
                 name: "Glass Bottle",
