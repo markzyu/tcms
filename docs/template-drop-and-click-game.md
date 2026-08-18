@@ -56,7 +56,8 @@ In general, the tier increases slowly as time goes on. But rarity can roll rando
 
 To calculate what to drop, the game
 
-* Rolls an effective tier based on the current time using tier probability table.
+* Rolls a drop quantity based on the maximum tier available at the current time.
+* Rolls an effective tier based on the maximum tier, and each tier's probability.
 * Rolls a rarity based on the rarity probability table (not depending on time)
 * This drop must be an exact match of the effective tier and rarity.
 * List all eligible drops (base and variants) and apply weights. And roll the exact drop.

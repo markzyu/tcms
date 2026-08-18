@@ -39,8 +39,8 @@
           { type: "screenZoom", baseValue: 1, maxValue: 10 },
         ],
         player: {
-          directionChangeInterval: 1,
-          directionChangeMaxAngle: 10,
+          directionChangeInterval: 4,
+          directionChangeMaxAngle: 90,
         },
         drops: [
           {
@@ -65,7 +65,7 @@
           }
         ],
         scoreFunction: "A * rarity * B ^ tier",
-        scoreFunctionParamA: 100,
+        scoreFunctionParamA: 10,
         scoreFunctionParamB: 1.05,
       },
       getCDNType: () => "localCDN",

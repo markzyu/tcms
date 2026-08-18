@@ -119,7 +119,15 @@ const effectConfigEditorField = defineEditorUiField(effectConfigSchema, {
 });
 
 export const playerConfigSchema = z.strictObject({
+  /**
+   * Unit: seconds, fractional numbers are allowed.
+   * 
+   * This will be renormalized to match the game's internal tick interval.
+   */
   directionChangeInterval: z.number(),
+  /**
+   * Unit: degrees, fractional numbers are allowed.
+   */
   directionChangeMaxAngle: z.number(),
 });
 const playerConfigEditorField = defineEditorUiField(playerConfigSchema, {

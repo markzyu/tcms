@@ -73,7 +73,7 @@ export const GameCanvas = () => {
               ...getTextStyle(
                 {
                   ...contentJson.rarities[entity.rarity]?.textStyle,
-                  ...(entity.dropVariant ? entity.dropVariant?.textStyle : entity.drop.baseTextStyle),
+                  ...(entity.dropIsVariant ? entity.drop?.textStyle : entity.drop.baseTextStyle),
                 },
                 entity.wasClicked
               ),
