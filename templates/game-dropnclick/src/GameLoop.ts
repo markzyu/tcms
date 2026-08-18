@@ -19,6 +19,9 @@ export type GameEntity = {
   drop: Drop;
   dropVariant?: Variant;
 
+  rarity: number;
+  tier: number;
+
   wasClicked?: boolean;
 }
 
@@ -49,15 +52,6 @@ export class GameLoop {
   private deltaX: number;
   private deltaY: number;
 
-  static _getRandomSpeed(): Point2D {
-    const speedScalar = 50;
-    const angle = Math.random() * 2 * Math.PI;
-    return {
-      x: speedScalar * Math.cos(angle),
-      y: speedScalar * Math.sin(angle),
-    };
-  }
-
   static _getRandomDrop(gameConfig: GameConfig) {
     const { drops } = gameConfig;
     const randomIndex = Math.floor(Math.random() * drops.length);
@@ -68,10 +62,20 @@ export class GameLoop {
     };
   }
 
+  _getRandomSpeed(): Point2D {
+    const { effects } = this.props.gameConfig;
+    const speedScalar = effects.find((effect) => effect.type === "movementSpeed")?.baseValue || 50;
+    const angle = Math.random() * 2 * Math.PI;
+    return {
+      x: speedScalar * Math.cos(angle),
+      y: speedScalar * Math.sin(angle),
+    };
+  }
+
   constructor(props: GameLoopProps) {
     this.props = props;
     this.tick = 0;
-    const speed = GameLoop._getRandomSpeed();
+    const speed = this._getRandomSpeed();
     this.speedX = speed.x;
     this.speedY = speed.y;
     this.deltaX = 0;
@@ -116,6 +120,8 @@ export class GameLoop {
           textStyle: variant?.textStyle || drop.baseTextStyle,
           drop,
           dropVariant: variant,
+          rarity: variant?.rarity || drop.baseRarity,
+          tier: drop.baseTier,
         });
       }
 
@@ -133,7 +139,7 @@ export class GameLoop {
       if (this.tick % (CHANGE_MOVEMENT_INTERVAL / TICK_INTERVAL) === 0) {
         const oldSpeedX = this.speedX;
         const oldSpeedY = this.speedY;
-        const speed = GameLoop._getRandomSpeed();
+        const speed = this._getRandomSpeed();
         this.speedX = speed.x;
         this.speedY = speed.y;
         newEntities = newEntities.map((entity) => ({

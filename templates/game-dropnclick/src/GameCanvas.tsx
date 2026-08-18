@@ -4,6 +4,7 @@ import { TEST_IDS } from "./constants";
 import { useEffect, useRef, useState } from "react";
 import { usePageContentContext } from "@tcms/mini-app-react-utils";
 import { GameEntity, GameLoop } from "./GameLoop";
+import { TextStyle } from "./content/basicTypes";
 
 const HITBOX_SIZE = 10;
 
@@ -12,6 +13,13 @@ declare module "react" {
   interface CSSProperties {
     [key: `--${string}`]: string;
   }
+}
+
+export const getTextStyle = (textStyle: TextStyle, skipColor: boolean = false) => {
+  return {
+    backgroundColor: skipColor ? undefined : textStyle.backgroundColor,
+    color: skipColor ? undefined : textStyle.fontColor,
+  };
 }
 
 export const GameCanvas = () => {
@@ -60,8 +68,15 @@ export const GameCanvas = () => {
         {entities.map((entity) => (
           <div
             key={entity.id}
-            className={`absolute text-nowrap overflow-hidden select-none ${entity.wasClicked ? 'bg-green-500' : ''}`}
+            className={`absolute text-nowrap overflow-hidden select-none ${entity.wasClicked ? 'bg-green-500' : 'bg-blue-500'}`}
             style={{
+              ...getTextStyle(
+                {
+                  ...contentJson.rarities[entity.rarity]?.textStyle,
+                  ...(entity.dropVariant ? entity.dropVariant?.textStyle : entity.drop.baseTextStyle),
+                },
+                entity.wasClicked
+              ),
               left: entity.startX,
               top: entity.startY,
               padding: `${HITBOX_SIZE}px`,

@@ -11,12 +11,30 @@
           { weight: 1, baseDropRate: 0.5, pGlobalEffect: 0.01 },
         ],
         rarities: [
-          { name: "Common", weight: 100, textStyle: {} },
-          { name: "Rare", weight: 10, textStyle: {} },
-          { name: "Legendary", weight: 1, textStyle: {} },
+          {
+            name: "Common",
+            weight: 100,
+            textStyle: {},
+          },
+          {
+            name: "Rare",
+            weight: 10,
+            textStyle: {
+              backgroundColor: "#000000",
+              fontColor: "#F9F018"
+            },
+          },
+          {
+            name: "Legendary",
+            weight: 1,
+            textStyle: {
+              backgroundColor: "#000000",
+              fontColor: "#FF4500"
+            },
+          },
         ],
         effects: [
-          { type: "movementSpeed", baseValue: 1, maxValue: 10 },
+          { type: "movementSpeed", baseValue: 20, maxValue: 200 },
           { type: "itemVisibility", baseValue: 1, maxValue: 10 },
           { type: "screenZoom", baseValue: 1, maxValue: 10 },
         ],
