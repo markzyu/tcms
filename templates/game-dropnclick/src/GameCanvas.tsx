@@ -5,7 +5,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { usePageContentContext } from "@tcms/mini-app-react-utils";
 import { EffectStatus, GameEntity, GameLoop } from "./GameLoop";
 import { EffectType, TextStyle } from "./content/basicTypes";
-import { drop } from "lodash";
 
 const RARE_DROPS_HISTORY_SIZE = 10;
 const HITBOX_SIZE = 10;
