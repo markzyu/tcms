@@ -47,7 +47,14 @@ export const GameCanvas = () => {
       setScreenDeltaToZero,
       setEffects,
     });
-    const interval = gameLoop.run();
+    const getScreenSize = () => {
+      const screenBox = screenRef.current?.getBoundingClientRect();
+      return {
+        width: screenBox?.width || 0,
+        height: screenBox?.height || 0,
+      };
+    };
+    const interval = gameLoop.run(getScreenSize);
     return () => clearInterval(interval);
   }, [contentJson, setEntities, setMovementSpeed, setScore]);
 

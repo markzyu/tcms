@@ -10,6 +10,11 @@ type Point2D = {
   y: number;
 }
 
+export type ScreenSize = {
+  width: number;
+  height: number;
+}
+
 export type EffectStatus = {
   expirationTick: number;
   stackCount: number;
@@ -214,16 +219,16 @@ export class GameLoop {
   }
 
   /* Returns the setInterval id */
-  run() {
-    this._doTick();
+  run(getScreenSize: () => ScreenSize) {
+    this._doTick(getScreenSize());
     this.tick++;
     return setInterval(() => {
-      this._doTick();
+      this._doTick(getScreenSize());
       this.tick++;
     }, TICK_INTERVAL);
   }
 
-  private _doTick() {
+  private _doTick(screen: ScreenSize) {
     const {
       gameConfig,
       setEntities,
@@ -278,8 +283,8 @@ export class GameLoop {
       const spawnsThisTick = this._getSpawnsThisTick(spawnRate);
       Array.from({ length: spawnsThisTick }).forEach(() => {
         // Spawning the new entity, relative to screen space position, by subtracting parent offset
-        const startX = Math.random() * window.innerWidth - this.deltaX;
-        const startY = Math.random() * window.innerHeight - this.deltaY;
+        const startX = Math.random() * screen.width - this.deltaX;
+        const startY = Math.random() * screen.height - this.deltaY;
         const [item, effect] = this._getRandomDrop();
         const dropIsVariant = "name" in item;
         newEntities.push({
@@ -302,8 +307,8 @@ export class GameLoop {
 
       // Remove entities that moved out of view (right now, the entities are at their start* positions)
       newEntities = newEntities.filter((entity) => {
-        return entity.startX + this.deltaX > 0 && entity.startX + this.deltaX < window.innerWidth
-          && entity.startY + this.deltaY > 0 && entity.startY + this.deltaY < window.innerHeight;
+        return entity.startX + this.deltaX > 0 && entity.startX + this.deltaX < screen.width
+          && entity.startY + this.deltaY > 0 && entity.startY + this.deltaY < screen.height;
       });
 
       // Update movement speed and renormalize entities' startX, startY positions
