@@ -116,6 +116,14 @@ export class GameLoop {
       ([cdf]) => cdf
     );
     const rolledEffect = this.effectTable[effectiveDrop.baseDropIndex][rolledEffectIndex][1];
+
+    const itemVisibilityLevel = Math.floor(
+      (1 + (this.effects.itemVisibility?.totalPctChange || 0) / 100) 
+      * (this.props.gameConfig.effects.find((effect) => effect.type === "itemVisibility")?.baseValue || 1)
+    );
+    const hasEffectVisibility = itemVisibilityLevel >= this.props.gameConfig.player.effectVisibilityThreshold;
+    rolledEffect.isHidden &&= !hasEffectVisibility;
+
     return [effectiveDrop, hasEffect ? rolledEffect : undefined];
   }
 
@@ -219,10 +227,10 @@ export class GameLoop {
     const {
       gameConfig,
       setEntities,
+      setEffects,
       setMovementSpeed,
       setScore,
       setScreenDeltaToZero,
-      setEffects,
     } = this.props;
 
     setEntities((entities) => {
@@ -259,6 +267,12 @@ export class GameLoop {
       setScore((score) => score + deltaScore);
       setEffects(() => ({...this.effects}));
 
+      const itemVisibilityLevel = Math.floor(
+        (1 + (this.effects.itemVisibility?.totalPctChange || 0) / 100) 
+        * (gameConfig.effects.find((effect) => effect.type === "itemVisibility")?.baseValue || 1)
+      );
+      const isRarityVisible = itemVisibilityLevel >= gameConfig.player.rarityVisibilityThreshold;
+
       // Spawn new entities
       const spawnRate = gameConfig.tiers[this.maxTier - 1].baseDropRate;
       const spawnsThisTick = this._getSpawnsThisTick(spawnRate);
@@ -272,12 +286,12 @@ export class GameLoop {
           id: uuidv4(),
           startX,
           startY,
-          text: item.name || item.baseName,
-          textStyle: dropIsVariant ? item.textStyle : item.baseTextStyle,
+          text: !isRarityVisible ? item.baseName : item.name,
+          textStyle: dropIsVariant && isRarityVisible ? item.textStyle : item.baseTextStyle,
           drop: item,
           dropIsVariant,
           effect,
-          rarity: item.rarity || item.baseRarity,
+          rarity: !isRarityVisible ? item.baseRarity : item.rarity || item.baseRarity,
           tier: item.baseTier,
         });
       });

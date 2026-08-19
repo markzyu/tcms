@@ -91,6 +91,7 @@ const rarityEditorField = defineEditorUiField(raritySchema, {
 
 export const effectConfigSchema = z.strictObject({
   type: effectTypeSchema,
+  emojiIcon: z.string(),
   baseValue: z.number(),
   maxValue: z.number(),
 });
@@ -102,6 +103,12 @@ const effectConfigEditorField = defineEditorUiField(effectConfigSchema, {
     label: {
       en: "Effect Type",
       ja: "効果タイプ",
+    }
+  },
+  emojiIcon: {
+    label: {
+      en: "Emoji Icon",
+      ja: "絵文字アイコン",
     }
   },
   baseValue: {
@@ -129,6 +136,14 @@ export const playerConfigSchema = z.strictObject({
    * Unit: degrees, fractional numbers are allowed.
    */
   directionChangeMaxAngle: z.number(),
+  /**
+   * Unit: integer. 1 means visible at all times. 2 and above requires effects.
+   */
+  rarityVisibilityThreshold: z.number().default(2),
+  /**
+   * Unit: integer. 1 means visible at all times. 2 and above requires effects.
+   */
+  effectVisibilityThreshold: z.number().default(2),
 });
 const playerConfigEditorField = defineEditorUiField(playerConfigSchema, {
   en: "Player",
@@ -144,6 +159,18 @@ const playerConfigEditorField = defineEditorUiField(playerConfigSchema, {
     label: {
       en: "Movement Direction Change Max Angle",
       ja: "移動方向変更最大角度",
+    }
+  },
+  rarityVisibilityThreshold: {
+    label: {
+      en: "Rarity Visibility Threshold",
+      ja: "レアリティの表示閾値",
+    }
+  },
+  effectVisibilityThreshold: {
+    label: {
+      en: "Effect Visibility Threshold",
+      ja: "効果の表示閾値",
     }
   },
 });

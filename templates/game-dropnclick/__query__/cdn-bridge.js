@@ -34,17 +34,20 @@
           },
         ],
         effects: [
-          { type: "movementSpeed", baseValue: 20, maxValue: 200 },
-          { type: "itemVisibility", baseValue: 1, maxValue: 10 },
-          { type: "screenZoom", baseValue: 1, maxValue: 10 },
+          { type: "movementSpeed", emojiIcon: "👟", baseValue: 20, maxValue: 200 },
+          { type: "itemVisibility", emojiIcon: "🔍", baseValue: 1, maxValue: 10 },
+          { type: "screenZoom", emojiIcon: "📺", baseValue: 1, maxValue: 10 },
         ],
         player: {
           directionChangeInterval: 4,
           directionChangeMaxAngle: 90,
+          rarityVisibilityThreshold: 2,
+          effectVisibilityThreshold: 2,
         },
         drops: [
           {
-            baseName: "Plastic Bottle",
+            baseName: "Bottle",
+            name: "Plastic Bottle",
             baseRarity: 0,
             baseTier: 0,
             baseWeight: 100,
@@ -65,9 +68,9 @@
                 type: "itemVisibility",
                 duration: 20,
                 weight: 100,
-                isHidden: false,
-                minPctChange: 2,
-                maxPctChange: 10,
+                isHidden: true,
+                minPctChange: 10,
+                maxPctChange: 20,
               }
             ],
             variants: [

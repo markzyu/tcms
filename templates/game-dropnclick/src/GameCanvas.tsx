@@ -97,6 +97,7 @@ export const GameCanvas = () => {
             }}
             onClick={onClickEntity(entity)}
           >
+            {!entity.effect?.isHidden ? <span className="text-red-700">{contentJson.effects.find((effect) => effect.type === entity.effect?.type)?.emojiIcon || ''}</span> : null}
             {entity.text}
           </div>
         ))}

@@ -4,27 +4,48 @@ import type { GameConfig } from "./gameConfig";
 //       so that helper functions like `toHaveTextContent()` can be used without type assertions.
 export const defaultGameConfig: Required<GameConfig> = {
   tiers: [
-    { weight: 100, baseDropRate: 2, pGlobalEffect: 0.1 },
+    { weight: 100, baseDropRate: 2, pGlobalEffect: 0.5 },
     { weight: 10, baseDropRate: 1, pGlobalEffect: 0.05 },
     { weight: 1, baseDropRate: 0.5, pGlobalEffect: 0.01 },
   ],
   rarities: [
-    { name: "Common", weight: 100, textStyle: {} },
-    { name: "Rare", weight: 10, textStyle: {} },
-    { name: "Legendary", weight: 1, textStyle: {} },
+    {
+      name: "Common",
+      weight: 100,
+      textStyle: {},
+    },
+    {
+      name: "Rare",
+      weight: 10,
+      textStyle: {
+        backgroundColor: "#000000",
+        fontColor: "#F9F018"
+      },
+    },
+    {
+      name: "Legendary",
+      weight: 1,
+      textStyle: {
+        backgroundColor: "#000000",
+        fontColor: "#FF4500"
+      },
+    },
   ],
   effects: [
-    { type: "movementSpeed", baseValue: 1, maxValue: 10 },
-    { type: "itemVisibility", baseValue: 1, maxValue: 10 },
-    { type: "screenZoom", baseValue: 1, maxValue: 10 },
+    { type: "movementSpeed", emojiIcon: "👟", baseValue: 20, maxValue: 200 },
+    { type: "itemVisibility", emojiIcon: "🔍", baseValue: 1, maxValue: 10 },
+    { type: "screenZoom", emojiIcon: "📺", baseValue: 1, maxValue: 10 },
   ],
   player: {
-    directionChangeInterval: 1,
-    directionChangeMaxAngle: 10,
+    directionChangeInterval: 4,
+    directionChangeMaxAngle: 90,
+    rarityVisibilityThreshold: 2,
+    effectVisibilityThreshold: 2,
   },
   drops: [
     {
-      baseName: "Plastic Bottle",
+      baseName: "Bottle",
+      name: "Plastic Bottle",
       baseRarity: 0,
       baseTier: 0,
       baseWeight: 100,
@@ -32,7 +53,24 @@ export const defaultGameConfig: Required<GameConfig> = {
       baseMedia: [],
       animationOnPickup: "zoomOutAndFade",
       animationOnDrop: "zoomOutAndFade",
-      effects: [],
+      effects: [
+        {
+          type: "movementSpeed",
+          duration: 20,
+          weight: 100,
+          isHidden: false,
+          minPctChange: 50,
+          maxPctChange: 70,
+        },
+        {
+          type: "itemVisibility",
+          duration: 20,
+          weight: 100,
+          isHidden: true,
+          minPctChange: 10,
+          maxPctChange: 20,
+        }
+      ],
       variants: [
         {
           name: "Glass Bottle",
@@ -45,6 +83,6 @@ export const defaultGameConfig: Required<GameConfig> = {
     }
   ],
   scoreFunction: "A * rarity * B ^ tier",
-  scoreFunctionParamA: 100,
+  scoreFunctionParamA: 10,
   scoreFunctionParamB: 1.05,
 };

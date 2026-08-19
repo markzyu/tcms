@@ -110,7 +110,14 @@ export const effectEditorField = defineEditorUiField(effectSchema, {
 export const dropSchemaName = "drop";
 export const dropSchemaVersion = "0.1.0";
 export const dropSchema = z.strictObject({
+  /**
+   * The base (unidentified) name for all variants.
+   */
   baseName: z.string(),
+  /**
+   * The identified name for the base variant of this drop.
+   */
+  name: z.string(),
   baseRarity: z.number(),
   baseTier: z.number().default(0),
   baseWeight: z.number().default(100),
@@ -132,6 +139,12 @@ export const dropEditorField = defineEditorUiField(dropSchema, {
   ja: "ドロップ",
 }, {
   baseName: {
+    label: {
+      en: "Unidentified Item Name",
+      ja: "未識別アイテム名",
+    }
+  },
+  name: {
     label: {
       en: "Name",
       ja: "名前",
