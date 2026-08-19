@@ -115,7 +115,7 @@ export class GameLoop {
       [Math.random(), undefined as any],
       ([cdf]) => cdf
     );
-    const rolledEffect = this.effectTable[effectiveDrop.baseDropIndex][rolledEffectIndex][1];
+    const rolledEffect = { ...this.effectTable[effectiveDrop.baseDropIndex][rolledEffectIndex][1] };
 
     const itemVisibilityLevel = Math.floor(
       (1 + (this.effects.itemVisibility?.totalPctChange || 0) / 100) 
