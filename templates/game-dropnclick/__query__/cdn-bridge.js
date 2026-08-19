@@ -34,9 +34,9 @@
           },
         ],
         effects: [
-          { type: "movementSpeed", emojiIcon: "👟", baseValue: 20, maxValue: 200 },
-          { type: "itemVisibility", emojiIcon: "🔍", baseValue: 1, maxValue: 10 },
-          { type: "screenZoom", emojiIcon: "📺", baseValue: 1, maxValue: 10 },
+          { type: "movementSpeed", emojiIcon: "👟", baseValue: 20, maxValue: 200, nameTemplate: "{item} of jogging", },
+          { type: "itemVisibility", emojiIcon: "🔍", baseValue: 1, maxValue: 10, nameTemplate: "{item} of visibility", },
+          { type: "screenZoom", emojiIcon: "📺", baseValue: 1, maxValue: 10, nameTemplate: "{item} of zoom", },
         ],
         player: {
           directionChangeInterval: 4,

@@ -94,6 +94,10 @@ export const effectConfigSchema = z.strictObject({
   emojiIcon: z.string(),
   baseValue: z.number(),
   maxValue: z.number(),
+  /**
+   * A template string describing how the item shall be named when it has an effect.
+   */
+  nameTemplate: z.string(),
 });
 const effectConfigEditorField = defineEditorUiField(effectConfigSchema, {
   en: "Effect",
@@ -121,6 +125,12 @@ const effectConfigEditorField = defineEditorUiField(effectConfigSchema, {
     label: {
       en: "Max Value",
       ja: "最大値",
+    }
+  },
+  nameTemplate: {
+    label: {
+      en: "Item Name Modification",
+      ja: "アイテム名の変更",
     }
   },
 });

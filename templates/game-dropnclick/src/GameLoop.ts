@@ -21,7 +21,7 @@ export type EffectStatus = {
   totalPctChange: number;
 }
 
-type Item = Drop & Partial<Variant> & { baseDropIndex: number };
+type Item = Drop & Partial<Variant> & { baseDropIndex: number, dropIsVariant: boolean };
 
 export type GameEntity = {
   /* This is a UUID. And it can be abused to trigger a rerender/restart of any entity's animation */
@@ -34,6 +34,7 @@ export type GameEntity = {
   startY: number;
 
   text: string;
+  textFullNameAndEffect: string;
   textStyle?: TextStyle;
   drop: Item;
   dropIsVariant: boolean;
@@ -50,6 +51,7 @@ const DEFAULT_RANDOM_SPEED = 50;
 
 export type GameLoopProps = {
   gameConfig: GameConfig;
+  onCollectDrop: (drop: GameEntity) => void;
   setEntities: (_callback: (entities: GameEntity[]) => GameEntity[]) => void;
   setEffects: (_callback: (effects: Partial<Record<EffectType, EffectStatus>>) => Partial<Record<EffectType, EffectStatus>>) => void;
   setMovementSpeed: (_callback: (speed: Point2D) => Point2D) => void;
@@ -199,11 +201,11 @@ export class GameLoop {
       let cdf = existingCdf + drop.baseWeight;
       this.dropTable[tier] ||= {};
       this.dropTable[tier][drop.baseRarity] ||= [];
-      this.dropTable[tier][drop.baseRarity].push([cdf, { ...drop, baseDropIndex }]);
+      this.dropTable[tier][drop.baseRarity].push([cdf, { ...drop, baseDropIndex, dropIsVariant: false }]);
       drop.variants.forEach((variant) => {
         cdf += variant.weight;
         this.dropTable[tier][variant.rarity] ||= [];
-        this.dropTable[tier][variant.rarity].push([cdf, { ...drop, ...variant, baseDropIndex }]);
+        this.dropTable[tier][variant.rarity].push([cdf, { ...drop, ...variant, baseDropIndex, dropIsVariant: true }]);
       });
     });
 
@@ -231,6 +233,7 @@ export class GameLoop {
   private _doTick(screen: ScreenSize) {
     const {
       gameConfig,
+      onCollectDrop,
       setEntities,
       setEffects,
       setMovementSpeed,
@@ -245,6 +248,9 @@ export class GameLoop {
       let newEntities = entities.filter((entity) => {
         if (entity.wasClicked) {
           deltaScore += Math.ceil(this._getScore(entity.drop));
+        }
+        if (entity.wasClicked) {
+          onCollectDrop(entity);
         }
         if (entity.wasClicked && entity.effect) {
           const ticks = Math.ceil(entity.effect.duration * 1000 / TICK_INTERVAL);
@@ -286,15 +292,16 @@ export class GameLoop {
         const startX = Math.random() * screen.width - this.deltaX;
         const startY = Math.random() * screen.height - this.deltaY;
         const [item, effect] = this._getRandomDrop();
-        const dropIsVariant = "name" in item;
+        const effectConfig = gameConfig.effects.find((effect2) => effect2.type === effect?.type);
         newEntities.push({
           id: uuidv4(),
           startX,
           startY,
           text: !isRarityVisible ? item.baseName : item.name,
-          textStyle: dropIsVariant && isRarityVisible ? item.textStyle : item.baseTextStyle,
+          textFullNameAndEffect: (effectConfig?.nameTemplate || "{item}").replace("{item}", item.name || item.baseName),
+          textStyle: item.dropIsVariant && isRarityVisible ? item.textStyle : item.baseTextStyle,
           drop: item,
-          dropIsVariant,
+          dropIsVariant: item.dropIsVariant,
           effect,
           rarity: !isRarityVisible ? item.baseRarity : item.rarity || item.baseRarity,
           tier: item.baseTier,

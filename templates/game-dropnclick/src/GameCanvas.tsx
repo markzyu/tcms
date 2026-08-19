@@ -5,7 +5,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { usePageContentContext } from "@tcms/mini-app-react-utils";
 import { EffectStatus, GameEntity, GameLoop } from "./GameLoop";
 import { EffectType, TextStyle } from "./content/basicTypes";
+import { drop } from "lodash";
 
+const RARE_DROPS_HISTORY_SIZE = 10;
 const HITBOX_SIZE = 10;
 
 // Allow custom CSS properties to be used in style attribute
@@ -28,6 +30,7 @@ export const GameCanvas = () => {
   const [movementSpeed, setMovementSpeed] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [score, setScore] = useState(0);
   const [effects, setEffects] = useState<Partial<Record<EffectType, EffectStatus>>>({});
+  const [rareDropsHistory, setRareDropsHistory] = useState<GameEntity[]>([]);
   const screenRef = useRef<HTMLDivElement>(null);
   if (!contentJson || isLoading) return "Loading...";
 
@@ -39,8 +42,15 @@ export const GameCanvas = () => {
       void screenRef.current.offsetWidth;
       screenRef.current.style.animation = backupAnimation;
     }
+    const onCollectDrop = (drop: GameEntity) => {
+      const isRare = !!(drop.dropIsVariant || drop.effect?.type);
+      isRare && setRareDropsHistory((history) => {
+        return [...history.slice(-RARE_DROPS_HISTORY_SIZE), drop];
+      });
+    };
     const gameLoop = new GameLoop({
       gameConfig: contentJson,
+      onCollectDrop,
       setEntities,
       setMovementSpeed,
       setScore,
@@ -78,11 +88,11 @@ export const GameCanvas = () => {
 
   return (
     <div
-      className="bg-blue-500 w-full h-full overflow-hidden"
+      className="bg-blue-500 w-full h-full overflow-hidden flex flex-row"
       data-testid={TEST_IDS.gameRoot}
     >
       <div className="absolute top-0 left-0 w-full bg-red-500">Score: {score}. {effectsText}</div>
-      <div ref={screenRef} className="relative w-full h-full" style={{
+      <div ref={screenRef} className="relative flex-1 h-full" style={{
         animation: `movement 100s linear`,
         '--speed-x-for-100-secs': `${movementSpeed.x * 100}px`,
         '--speed-y-for-100-secs': `${movementSpeed.y * 100}px`,
@@ -107,6 +117,13 @@ export const GameCanvas = () => {
           >
             {!entity.effect?.isHidden ? <span className="text-red-700">{contentJson.effects.find((effect) => effect.type === entity.effect?.type)?.emojiIcon || ''}</span> : null}
             {entity.text}
+          </div>
+        ))}
+      </div>
+      <div className="w-64 h-full bg-gray-200 flex flex-col-reverse">
+        {rareDropsHistory.map((entity) => (
+          <div key={entity.id}>
+            {entity.textFullNameAndEffect}
           </div>
         ))}
       </div>
