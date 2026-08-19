@@ -60,28 +60,33 @@ export type GameLoopProps = {
 }
 
 export class GameLoop {
-  private props: GameLoopProps;
-  private tick: number;
+  props: GameLoopProps;
+  tick: number;
 
   // --- Game state ---
-  private directionAngleRadian: number;
-  private maxTier: number;   // eligible tier is [0, maxTier)
-  private effects: Partial<Record<EffectType, EffectStatus>>;   // effect type -> expiration tick
+  directionAngleRadian: number;
+  maxTier: number;   // eligible tier is [0, maxTier)
+  effects: Partial<Record<EffectType, EffectStatus>>;   // effect type -> expiration tick
 
   // The current speed of the player / of the canvas screen
-  private speedX: number;
-  private speedY: number;
+  speedX: number;
+  speedY: number;
 
   // The delta in position of the screen, at the next tick
-  private deltaX: number;
-  private deltaY: number;
+  deltaX: number;
+  deltaY: number;
 
   // --- Derived constants ---
-  private directionChangeTicks: number;
-  private directionChangeMaxDeltaRadians: number;
-  private dropTable: Record<number, Record<number, [number, Item][]>>;    // [tier][rarity] -> [CDF of P(drop), drop] sorted by CDF
-  private effectTable: Record<number, [number, Effect][]>;     // [index of drop] -> [CDF of P(effect), effect type] sorted by CDF
-  private rarityTable: number[];    // rarity -> CDF of P(rarity)
+  directionChangeTicks: number;
+  directionChangeMaxDeltaRadians: number;
+  dropTable: Record<number, Record<number, [number, Item][]>>;    // [tier][rarity] -> [CDF of P(drop), drop] sorted by CDF
+  effectTable: Record<number, [number, Effect][]>;     // [index of drop] -> [CDF of P(effect), effect type] sorted by CDF
+  rarityTable: number[];    // rarity -> CDF of P(rarity)
+
+  // Helper method to assist with unit tests
+  _random(): number {
+    return Math.random();
+  }
 
   _getRandomSpeed(): Point2D {
     const { effects } = this.props.gameConfig;
@@ -89,7 +94,7 @@ export class GameLoop {
     const maxSpeedScalar = effects.find((effect) => effect.type === "movementSpeed")?.maxValue;
     const speedEffectPct = this.effects.movementSpeed?.totalPctChange || 0;
     const speedScalar = Math.min(baseSpeedScalar * (1 + speedEffectPct / 100), maxSpeedScalar ?? Infinity);
-    const deltaAngle = (Math.random() * 2 - 1) * this.directionChangeMaxDeltaRadians;
+    const deltaAngle = (this._random() * 2 - 1) * this.directionChangeMaxDeltaRadians;
     this.directionAngleRadian = (this.directionAngleRadian + deltaAngle) % (2 * Math.PI);
     return {
       x: speedScalar * Math.cos(this.directionAngleRadian),
@@ -98,8 +103,8 @@ export class GameLoop {
   }
 
   _getRandomDrop(): [Item, Effect | undefined] {
-    let effectiveTier = Math.floor(Math.random() * this.maxTier);
-    let effectiveRarity = sortedIndexBy(this.rarityTable, Math.random());
+    let effectiveTier = Math.floor(this._random() * this.maxTier);
+    let effectiveRarity = sortedIndexBy(this.rarityTable, this._random());
     let table = this.dropTable[effectiveTier]?.[effectiveRarity];
     while (!table) {
       effectiveRarity -= 1;
@@ -111,15 +116,15 @@ export class GameLoop {
 
     const effectiveDropIndex = sortedIndexBy(
       table,
-      [Math.random(), undefined as any],
+      [this._random(), undefined as any],
       ([cdf]) => cdf
     );
     const effectiveDrop = table[effectiveDropIndex][1];
 
-    const hasEffect = this.props.gameConfig.tiers[this.maxTier - 1].pGlobalEffect > Math.random();
+    const hasEffect = this.props.gameConfig.tiers[this.maxTier - 1].pGlobalEffect > this._random();
     const rolledEffectIndex = sortedIndexBy(
       this.effectTable[effectiveDropIndex],
-      [Math.random(), undefined as any],
+      [this._random(), undefined as any],
       ([cdf]) => cdf
     );
     const rolledEffect = { ...this.effectTable[effectiveDrop.baseDropIndex][rolledEffectIndex][1] };
@@ -137,7 +142,7 @@ export class GameLoop {
   _getSpawnsThisTick(spawnRate: number): number {
     const spawnsPerTick = Math.floor(spawnRate * TICK_INTERVAL / 1000);
     const spawnsProbabilityPerTick = spawnRate * TICK_INTERVAL / 1000 - spawnsPerTick;
-    return Math.random() < spawnsProbabilityPerTick ? spawnsPerTick + 1 : spawnsPerTick;
+    return this._random() < spawnsProbabilityPerTick ? spawnsPerTick + 1 : spawnsPerTick;
   }
 
   _getScore(item: Item): number {
@@ -157,9 +162,10 @@ export class GameLoop {
     const { gameConfig } = props;
     this.props = props;
     this.tick = 0;
+    // TODO: GameLoop doesn't support tiers yet
     this.maxTier = 1;
     this.effects = {};
-    this.directionAngleRadian = Math.random() * 2 * Math.PI;
+    this.directionAngleRadian = this._random() * 2 * Math.PI;
     this.directionChangeTicks = Math.ceil(
       gameConfig.player.directionChangeInterval * 1000 / TICK_INTERVAL
     );
@@ -260,7 +266,7 @@ export class GameLoop {
             totalPctChange: 0,
           };
           this.effects[entity.effect.type]!.totalPctChange += entity.effect.minPctChange
-            + Math.random() * (entity.effect.maxPctChange - entity.effect.minPctChange);
+            + this._random() * (entity.effect.maxPctChange - entity.effect.minPctChange);
           this.effects[entity.effect.type]!.expirationTick = this.tick + ticks;
           this.effects[entity.effect.type]!.stackCount += 1;
         }
@@ -289,8 +295,8 @@ export class GameLoop {
       const spawnsThisTick = this._getSpawnsThisTick(spawnRate);
       Array.from({ length: spawnsThisTick }).forEach(() => {
         // Spawning the new entity, relative to screen space position, by subtracting parent offset
-        const startX = Math.random() * screen.width - this.deltaX;
-        const startY = Math.random() * screen.height - this.deltaY;
+        const startX = this._random() * screen.width - this.deltaX;
+        const startY = this._random() * screen.height - this.deltaY;
         const [item, effect] = this._getRandomDrop();
         const effectConfig = gameConfig.effects.find((effect2) => effect2.type === effect?.type);
         newEntities.push({
