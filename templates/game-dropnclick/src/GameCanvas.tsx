@@ -63,8 +63,9 @@ export const GameCanvas = () => {
   };
 
   const effectsText = useMemo(() => {
-    return Object.entries(effects).map(([effectType, { stackCount }]) => {
-      return <span className="mx-2" key={effectType}>{effectType} x{stackCount}</span>;
+    return Object.entries(effects).map(([effectType, { totalPctChange }]) => {
+      const amount = totalPctChange ? `${totalPctChange > 0 ? '+' : '-'}${totalPctChange.toFixed(0)}%` : '';
+      return <span className="mx-2" key={effectType}>{effectType} {amount}</span>;
     });
   }, [effects]);
 
