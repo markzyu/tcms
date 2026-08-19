@@ -91,7 +91,7 @@ export const GameCanvas = () => {
       className="bg-blue-500 w-full h-full overflow-hidden flex flex-row"
       data-testid={TEST_IDS.gameRoot}
     >
-      <div className="absolute top-0 left-0 w-full bg-red-500">Score: {score}. {effectsText}</div>
+      <div className="absolute z-10 top-0 left-0 w-full bg-red-500">Score: {score}. {effectsText}</div>
       <div ref={screenRef} className="relative flex-1 h-full" style={{
         animation: `movement 100s linear`,
         '--speed-x-for-100-secs': `${movementSpeed.x * 100}px`,
@@ -111,6 +111,7 @@ export const GameCanvas = () => {
               ),
               left: entity.startX,
               top: entity.startY,
+              transform: "translate(-50%, -50%)",
               padding: `${HITBOX_SIZE}px`,
             }}
             onClick={onClickEntity(entity)}
@@ -120,7 +121,7 @@ export const GameCanvas = () => {
           </div>
         ))}
       </div>
-      <div className="w-64 h-full bg-gray-200 flex flex-col-reverse">
+      <div className="relative z-10 w-64 h-full bg-gray-200 flex flex-col-reverse">
         {rareDropsHistory.map((entity) => (
           <div key={entity.id}>
             {entity.textFullNameAndEffect}
