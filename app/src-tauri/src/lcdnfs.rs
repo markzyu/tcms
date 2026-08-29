@@ -98,15 +98,22 @@ pub(crate) fn unzip_app_asset_to_fs(
   Ok(())
 }
 
+fn _get_template_asset_path(template_scope: &String, template_name: &String) -> Result<PathBuf, String> {
+  let mut template_asset_path = PathBuf::from("templates");
+  if !template_scope.is_empty() {
+    template_asset_path.push(template_scope);
+  }
+  template_asset_path.push(template_name);
+  template_asset_path.set_extension("zip");
+  Ok(template_asset_path)
+}
+
 pub(crate) fn read_template_schema(
   app_handle: &AppHandle,
   template_scope: &String,
   template_name: &String,
 ) -> Result<String, String> {
-  let mut template_asset_path = PathBuf::from("templates");
-  template_asset_path.push(template_scope);
-  template_asset_path.push(template_name);
-  template_asset_path.set_extension("zip");
+  let template_asset_path = _get_template_asset_path(template_scope, template_name)?;
   let zip_data = read_app_asset(app_handle, &template_asset_path)?;
   let mut zip = zip::ZipArchive::new(std::io::Cursor::new(zip_data))
     .map_err(|e| format!("read_template_schema: {}", e))?;
@@ -122,6 +129,28 @@ pub(crate) fn read_template_schema(
     .read_to_string(&mut schema_data)
     .map_err(|e| format!("read_template_schema: {}", e))?;
   Ok(schema_data)
+}
+
+pub(crate) fn read_template_manifest(
+  app_handle: &AppHandle,
+  template_scope: &String,
+  template_name: &String,
+) -> Result<String, String> {
+  let template_asset_path = _get_template_asset_path(template_scope, template_name)?;
+  let zip_data = read_app_asset(app_handle, &template_asset_path)?;
+  let mut zip = zip::ZipArchive::new(std::io::Cursor::new(zip_data))
+    .map_err(|e| format!("read_template_manifest: {}", e))?;
+
+  let mut manifest_file_path = PathBuf::from("dist");
+  manifest_file_path.push("manifest.json");
+  let mut manifest_file = zip
+    .by_path(&manifest_file_path)
+    .map_err(|e| format!("read_template_manifest: {}", e))?;
+  let mut manifest_data = String::new();
+  manifest_file
+    .read_to_string(&mut manifest_data)
+    .map_err(|e| format!("read_template_manifest: {}", e))?;
+  Ok(manifest_data)
 }
 
 pub(crate) fn list_templates(app_handle: &AppHandle) -> Result<Vec<(String, String)>, String> {
