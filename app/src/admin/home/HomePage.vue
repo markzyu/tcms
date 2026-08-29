@@ -33,12 +33,3 @@
     </ion-content>
   </ion-page>
 </template>
-
-<style scoped>
-.content {
-  --padding-start: 16px;
-  --padding-end: 16px;
-  --padding-top: 20px;
-  --padding-bottom: 20px;
-}
-</style>
