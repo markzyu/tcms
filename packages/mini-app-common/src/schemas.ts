@@ -95,16 +95,21 @@ export type DefinePageContentSchemaProps = {
   editorUiSchema: EditorUiSchemaJson;
 };
 
-export type DefineRootManifestPageProps = {
-  schema: string | void;
-};
+export const TemplateManifestPagePropsSchema = z.object({
+  schema: z.string().optional(),
+});
 
-export type DefineRootManifestProps = {
-  id: string;
-  title: string;
-  version: string;
-  pages: Record<string, DefineRootManifestPageProps>;
-};
+export const TemplateManifestSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  version: z.string(),
+  pages: z.record(z.string(), TemplateManifestPagePropsSchema),
+  dependencies: z.array(z.string()),
+});
+
+export type DefineRootManifestPageProps = z.infer<typeof TemplateManifestPagePropsSchema>;
+export type DefineRootManifestProps = Exclude<z.infer<typeof TemplateManifestSchema>, "dependencies">;
+export type TemplateManifest = z.infer<typeof TemplateManifestSchema>;
 
 /**
  * Each schema definition contains this function call. It will only execute during build step.
@@ -304,7 +309,7 @@ export const defineRootManifest = async (props: DefineRootManifestProps) => {
     .map(([name, version]) => (
       `${name}@${version}`
     ));
-  const manifestDefinition = {
+  const manifestDefinition: TemplateManifest = {
     id,
     title,
     version,
