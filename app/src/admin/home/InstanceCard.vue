@@ -18,7 +18,8 @@
   const props = defineProps<Props>();
 
   const [
-    instanceStartBtnLabel, instanceStopBtnLabel, instanceEditBtnLabel, instanceShareBtnLabel,
+    instanceStartBtnLabel, instanceStopBtnLabel, instanceEditBtnLabel, instanceEditPageContentBtnAriaLabel, instanceShareBtnLabel,
+    statusRunningLabel, statusErrorLabel,
     debugToolsHeading, debugToolsSlugLabel, debugToolsJsonDataLabel,
   ] = useAdminHomePageContent(adminHomePageContentKeys);
 
@@ -99,7 +100,7 @@
   <ion-card class="w-full mx-auto max-w-[500px]" data-testid="instance-card">
     <div class="relative h-[220px] rounded-t-sm overflow-hidden">
       <div v-if="editStarted" class="absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]">
-        <ion-button fill="outline" color="light" @click="openEditWorkflow">
+        <ion-button fill="outline" color="light" @click="openEditWorkflow" :aria-label="instanceEditPageContentBtnAriaLabel">
           <ion-icon slow="icon-only" :icon="createOutline" aria-hidden="true" />
         </ion-button>
       </div>
@@ -124,7 +125,7 @@
         v-model="urlSlug"
       />
       <div v-else class="h-[40px]">
-        Test: {{ urlSlug }} {{ isLocalCDNRunning ? '(Running)' : '' }} {{ localCDNError ? '(Error)' : '' }}
+        {{ urlSlug }} {{ isLocalCDNRunning ? statusRunningLabel : '' }} {{ localCDNError ? statusErrorLabel : '' }}
       </div>
     </ion-card-content>
     <div class="flex justify-end gap-2 mt-2">
