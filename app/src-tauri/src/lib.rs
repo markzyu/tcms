@@ -45,6 +45,7 @@ async fn get_prefab_instance_install_dir(
 async fn perform_first_time_setup(app_handle: AppHandle) -> Result<(), String> {
   lcdnfs::ensure_os_data_dir(&app_handle)?;
   get_template_install_dir(app_handle.clone(), "@tcms", "template-example-info-card1").await?;
+  get_template_install_dir(app_handle.clone(), "@tcms", "template-game-dropnclick").await?;
   get_prefab_instance_install_dir(app_handle, EXAMPLE_INSTANCE_ID.to_string()).await?;
   Ok(())
 }
