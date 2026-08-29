@@ -5,7 +5,10 @@ await cleanUpSchemaDirectory();
 const { contactCardSchemaName, contactCardSchemaPathPromise } = await import("./contactCard");
 defineRootManifest({
   id: "example-info-card1",
-  title: "[Example] Contact Card",
+  title: {
+    en: "[Example] Contact Card",
+    ja: "[例] 連絡先カード",
+  },
   version: "1.0.0",
   pages: {
     [contactCardSchemaName]: {

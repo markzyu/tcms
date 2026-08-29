@@ -5,7 +5,10 @@ await cleanUpSchemaDirectory();
 const { gameConfigSchemaName, gameConfigSchemaPathPromise } = await import("./gameConfig");
 defineRootManifest({
   id: "game-dropnclick",
-  title: "[Example] Game Drop'n Click",
+  title: {
+    en: "[Example] Game Drop'n Click",
+    ja: "[例] 物拾いゲーム",
+  },
   version: "1.0.0",
   pages: {
     [gameConfigSchemaName]: {

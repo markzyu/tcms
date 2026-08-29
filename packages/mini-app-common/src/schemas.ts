@@ -101,15 +101,15 @@ export const TemplateManifestPagePropsSchema = z.object({
 
 export const TemplateManifestSchema = z.object({
   id: z.string(),
-  title: z.string(),
+  title: z.record(AppLanguagesSchema, z.string()),
   version: z.string(),
   pages: z.record(z.string(), TemplateManifestPagePropsSchema),
   dependencies: z.array(z.string()),
 });
 
-export type DefineRootManifestPageProps = z.infer<typeof TemplateManifestPagePropsSchema>;
-export type DefineRootManifestProps = Exclude<z.infer<typeof TemplateManifestSchema>, "dependencies">;
 export type TemplateManifest = z.infer<typeof TemplateManifestSchema>;
+export type DefineRootManifestPageProps = z.infer<typeof TemplateManifestPagePropsSchema>;
+export type DefineRootManifestProps = Omit<TemplateManifest, "dependencies">;
 
 /**
  * Each schema definition contains this function call. It will only execute during build step.

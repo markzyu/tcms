@@ -1,6 +1,6 @@
 {
   "name": "@tcms/mini-app-common",
-  "version": "0.0.22",
+  "version": "0.0.23",
   "license": "LGPL-3.0-or-later",
   "type": "module",
   "exports": {
