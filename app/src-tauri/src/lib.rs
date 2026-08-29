@@ -91,6 +91,16 @@ fn lcdn_status() -> LcdnStatus {
   lcdn_server::get_lcdn_server_status()
 }
 
+#[tauri::command]
+async fn list_templates(app_handle: AppHandle) -> Result<Vec<(String, String)>, String> {
+  lcdnfs::list_templates(&app_handle)
+}
+
+#[tauri::command]
+async fn list_instances(app_handle: AppHandle) -> Result<Vec<String>, String> {
+  lcdnfs::list_instances(&app_handle)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   // Setup the Reqwest client to use Ring/Rustls
@@ -110,7 +120,9 @@ pub fn run() {
       lcdn_start,
       lcdn_stop,
       lcdn_reload_configs,
-      lcdn_status
+      lcdn_status,
+      list_templates,
+      list_instances,
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
