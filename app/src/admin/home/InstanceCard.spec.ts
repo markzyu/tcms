@@ -9,7 +9,8 @@ import {
 } from "../mocks.ts";
 
 import { clickIonButton, renderTest } from "../../utils/testUtils.ts";
-import HomePage from "./HomePage.vue";
+import InstanceCard from "./InstanceCard.vue";
+import { IonPage } from "@ionic/vue";
 
 const { mockFs, mockTauri } = getAdminTestMocks();
 
@@ -22,7 +23,7 @@ async function getUrlSlugNativeInput() {
 }
 
 function getStatusText() {
-  return screen.getByTestId("home-status").textContent.replace(/\s+/g, " ").trim();
+  return screen.getByTestId("instance-status").textContent.replace(/\s+/g, " ").trim();
 }
 
 function getPreviewIframeSrc() {
@@ -65,21 +66,34 @@ async function setContentJson(_page: VueWrapper, contentJson: string) {
   await flushPromises();
 }
 
-describe("HomePage", () => {
+const WrapperComponent = {
+  components: {
+    InstanceCard,
+    IonPage,
+  },
+  template: `
+    <ion-page>
+      <instance-card instance-id="6fa27a2f-2f1e-413d-a842-424242424242" />
+    </ion-page>
+  `,
+};
+
+describe("InstanceCard", () => {
   beforeEach(() => {
     resetAdminTestMocks();
   });
 
   it("renders all components", async () => {
-    renderTest(HomePage);
+    renderTest(WrapperComponent);
 
     await waitFor(() => {
       expect(screen.queryByTestId("loading-configs-spinner")).not.toBeInTheDocument();
     });
 
-    expect(screen.getByTestId("home-page-title")).toHaveTextContent("Home");
+    expect(screen.getByTestId("instance-card")).toBeInTheDocument();
+    expect(screen.getByTestId("instance-debug-card")).toBeInTheDocument();
     expect(screen.getByTestId("preview-iframe")).toBeInTheDocument();
-    expect(screen.getByTestId("home-status")).toHaveTextContent(`Test: ${INITIAL_SLUG}`);
+    expect(screen.getByTestId("instance-status")).toHaveTextContent(`Test: ${INITIAL_SLUG}`);
     expect(screen.getByTestId("start-cdn-button")).toHaveTextContent("Start");
     expect(screen.getByTestId("edit-button")).toHaveTextContent("Edit");
     expect(screen.getByTestId("share-button")).toHaveTextContent("Share");
@@ -89,7 +103,7 @@ describe("HomePage", () => {
   });
 
   it("can start server and show the server is running", async () => {
-    renderTest(HomePage);
+    renderTest(WrapperComponent);
 
     await clickStartAndLoadPreview();
     await waitFor(() => {
@@ -101,7 +115,7 @@ describe("HomePage", () => {
 
   it("can start server, and if it fails, can start again", async () => {
     mockTauri.methods.setWantError(true);
-    renderTest(HomePage);
+    renderTest(WrapperComponent);
 
     await clickStartAndLoadPreview();
     await waitFor(() => {
@@ -117,7 +131,7 @@ describe("HomePage", () => {
   });
 
   it("can stop server", async () => {
-    renderTest(HomePage);
+    renderTest(WrapperComponent);
 
     await clickStartAndLoadPreview();
     await waitFor(() => {
@@ -136,7 +150,7 @@ describe("HomePage", () => {
 
   it("reads the LCDN status upon page load, when server is running", async () => {
     mockTauri.methods.setWantToForceStatusAsRunning(true);
-    renderTest(HomePage);
+    renderTest(WrapperComponent);
 
     await waitFor(() => {
       expect(getStatusText()).toContain("(Running)");
@@ -144,7 +158,7 @@ describe("HomePage", () => {
   });
 
   it("updates preview url when editing url slug while server is running", async () => {
-    renderTest(HomePage);
+    renderTest(WrapperComponent);
 
     await clickStartAndLoadPreview();
     await waitFor(() => {
@@ -163,7 +177,7 @@ describe("HomePage", () => {
   });
 
   it("uses updated slug after editing url slug and restarting server", async () => {
-    renderTest(HomePage);
+    renderTest(WrapperComponent);
 
     await clickStartAndLoadPreview();
     await waitFor(() => {
@@ -194,7 +208,7 @@ describe("HomePage", () => {
   });
 
   it("updates preview url when editing url slug while server is stopped", async () => {
-    renderTest(HomePage);
+    renderTest(WrapperComponent);
 
     await setUrlSlug("updated-slug");
     await waitFor(() => {
@@ -208,7 +222,7 @@ describe("HomePage", () => {
   });
 
   it("updates debug info when editing content json", async () => {
-    const page = renderTest(HomePage);
+    const page = renderTest(WrapperComponent);
 
     await waitFor(() => {
       expect(screen.queryByTestId("loading-configs-spinner")).not.toBeInTheDocument();
