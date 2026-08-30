@@ -19,6 +19,16 @@ export type ContactCardContent = z.infer<typeof contactCardSchema>;
 export const contactCardSchemaPathPromise = definePageContentSchema({
   schemaName: contactCardSchemaName,
   schemaVersion: contactCardSchemaVersion,
+  editorDefaultValue: {
+    name: "",
+    headline: "",
+    bio: "",
+    email: "email@example.com",
+    phone: "(123) 456-7890",
+    heroImage: "",
+    heroAltText: "",
+    heroAlignment: "left",
+  },
   editorUiSchema: {
     fieldLabels: {
       en: {

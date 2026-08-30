@@ -82,17 +82,19 @@ export type EditorUiSchemaJson = z.infer<typeof EditorUiSchemaJsonSchema>;
 
 export const PageContentSchemaJsonSchema = z.object({
   schemaVersion: z.string(),
+  editorDefaultValue: z.unknown(),
   editorUiSchema: EditorUiSchemaJsonSchema,
   jsonSchema: z.object<Record<string, unknown>>(),
 });
 
 export type PageContentSchemaJson = z.infer<typeof PageContentSchemaJsonSchema>;
 
-export type DefinePageContentSchemaProps = {
-  schema: ZodObject<any>;
+export type DefinePageContentSchemaProps<T extends ZodObject> = {
+  schema: T;
   schemaName: string;
   schemaVersion: string;
   editorUiSchema: EditorUiSchemaJson;
+  editorDefaultValue: z.infer<T>;
 };
 
 export const TemplateManifestPagePropsSchema = z.object({
@@ -117,8 +119,8 @@ export type DefineRootManifestProps = Omit<TemplateManifest, "dependencies">;
  * 
  * Build step runs the schema definition file itself, from the template package as workdir.
  */
-export const definePageContentSchema = async (props: DefinePageContentSchemaProps) => {
-  const { schema, schemaName, schemaVersion, editorUiSchema } = props;
+export const definePageContentSchema = async <T extends ZodObject>(props: DefinePageContentSchemaProps<T>) => {
+  const { schema, schemaName, schemaVersion, editorDefaultValue, editorUiSchema } = props;
   if (!IS_NODE) {
     return;
   }
@@ -135,6 +137,7 @@ export const definePageContentSchema = async (props: DefinePageContentSchemaProp
   const schemaDefinition: PageContentSchemaJson = {
     schemaVersion,
     editorUiSchema: EditorUiSchemaJsonSchema.parse(editorUiSchema),
+    editorDefaultValue: schema.parse(editorDefaultValue),
     jsonSchema: z.toJSONSchema(schema, { io: "input" }),
   };
 

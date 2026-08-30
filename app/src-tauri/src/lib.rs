@@ -60,8 +60,9 @@ async fn read_template_schema(
   app_handle: AppHandle,
   template_scope: String,
   template_name: String,
+  schema_path: String,
 ) -> Result<String, String> {
-  lcdnfs::read_template_schema(&app_handle, &template_scope, &template_name)
+  lcdnfs::read_template_schema(&app_handle, &template_scope, &template_name, &schema_path)
 }
 
 #[tauri::command]

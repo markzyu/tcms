@@ -4,7 +4,7 @@
   import { invokeWithType, LcdnInstanceConfig } from '../types';
   import { join } from '@tauri-apps/api/path';
   import { mkdir, writeTextFile } from '@tauri-apps/plugin-fs';
-  import { TemplateManifest, TemplateManifestSchema } from '@tcms/mini-app-common';
+  import { PageContentSchemaJson, TemplateManifest, TemplateManifestSchema } from '@tcms/mini-app-common';
   import { useAppLanguageLocale } from '../../utils/i18n';
   import { useLibraryPageContent } from './content';
   import { v4 as uuidv4 } from 'uuid';
@@ -66,10 +66,16 @@
       };
       await writeTextFile(instanceConfigPath, JSON.stringify(instanceConfig, null, 2));
 
-      Object.keys(template.pages).forEach(async (pageName) => {
+      await Promise.all(Object.entries(template.pages).map(async ([pageName, pageProps]) => {
         const contentPath = await join(instanceContentDir, `${pageName}.${currentLocale}.json`);
-        await writeTextFile(contentPath, "{}");
-      });
+        const schemaString = await invokeWithType(z.string(), "read_template_schema", {
+          templateScope: template.namespace ?? "",
+          templateName: template.id,
+          schemaPath: pageProps.schema,
+        });
+        const schema: PageContentSchemaJson = JSON.parse(schemaString);
+        await writeTextFile(contentPath, JSON.stringify(schema.editorDefaultValue || {}, null, 2));
+      }));
     } catch (error) {
       const toast = await toastController.create({
         message: error && typeof error === 'object' && 'message' in error ? String(error.message) : String(error),

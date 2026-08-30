@@ -7,9 +7,11 @@
   import { useWorkflow } from '../ToolsScreen.vue';
   import { adminHomePageContentKeys } from './contentKeys.ts';
   import { ToolInput } from '../../tools/toolTypes.ts';
-  import { invokeWithType } from '../types.ts';
+  import { invokeWithType, LcdnInstanceConfig, LcdnInstanceConfigSchema } from '../types.ts';
   import { z } from 'zod';
-  import { PageContentSchemaJson } from '@tcms/mini-app-common';
+  import { PageContentSchemaJson, TemplateManifest, TemplateManifestSchema } from '@tcms/mini-app-common';
+import { join } from '@tauri-apps/api/path';
+import { readTextFile } from '@tauri-apps/plugin-fs';
 
   type Props = {
     instanceId: string;
@@ -69,9 +71,24 @@
   const openEditWorkflow = async () => {
     try {
       editStarted.value = false;
+      const osDataDir = await invokeWithType(z.string(), "ensure_os_data_dir");
+      const instanceJsonPath = await join(osDataDir, "public", "instances", props.instanceId, "instance.json");
+      const instanceJson = await readTextFile(instanceJsonPath);
+      const instanceConfig: LcdnInstanceConfig = LcdnInstanceConfigSchema.parse(JSON.parse(instanceJson));
+
+      const templateManifestString = await invokeWithType(z.string(), "read_template_manifest", {
+        templateScope: instanceConfig.templateScope,
+        templateName: instanceConfig.templateId,
+      });
+      const templateManifest: TemplateManifest = TemplateManifestSchema.parse(JSON.parse(templateManifestString));
+      
+      // TODO: Instance config should determine which page/schema to load
+      const schemaPath = Object.values(templateManifest.pages)[0].schema;
+
       const schemaString = await invokeWithType(z.string(), 'read_template_schema', {
-        templateScope: '@tcms',
-        templateName: 'template-example-info-card1',
+        templateScope: instanceConfig.templateScope,
+        templateName: instanceConfig.templateId,
+        schemaPath,
       });
       const schema: PageContentSchemaJson = JSON.parse(schemaString);
       const input: ToolInput = {

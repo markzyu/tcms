@@ -226,6 +226,21 @@ export type GameConfig = z.infer<typeof gameConfigSchema>;
 export const gameConfigSchemaPathPromise = definePageContentSchema({
   schemaName: gameConfigSchemaName,
   schemaVersion: gameConfigSchemaVersion,
+  editorDefaultValue: {
+    tiers: [],
+    rarities: [],
+    drops: [],
+    effects: [],
+    player: {
+      directionChangeInterval: 1,
+      directionChangeMaxAngle: 10,
+      rarityVisibilityThreshold: 2,
+      effectVisibilityThreshold: 2,
+    },
+    scoreFunction: "A * rarity * B ^ tier",
+    scoreFunctionParamA: 10,
+    scoreFunctionParamB: 10,
+  },
   editorUiSchema: {
     fieldLabels: gameConfigEditorField.fieldLabels,
     fieldGroups: [],

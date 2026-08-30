@@ -31,7 +31,7 @@ describe("useLocalCDNControls", () => {
     expect(controls.startLocalCDN).toBeTypeOf("function");
     expect(controls.stopLocalCDN).toBeTypeOf("function");
 
-    const startPromise = controls.startLocalCDN("my-contact-card");
+    const startPromise = controls.startLocalCDN(["6fa27a2f-2f1e-413d-a842-424242424242"], "my-contact-card");
     expect(controls.isLocalCDNStarting.value).toBe(true);
     await startPromise;
 

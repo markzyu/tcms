@@ -112,6 +112,7 @@ pub(crate) fn read_template_schema(
   app_handle: &AppHandle,
   template_scope: &String,
   template_name: &String,
+  schema_path: &String,
 ) -> Result<String, String> {
   let template_asset_path = _get_template_asset_path(template_scope, template_name)?;
   let zip_data = read_app_asset(app_handle, &template_asset_path).map_err(|e| format!("read_template_schema({}, {}): {}", template_scope, template_name, e))?;
@@ -119,8 +120,8 @@ pub(crate) fn read_template_schema(
     .map_err(|e| format!("read_template_schema: {}", e))?;
 
   let mut schema_file_path = PathBuf::from("dist");
-  schema_file_path.push("schema");
-  schema_file_path.push("main.schema.json");
+  schema_file_path.push(schema_path);
+
   let mut schema_file = zip
     .by_path(&schema_file_path)
     .map_err(|e| format!("read_template_schema: {}", e))?;
