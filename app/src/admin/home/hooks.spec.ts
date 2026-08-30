@@ -1,7 +1,6 @@
 import { expect, vi } from "vitest";
 import { defineComponent, nextTick } from "vue";
-import { flushPromises, mount } from "@vue/test-utils";
-import { IonicVue } from "@ionic/vue";
+import { flushPromises } from "@vue/test-utils";
 
 import {
   defaultInstanceConfig,
@@ -11,6 +10,7 @@ import {
   INSTANCE_ID,
   resetAdminTestMocks,
 } from "../mocks";
+import { renderTest } from "../../utils/testUtils";
 import { useEditableInstanceConfigs, useLocalCDNControls } from "./hooks";
 
 const { mockTauri, mockFs, mockToast } = getAdminTestMocks();
@@ -117,12 +117,7 @@ describe("useEditableInstanceConfigs", () => {
       `,
     });
 
-    return mount(TestComponent, {
-      attachTo: document.body,
-      global: {
-        plugins: [IonicVue],
-      },
-    });
+    return renderTest(TestComponent);
   }
 
   it("loads instance configs on mount and clears loading state", async () => {

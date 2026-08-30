@@ -80,7 +80,7 @@ export const withArrayFieldsInitialRender = {
       name: "Example Deep Field",
       fields: [
         { testId: "field-input-exampleDeepField.field1", label: "Question 1", value: undefined },
-        { testId: "field-undefined-exampleDeepField.field2", label: "Question 2", value: undefined },
+        { testId: "field-input-exampleDeepField.field2", label: "Question 2", value: undefined },
         { testId: "field-toggle-exampleDeepField.field3", label: "Question 3", value: false },
       ],
     },

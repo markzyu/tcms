@@ -19,6 +19,12 @@ vi.mock("@tauri-apps/api/core", () => ({
     if (command === "ensure_os_data_dir") {
       return Promise.resolve("./public");
     }
+    if (command === "list_templates") {
+      return Promise.resolve([]);
+    }
+    if (command === "list_instances") {
+      return Promise.resolve([]);
+    }
     return Promise.resolve();
   }),
 }));

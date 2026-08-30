@@ -93,7 +93,7 @@ describe("InstanceCard", () => {
     expect(screen.getByTestId("instance-card")).toBeInTheDocument();
     expect(screen.getByTestId("instance-debug-card")).toBeInTheDocument();
     expect(screen.getByTestId("preview-iframe")).toBeInTheDocument();
-    expect(screen.getByTestId("instance-status")).toHaveTextContent(`Test: ${INITIAL_SLUG}`);
+    expect(screen.getByTestId("instance-status")).toHaveTextContent(`${INITIAL_SLUG}`);
     expect(screen.getByTestId("start-cdn-button")).toHaveTextContent("Start");
     expect(screen.getByTestId("edit-button")).toHaveTextContent("Edit");
     expect(screen.getByTestId("share-button")).toHaveTextContent("Share");
@@ -107,7 +107,7 @@ describe("InstanceCard", () => {
 
     await clickStartAndLoadPreview();
     await waitFor(() => {
-      expect(getStatusText()).toContain(`Test: ${INITIAL_SLUG} (Running)`);
+      expect(getStatusText()).toContain(`${INITIAL_SLUG} (Running)`);
     });
     expect(screen.getByTestId("stop-cdn-button")).toBeInTheDocument();
     expect(screen.queryByTestId("start-cdn-button")).not.toBeInTheDocument();
@@ -119,13 +119,13 @@ describe("InstanceCard", () => {
 
     await clickStartAndLoadPreview();
     await waitFor(() => {
-      expect(getStatusText()).toContain(`Test: ${INITIAL_SLUG} (Error)`);
+      expect(getStatusText()).toContain(`${INITIAL_SLUG} (Error)`);
     });
     expect(screen.getByTestId("start-cdn-button")).toBeInTheDocument();
 
     await clickStartAndLoadPreview();
     await waitFor(() => {
-      expect(getStatusText()).toContain(`Test: ${INITIAL_SLUG} (Running)`);
+      expect(getStatusText()).toContain(`${INITIAL_SLUG} (Running)`);
     });
     expect(getStatusText()).not.toContain("(Error)");
   });
@@ -141,7 +141,7 @@ describe("InstanceCard", () => {
     await clickIonButton("stop-cdn-button");
     await waitFor(
       () => {
-        expect(getStatusText()).toBe(`Test: ${INITIAL_SLUG}`);
+        expect(getStatusText()).toBe(`${INITIAL_SLUG}`);
       },
       { timeout: 2000 },
     );
@@ -173,7 +173,7 @@ describe("InstanceCard", () => {
       );
     });
     expect(getPreviewIframeSrc()).toContain("http://localhost:8088/updated-slug?v=");
-    expect(getStatusText()).toContain("Test: updated-slug (Running)");
+    expect(getStatusText()).toContain("updated-slug (Running)");
   });
 
   it("uses updated slug after editing url slug and restarting server", async () => {
@@ -202,7 +202,7 @@ describe("InstanceCard", () => {
 
     await clickStartAndLoadPreview();
     await waitFor(() => {
-      expect(getStatusText()).toContain("Test: updated-slug (Running)");
+      expect(getStatusText()).toContain("updated-slug (Running)");
     });
     expect(getPreviewIframeSrc()).toBe("http://localhost:8088/updated-slug");
   });
@@ -218,7 +218,7 @@ describe("InstanceCard", () => {
       );
       expect(getPreviewIframeSrc()).toContain("http://localhost:8088/updated-slug?v=");
     });
-    expect(getStatusText()).toContain("Test: updated-slug");
+    expect(getStatusText()).toContain("updated-slug");
   });
 
   it("updates debug info when editing content json", async () => {

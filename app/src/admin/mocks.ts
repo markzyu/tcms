@@ -81,6 +81,23 @@ const adminTestMocks = vi.hoisted(() => {
       return status;
     }),
     lcdn_reload_configs: vi.fn().mockResolvedValue(null),
+    list_templates: vi.fn().mockResolvedValue([]),
+    list_instances: vi.fn().mockResolvedValue([]),
+    read_template_manifest: vi.fn().mockResolvedValue(JSON.stringify({
+      namespace: "@tcms",
+      id: "template-example-info-card1",
+      title: {
+        en: "[Example] Contact Card",
+        ja: "[例] 連絡先カード"
+      },
+      version: "0.1.0",
+      pages: {
+        main: {
+          schema: "schema/main.schema.json"
+        }
+      },
+      dependencies: []
+    })),
     setWantError: vi.fn().mockImplementation((value: boolean) => {
       wantStartError = value;
     }),
@@ -163,6 +180,9 @@ export function resetAdminTestMocks() {
   adminTestMocks.mockTauri.methods.lcdn_stop.mockClear();
   adminTestMocks.mockTauri.methods.lcdn_status.mockClear();
   adminTestMocks.mockTauri.methods.lcdn_reload_configs.mockClear();
+  adminTestMocks.mockTauri.methods.list_templates.mockClear();
+  adminTestMocks.mockTauri.methods.list_instances.mockClear();
+  adminTestMocks.mockTauri.methods.read_template_manifest.mockClear();
   adminTestMocks.mockTauri.mockInvoke.mockClear();
   adminTestMocks.mockFs.reset();
   adminTestMocks.mockToast.reset();

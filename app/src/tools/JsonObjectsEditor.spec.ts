@@ -335,7 +335,7 @@ describe("JsonObjectsEditor", () => {
       await setFieldInputValue("field-input-email", "jane@example.com");
       await setFieldInputValue("field-input-phone", "555-0100");
       await setFieldInputValue("field-input-exampleDeepField.field1", "secret");
-      await setFieldInputValue("field-undefined-exampleDeepField.field2", "42");
+      await setFieldInputValue("field-input-exampleDeepField.field2", "42");
       await setFieldInputValue("field-undefined-heroAltText", "Portrait");
 
       await clickMediaPicker("field-media-heroImage");
@@ -356,7 +356,7 @@ describe("JsonObjectsEditor", () => {
         heroAlignment: "right",
         exampleDeepField: {
           field1: "secret",
-          field2: "42",
+          field2: 42,
           field3: true,
         },
       });

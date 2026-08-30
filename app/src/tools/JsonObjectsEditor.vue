@@ -73,7 +73,6 @@
               </ion-toggle>
               <ion-input
                 v-else-if="field.type === 'input' && field.inputType"
-                :data-input-type="field.inputType"
                 :placeholder="hintsByInputType[field.inputType]"
                 :label="field.name"
                 :type="field.inputType"

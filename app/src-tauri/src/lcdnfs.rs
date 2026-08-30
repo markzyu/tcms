@@ -98,7 +98,10 @@ pub(crate) fn unzip_app_asset_to_fs(
   Ok(())
 }
 
-fn _get_template_asset_path(template_scope: &String, template_name: &String) -> Result<PathBuf, String> {
+fn _get_template_asset_path(
+  template_scope: &String,
+  template_name: &String,
+) -> Result<PathBuf, String> {
   let mut template_asset_path = PathBuf::from("templates");
   if !template_scope.is_empty() {
     template_asset_path.push(template_scope);
@@ -115,7 +118,12 @@ pub(crate) fn read_template_schema(
   schema_path: &String,
 ) -> Result<String, String> {
   let template_asset_path = _get_template_asset_path(template_scope, template_name)?;
-  let zip_data = read_app_asset(app_handle, &template_asset_path).map_err(|e| format!("read_template_schema({}, {}): {}", template_scope, template_name, e))?;
+  let zip_data = read_app_asset(app_handle, &template_asset_path).map_err(|e| {
+    format!(
+      "read_template_schema({}, {}): {}",
+      template_scope, template_name, e
+    )
+  })?;
   let mut zip = zip::ZipArchive::new(std::io::Cursor::new(zip_data))
     .map_err(|e| format!("read_template_schema: {}", e))?;
 
@@ -138,7 +146,12 @@ pub(crate) fn read_template_manifest(
   template_name: &String,
 ) -> Result<String, String> {
   let template_asset_path = _get_template_asset_path(template_scope, template_name)?;
-  let zip_data = read_app_asset(app_handle, &template_asset_path).map_err(|e| format!("read_template_manifest({}, {}): {}", template_scope, template_name, e))?;
+  let zip_data = read_app_asset(app_handle, &template_asset_path).map_err(|e| {
+    format!(
+      "read_template_manifest({}, {}): {}",
+      template_scope, template_name, e
+    )
+  })?;
   let mut zip = zip::ZipArchive::new(std::io::Cursor::new(zip_data))
     .map_err(|e| format!("read_template_manifest: {}", e))?;
 
@@ -159,7 +172,8 @@ pub(crate) fn list_templates(app_handle: &AppHandle) -> Result<Vec<(String, Stri
   let templates_dir = public_dir.join("templates");
 
   // Iterator #1: Scope-less templates
-  let templates = std::fs::read_dir(&templates_dir).map_err(|e| format!("list_templates: {}", e))?;
+  let templates =
+    std::fs::read_dir(&templates_dir).map_err(|e| format!("list_templates: {}", e))?;
   let scope_less_templates = templates.filter_map(|entry| {
     if let Ok(entry) = entry {
       let Ok(file_type) = entry.file_type() else {
@@ -173,13 +187,17 @@ pub(crate) fn list_templates(app_handle: &AppHandle) -> Result<Vec<(String, Stri
           return None;
         }
       }
-      return Some(("".to_string(), entry.file_name().to_string_lossy().to_string()));
+      return Some((
+        "".to_string(),
+        entry.file_name().to_string_lossy().to_string(),
+      ));
     }
     None
   });
 
   // Iterator #2: Scoped templates
-  let templates = std::fs::read_dir(&templates_dir).map_err(|e| format!("list_templates: {}", e))?;
+  let templates =
+    std::fs::read_dir(&templates_dir).map_err(|e| format!("list_templates: {}", e))?;
   let mut errors: Vec<String> = Vec::new();
   let has_errors: RefCell<bool> = RefCell::new(false);
   let scoped_templates = templates.flat_map(|entry| {
@@ -196,28 +214,35 @@ pub(crate) fn list_templates(app_handle: &AppHandle) -> Result<Vec<(String, Stri
       let entries = std::fs::read_dir(entry.path());
       if let Err(e) = entries {
         *has_errors.borrow_mut() = true;
-        errors.push(format!("read_dir({}) failed: {}", entry.path().to_string_lossy(), e));
+        errors.push(format!(
+          "read_dir({}) failed: {}",
+          entry.path().to_string_lossy(),
+          e
+        ));
         return Vec::new();
       }
       let scope_name = entry.file_name().to_string_lossy().to_string();
-      let result: Vec<(String, String)> = entries.unwrap().filter_map(|entry| {
-        if let Ok(entry) = entry {
-          let Ok(file_type) = entry.file_type() else {
-            return None;
-          };
-          if !file_type.is_file() {
-            return None;
-          }
-          if let Some(extension) = entry.path().extension() {
-            if extension != "zip" {
+      let result: Vec<(String, String)> = entries
+        .unwrap()
+        .filter_map(|entry| {
+          if let Ok(entry) = entry {
+            let Ok(file_type) = entry.file_type() else {
+              return None;
+            };
+            if !file_type.is_file() {
               return None;
             }
+            if let Some(extension) = entry.path().extension() {
+              if extension != "zip" {
+                return None;
+              }
+            }
+            let template_name = entry.file_name().to_string_lossy().to_string();
+            return Some((scope_name.clone(), template_name));
           }
-          let template_name = entry.file_name().to_string_lossy().to_string();
-          return Some((scope_name.clone(), template_name));
-        }
-        None
-      }).collect();
+          None
+        })
+        .collect();
       return result;
     }
     Vec::new()
@@ -234,17 +259,19 @@ pub(crate) fn list_instances(app_handle: &AppHandle) -> Result<Vec<String>, Stri
   let public_dir = get_compat_os_data_dir(app_handle)?.join("public");
   let instances_dir = public_dir.join("instances");
   let instances = std::fs::read_dir(instances_dir).map_err(|e| format!("list_instances: {}", e))?;
-  let instances: Vec<String> = instances.filter_map(|entry| {
-    if let Ok(entry) = entry {
-      let Ok(file_type) = entry.file_type() else {
-        return None;
-      };
-      if !file_type.is_dir() {
-        return None;
+  let instances: Vec<String> = instances
+    .filter_map(|entry| {
+      if let Ok(entry) = entry {
+        let Ok(file_type) = entry.file_type() else {
+          return None;
+        };
+        if !file_type.is_dir() {
+          return None;
+        }
+        return Some(entry.file_name().to_string_lossy().to_string());
       }
-      return Some(entry.file_name().to_string_lossy().to_string());
-    }
-    None
-  }).collect();
+      None
+    })
+    .collect();
   Ok(instances)
 }
