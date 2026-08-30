@@ -109,6 +109,8 @@ export const walkJsonSchemaForFieldsWithin = (
       let extras: EditorUiFieldTypes = {};
       if (schema.type === "boolean") {
         extras = { type: "toggle" };
+      } else if (schema.type === "number") {
+        extras = { type: "input", inputType: "number" };
       } else if (schema.type === "string" && Array.isArray(schema.enum)) {
         extras = { type: "segment" };
         extras.choices = schema.enum.map((choice) => String(choice));

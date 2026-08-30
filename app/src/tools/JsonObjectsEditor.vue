@@ -73,11 +73,12 @@
               </ion-toggle>
               <ion-input
                 v-else-if="field.type === 'input' && field.inputType"
+                :data-input-type="field.inputType"
                 :placeholder="hintsByInputType[field.inputType]"
                 :label="field.name"
                 :type="field.inputType"
                 :value="get(jsonData, field.fullPath)"
-                @input="updateField(field.fullPath, $event)" />
+                @input="updateField(field.fullPath, $event, field.inputType)" />
               <ion-input
                 v-else
                 :label="field.name"
@@ -356,11 +357,22 @@ const gridStyles = computed(() => ({
   "grid-template-rows": `repeat(${allFieldGroups.value.length / 2}, 1fr)`,
 }));
 
-const updateField = (fullPath: string, event: Event) => {
+/**
+ * Updates the JSON data for a given field.
+ * @param fullPath - The full path to the field in the JSON data.
+ * @param event - The event object.
+ * @param inputType - For use with `field.type === "input"` only.
+ */
+const updateField = (fullPath: string, event: Event, inputType?: string) => {
   const { target } = event;
-  const value = (event.target as HTMLInputElement).value;
+  const targetAsInput = target as HTMLInputElement;
+  const value = targetAsInput.value;
   if (target && 'checked' in target && 'role' in target && target.role === 'switch') {
     set(jsonData.value, fullPath, target.checked);
+    return;
+  }
+  if (inputType === 'number') {
+    set(jsonData.value, fullPath, Number(value));
     return;
   }
   set(jsonData.value, fullPath, value);
