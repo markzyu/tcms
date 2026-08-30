@@ -2,22 +2,24 @@
   import { IonButton, IonCard, IonCardContent, IonIcon, IonSpinner, IonList, IonItem, IonInput, IonTextarea } from '@ionic/vue';
   import { alertCircle, createOutline } from 'ionicons/icons';
   import { computed, onUnmounted, ref, watch } from 'vue';
+  import { adminHomePageContentKeys } from './contentKeys.ts';
+  import { invokeWithType, LcdnInstanceConfig, LcdnInstanceConfigSchema } from '../types.ts';
+  import { join } from '@tauri-apps/api/path';
+  import { PageContentSchemaJson, TemplateManifest, TemplateManifestSchema } from '@tcms/mini-app-common';
+  import { readTextFile } from '@tauri-apps/plugin-fs';
+  import { ToolInput } from '../../tools/toolTypes.ts';
   import { useEditableInstanceConfigs, useLocalCDNControls } from './hooks.ts';
   import { useAdminHomePageContent } from './content.ts';
   import { useWorkflow } from '../ToolsScreen.vue';
-  import { adminHomePageContentKeys } from './contentKeys.ts';
-  import { ToolInput } from '../../tools/toolTypes.ts';
-  import { invokeWithType, LcdnInstanceConfig, LcdnInstanceConfigSchema } from '../types.ts';
+  import { useAppLanguageLocale } from '../../utils/i18n.ts';
   import { z } from 'zod';
-  import { PageContentSchemaJson, TemplateManifest, TemplateManifestSchema } from '@tcms/mini-app-common';
-import { join } from '@tauri-apps/api/path';
-import { readTextFile } from '@tauri-apps/plugin-fs';
 
   type Props = {
     instanceId: string;
   };
 
   const props = defineProps<Props>();
+  const locale = useAppLanguageLocale();
 
   const [
     instanceStartBtnLabel, instanceStopBtnLabel, instanceEditBtnLabel, instanceEditPageContentBtnAriaLabel, instanceShareBtnLabel,
@@ -84,6 +86,7 @@ import { readTextFile } from '@tauri-apps/plugin-fs';
       
       // TODO: Instance config should determine which page/schema to load
       const schemaPath = Object.values(templateManifest.pages)[0].schema;
+      const pageName = Object.keys(templateManifest.pages)[0];
 
       const schemaString = await invokeWithType(z.string(), 'read_template_schema', {
         templateScope: instanceConfig.templateScope,
@@ -97,7 +100,7 @@ import { readTextFile } from '@tauri-apps/plugin-fs';
         filePath: {
           type: "miniAppContent",
           instanceId: props.instanceId,
-          _pathAsUrl: '/content/main.en.json',
+          _pathAsUrl: `/content/${pageName}.${locale.value}.json`
         },
         jsonSchema: schema.jsonSchema,
         editorUiSchema: schema.editorUiSchema,
