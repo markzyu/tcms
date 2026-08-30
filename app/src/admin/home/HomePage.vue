@@ -1,14 +1,14 @@
 <script setup lang="ts">
-  import { IonButton, IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonIcon } from '@ionic/vue';
+  import { IonButton, IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonIcon, onIonViewDidEnter } from '@ionic/vue';
   import { invokeWithType } from '../types.ts';
   import { moon, shareSocial } from 'ionicons/icons';
-  import { ref, onMounted } from 'vue';
+  import { ref } from 'vue';
   import { z } from 'zod';
   import InstanceCard from './InstanceCard.vue';
 
   const instanceIds = ref<string[]>([]);
 
-  onMounted(async () => {
+  onIonViewDidEnter(async () => {
     instanceIds.value = await invokeWithType(z.array(z.string()), "list_instances");
   });
 </script>
