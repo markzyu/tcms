@@ -1,7 +1,8 @@
-import { defineEditorUiField, defineEditorUiStringEnumField, definePageContentSchema, relativeFieldGroup } from "../../../../packages/mini-app-common/src/schemas";
-import { effectTypeSchema, mediaEditorField, mediaSchema, textStyleEditorField, textStyleSchema } from "./basicTypes";
-import { z } from "zod";
+import { defineEditorUiField, defineEditorUiStringEnumField, definePageContentSchema } from "../../../../packages/mini-app-common/src/schemas";
 import { dropEditorField, dropSchema } from "./drop";
+import { effectTypeSchema, mediaEditorField, mediaSchema, textStyleEditorField, textStyleSchema } from "./basicTypes";
+import { defaultGameConfig } from "./gameConfig.mock";
+import { z } from "zod";
 
 export const scoreFunctionSchema = z.enum([
   "A * rarity * tier ^ B",
@@ -226,21 +227,7 @@ export type GameConfig = z.infer<typeof gameConfigSchema>;
 export const gameConfigSchemaPathPromise = definePageContentSchema({
   schemaName: gameConfigSchemaName,
   schemaVersion: gameConfigSchemaVersion,
-  editorDefaultValue: {
-    tiers: [],
-    rarities: [],
-    drops: [],
-    effects: [],
-    player: {
-      directionChangeInterval: 1,
-      directionChangeMaxAngle: 10,
-      rarityVisibilityThreshold: 2,
-      effectVisibilityThreshold: 2,
-    },
-    scoreFunction: "A * rarity * B ^ tier",
-    scoreFunctionParamA: 10,
-    scoreFunctionParamB: 10,
-  },
+  editorDefaultValue: defaultGameConfig,
   editorUiSchema: {
     fieldLabels: gameConfigEditorField.fieldLabels,
     fieldGroups: [],
