@@ -6,6 +6,8 @@ import { z } from "zod";
 import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { toastController } from "@ionic/vue";
 import { debounce } from "lodash";
+import { TemplateManifest, TemplateManifestSchema } from "@tcms/mini-app-common";
+import { useAppLanguageLocale } from "../../utils/i18n";
 
 /**
  * @param onUrlUpdate Callback to update the URL to visit. url is null when the local CDN is stopped.
@@ -34,13 +36,13 @@ export const useLocalCDNControls = (onUrlUpdate: (url: string | null) => void) =
       isLocalCDNRunning.value = false;
     }
   }
-  const startLocalCDN = async (slugToVisit: string) => {
+  const startLocalCDN = async (instanceIds: string[], slugToVisit: string) => {
     try {
       isLocalCDNStarting.value = true;
       const lcdnConfig: LcdnConfig = {
         port: 8088,
         startupTimeout: 3000,
-        instanceIds: ["6fa27a2f-2f1e-413d-a842-424242424242"],
+        instanceIds,
         sameOriginDomains: ["localhost:8088", "127.0.0.1:8088"],
       };
 
@@ -87,6 +89,7 @@ export const useEditableInstanceConfigs = (instanceId: string, onUrlUpdate: (url
   const instanceConfig = ref<LcdnInstanceConfig | null>(null);
   const contentJson = ref<string | null>(null);
   const urlSlug = ref<string>("");
+  const locale = useAppLanguageLocale();
 
   const updateConfigsFromDisk = async () => {
     try {
@@ -97,7 +100,14 @@ export const useEditableInstanceConfigs = (instanceId: string, onUrlUpdate: (url
       instanceConfig.value = config;
       urlSlug.value = config.slug;
 
-      const contentJsonPath = await join(osDataDir, 'public', 'instances', instanceId, 'content', 'main.en.json');
+      const templateManifestString = await invokeWithType(z.string(), "read_template_manifest", {
+        templateScope: instanceConfig.value.templateScope,
+        templateName: instanceConfig.value.templateId,
+      });
+      const templateManifest: TemplateManifest = TemplateManifestSchema.parse(JSON.parse(templateManifestString));
+      const firstPageName = Object.keys(templateManifest.pages)[0];
+
+      const contentJsonPath = await join(osDataDir, 'public', 'instances', instanceId, 'content', `${firstPageName}.${locale.value}.json`);
       const contentJsonStr = await readTextFile(contentJsonPath);
       contentJson.value = contentJsonStr;
       isLoadingInstanceConfig.value = false;

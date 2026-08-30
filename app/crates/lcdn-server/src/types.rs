@@ -123,6 +123,7 @@ impl AppState {
   ) -> Result<Self, LcdnError> {
     let mut instance_configs: Vec<InstanceConfig> = Vec::new();
     for instance_id in lcdn_config.instance_ids.iter() {
+      eprintln!("Loading instance config for: {}", &instance_id);
       let mut config_path = public_content_path.join("instances");
       config_path.push(instance_id);
       config_path.push("instance.json");

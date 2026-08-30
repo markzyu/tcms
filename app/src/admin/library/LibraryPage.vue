@@ -1,10 +1,13 @@
 <script setup lang="ts">
   import { IonContent, IonPage, IonHeader, IonToolbar, IonTitle, toastController, IonList, IonItem } from '@ionic/vue';
   import { onMounted, ref } from 'vue';
-  import { invokeWithType } from '../types';
+  import { invokeWithType, LcdnInstanceConfig } from '../types';
+  import { join } from '@tauri-apps/api/path';
+  import { mkdir, writeTextFile } from '@tauri-apps/plugin-fs';
   import { TemplateManifest, TemplateManifestSchema } from '@tcms/mini-app-common';
   import { useAppLanguageLocale } from '../../utils/i18n';
   import { useLibraryPageContent } from './content';
+  import { v4 as uuidv4 } from 'uuid';
   import * as keys from './contentKeys';
   import z from 'zod';
 
@@ -37,6 +40,45 @@
       console.error(error);
     }
   });
+
+  const addNewTemplate = async (template: TemplateManifest) => {
+    const currentLocale = locale.value;
+    try {
+      const osDataDir = await invokeWithType(z.string(), "ensure_os_data_dir");
+      const instanceId = uuidv4();
+      const instanceDir = await join(osDataDir, "public", "instances", instanceId);
+      const instanceContentDir = await join(instanceDir, "content");
+      const instanceConfigPath = await join(instanceDir, "instance.json");
+      await mkdir(instanceDir, { recursive: true });
+      await mkdir(instanceContentDir, { recursive: true });
+
+      const instanceConfig: LcdnInstanceConfig = {
+        instanceId,
+        slug: instanceId,
+        name: instanceId,
+        templateScope: template.namespace ?? "",
+        templateId: template.id,
+        templateVersion: template.version,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        currentVariant: currentLocale,
+        variants: [currentLocale],
+      };
+      await writeTextFile(instanceConfigPath, JSON.stringify(instanceConfig, null, 2));
+
+      Object.keys(template.pages).forEach(async (pageName) => {
+        const contentPath = await join(instanceContentDir, `${pageName}.${currentLocale}.json`);
+        await writeTextFile(contentPath, "{}");
+      });
+    } catch (error) {
+      const toast = await toastController.create({
+        message: error && typeof error === 'object' && 'message' in error ? String(error.message) : String(error),
+        duration: 5000,
+      });
+      await toast.present();
+      console.error(error);
+    }
+  };
 </script>
 
 <template>
@@ -53,7 +95,7 @@
       <ion-list>
         <ion-item v-for="template in templates" :key="template.id">
           <ion-label>{{ template.title[locale] }}</ion-label>
-          <ion-button slot="end">
+          <ion-button slot="end" @click="addNewTemplate(template)">
             {{ templateAddNewBtnLabel }}
           </ion-button>
         </ion-item>

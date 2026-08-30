@@ -114,7 +114,7 @@ pub(crate) fn read_template_schema(
   template_name: &String,
 ) -> Result<String, String> {
   let template_asset_path = _get_template_asset_path(template_scope, template_name)?;
-  let zip_data = read_app_asset(app_handle, &template_asset_path)?;
+  let zip_data = read_app_asset(app_handle, &template_asset_path).map_err(|e| format!("read_template_schema({}, {}): {}", template_scope, template_name, e))?;
   let mut zip = zip::ZipArchive::new(std::io::Cursor::new(zip_data))
     .map_err(|e| format!("read_template_schema: {}", e))?;
 
@@ -137,7 +137,7 @@ pub(crate) fn read_template_manifest(
   template_name: &String,
 ) -> Result<String, String> {
   let template_asset_path = _get_template_asset_path(template_scope, template_name)?;
-  let zip_data = read_app_asset(app_handle, &template_asset_path)?;
+  let zip_data = read_app_asset(app_handle, &template_asset_path).map_err(|e| format!("read_template_manifest({}, {}): {}", template_scope, template_name, e))?;
   let mut zip = zip::ZipArchive::new(std::io::Cursor::new(zip_data))
     .map_err(|e| format!("read_template_manifest: {}", e))?;
 

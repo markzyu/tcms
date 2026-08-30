@@ -4,12 +4,13 @@ await cleanUpSchemaDirectory();
 // Do not import any schema until cleanup is done.
 const { contactCardSchemaName, contactCardSchemaPathPromise } = await import("./contactCard");
 defineRootManifest({
-  id: "example-info-card1",
+  namespace: "@tcms",
+  id: "template-example-info-card1",
   title: {
     en: "[Example] Contact Card",
     ja: "[例] 連絡先カード",
   },
-  version: "1.0.0",
+  version: "0.1.0",
   pages: {
     [contactCardSchemaName]: {
       schema: await contactCardSchemaPathPromise,

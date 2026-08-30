@@ -94,10 +94,10 @@
 </script>
 
 <template>
-  <div v-if="isLoadingInstanceConfig" class="flex h-full w-full items-center justify-center absolute left-0 top-0 z-10 bg-white" data-testid="loading-configs-spinner">
-    <ion-spinner />
-  </div>
-  <ion-card class="w-full mx-auto max-w-[500px]" data-testid="instance-card">
+  <ion-card class="relative w-full mx-auto max-w-[500px]" data-testid="instance-card">
+    <div v-if="isLoadingInstanceConfig" class="flex h-full w-full items-center justify-center absolute left-0 top-0 z-10 bg-white" data-testid="loading-configs-spinner">
+      <ion-spinner />
+    </div>
     <div class="relative h-[220px] rounded-t-sm overflow-hidden">
       <div v-if="editStarted" class="absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]">
         <ion-button fill="outline" color="light" @click="openEditWorkflow" :aria-label="instanceEditPageContentBtnAriaLabel">
@@ -129,7 +129,7 @@
       </div>
     </ion-card-content>
     <div class="flex justify-end gap-2 mt-2">
-      <ion-button size="small" fill="clear" data-testid="start-cdn-button" @click="urlSlug && startLocalCDN(urlSlug)" v-if="!isLocalCDNRunning">
+      <ion-button size="small" fill="clear" data-testid="start-cdn-button" @click="urlSlug && startLocalCDN([props.instanceId], urlSlug)" v-if="!isLocalCDNRunning">
         <ion-spinner class="w-4 h-4 mr-2" v-if="isLocalCDNStarting"></ion-spinner>
         <ion-icon class="w-4 h-4 mr-1 fill-red-600" :icon="alertCircle" v-if="localCDNError"></ion-icon>
         {{ instanceStartBtnLabel }}

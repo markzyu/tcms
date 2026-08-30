@@ -100,6 +100,7 @@ export const TemplateManifestPagePropsSchema = z.object({
 });
 
 export const TemplateManifestSchema = z.object({
+  namespace: z.string().optional(),
   id: z.string(),
   title: z.record(AppLanguagesSchema, z.string()),
   version: z.string(),
@@ -286,7 +287,6 @@ export const relativeFieldGroup = (path: string, group: EditorUiFieldGroup) => {
  * Build step must run this function, from the template package root directory as workdir.
  */
 export const defineRootManifest = async (props: DefineRootManifestProps) => {
-  const { id, title, version, pages } = props;
   if (!IS_NODE) {
     return;
   }
@@ -303,6 +303,16 @@ export const defineRootManifest = async (props: DefineRootManifestProps) => {
   const { pathToFileURL } = await import("node:url");
   const packageJsonUrl = pathToFileURL(path.join(WORKDIR, "package.json"));
   const packageJson = await import(packageJsonUrl.toString());
+
+  // Verify namespace, id, and version against package.json
+  const expectedPackageName = `${props.namespace}/${props.id}`;
+  if (expectedPackageName !== packageJson.name) {
+    throw new Error(`Package name mismatch: manifest "${expectedPackageName}" != package.json "${packageJson.name}"`);
+  }
+  if (props.version !== packageJson.version) {
+    throw new Error(`Package version mismatch: manifest "${props.version}" != package.json "${packageJson.version}"`);
+  }
+
   const packageDependencies = packageJson.dependencies || {};
   const dependencies = Object.entries(packageDependencies)
     .filter(([name]) => !name.startsWith("@tcms/"))
@@ -310,10 +320,7 @@ export const defineRootManifest = async (props: DefineRootManifestProps) => {
       `${name}@${version}`
     ));
   const manifestDefinition: TemplateManifest = {
-    id,
-    title,
-    version,
-    pages,
+    ...props,
     dependencies,
   };
 

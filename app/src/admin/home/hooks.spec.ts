@@ -55,7 +55,7 @@ describe("useLocalCDNControls", () => {
     const controls = useLocalCDNControls(onUrlUpdate);
 
     mockTauri.methods.setWantError(true);
-    await controls.startLocalCDN("my-contact-card");
+    await controls.startLocalCDN(["6fa27a2f-2f1e-413d-a842-424242424242"], "my-contact-card");
 
     expect(controls.localCDNError.value).toBe("Error: Test error");
     expect(controls.isLocalCDNRunning.value).toBe(false);
@@ -79,7 +79,7 @@ describe("useLocalCDNControls", () => {
     const controls = useLocalCDNControls(onUrlUpdate);
 
     mockTauri.methods.setWantStatusError(true);
-    await controls.startLocalCDN("my-contact-card");
+    await controls.startLocalCDN(["6fa27a2f-2f1e-413d-a842-424242424242"], "my-contact-card");
 
     expect(controls.localCDNError.value).toContain("Failed to get local CDN status");
     expect(controls.localCDNHost.value).toBeNull();

@@ -1,9 +1,16 @@
 <script setup lang="ts">
   import { IonButton, IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonIcon } from '@ionic/vue';
+  import { invokeWithType } from '../types.ts';
   import { moon, shareSocial } from 'ionicons/icons';
+  import { ref, onMounted } from 'vue';
+  import { z } from 'zod';
   import InstanceCard from './InstanceCard.vue';
 
-  const cardInstanceId = '6fa27a2f-2f1e-413d-a842-424242424242';
+  const instanceIds = ref<string[]>([]);
+
+  onMounted(async () => {
+    instanceIds.value = await invokeWithType(z.array(z.string()), "list_instances");
+  });
 </script>
 
 <template>
@@ -28,7 +35,7 @@
 
     <ion-content>
       <div class="w-full -lg:flex flex-col px-4 py-6 gap-4 lg:grid lg:grid-cols-[500px_1fr] lg:px-[60px]">
-        <instance-card :instance-id="cardInstanceId" />
+        <instance-card v-for="instanceId in instanceIds" :key="instanceId" :instance-id="instanceId" />
       </div>
     </ion-content>
   </ion-page>
