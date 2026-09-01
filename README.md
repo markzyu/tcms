@@ -143,4 +143,4 @@ Or, for vim extension users, add the following to VSCode User Settings:
 
 ## License
 
-Thor CMS (TCMS) is free software licensed under the [GNU Lesser General Public License v3.0 or later](COPYING). Copyright © 2026 Zhongzhi Yu.
+Thor CMS (TCMS) is licensed under the [MIT License](LICENSE). Copyright © 2026 Zhongzhi Yu.
