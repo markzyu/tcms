@@ -6,8 +6,9 @@ import { describe, expect, it, vi, type Mock } from "vitest";
 import { renderTest } from "../utils/testUtils";
 import JsonObjectsEditor from "./JsonObjectsEditor.vue";
 
+import schema2 from "./JsonObjectsEditor.schema2.json";
+
 import {
-  allGroupNames,
   defaultFilePath,
   fieldsInsideArrayInitialDebugJson,
   fieldsInsideArrayInitialRender,
@@ -28,27 +29,17 @@ function getDebugJson() {
 
 
 function getRenderedGroupNames() {
-  const grid = screen.getByTestId("field-groups-grid");
-  return Array.from(grid.children)
-    .filter((element) => element.classList.contains("h-full"))
-    .flatMap((column) => {
-      const header = column.querySelector(".mx-3");
-      if (!header) {
-        return [];
-      }
-      const headerText = header.textContent ?? "";
-      const match = allGroupNames.find((name) => headerText.startsWith(name));
-      return match ? [match] : [];
-    });
+  const headers = screen.getAllByTestId("field-group-header-text");
+  return headers.flatMap((header) => {
+    return header.textContent ? [header.textContent] : [];
+  });
 }
 
 function getGroupContainer(groupName: string) {
-  const grid = screen.getByTestId("field-groups-grid");
-  const column = Array.from(grid.children)
-    .filter((element) => element.classList.contains("h-full"))
-    .find((element) => (element.querySelector(".mx-3")?.textContent ?? "").startsWith(groupName));
-  expect(column).toBeTruthy();
-  return column as HTMLElement;
+  const groups = screen.getAllByTestId("field-group");
+  const group = groups.find((group) => within(group).queryByTestId("field-group-header-text")?.textContent === groupName);
+  expect(group).toBeTruthy();
+  return group as HTMLElement;
 }
 
 async function waitForIonControl(fieldTestId: string) {
@@ -179,6 +170,8 @@ async function renderEditor(
   overrides: {
     json?: Record<string, unknown>;
     jsonPath?: string;
+    jsonSchema?: any;
+    editorUiSchema?: any;
     onAction?: Mock;
     waitForText?: string;
   } = {},
@@ -195,6 +188,8 @@ async function renderEditor(
         ...withArrayFieldsProps.input,
         json: structuredClone(overrides.json ?? withArrayFieldsJson),
         ...(overrides.jsonPath !== undefined ? { jsonPath: overrides.jsonPath } : {}),
+        ...(overrides.jsonSchema !== undefined ? { jsonSchema: overrides.jsonSchema } : {}),
+        ...(overrides.editorUiSchema !== undefined ? { editorUiSchema: overrides.editorUiSchema } : {}),
       },
       onAction,
     },
@@ -494,6 +489,33 @@ describe("JsonObjectsEditor", () => {
       const groupContainer = getGroupContainer("Miscellaneous Questions");
       expect(within(groupContainer).getByTestId("field-media-heroImage")).toBeInTheDocument();
       expect(within(groupContainer).getByTestId("media-picker-heroImage")).toBeInTheDocument();
+    });
+
+    it("does not mistake an object in a shallow array for an inner array group", async () => {
+      await renderEditor({
+        json: schema2.editorDefaultValue,
+        jsonSchema: schema2.jsonSchema,
+        editorUiSchema: schema2.editorUiSchema,
+        waitForText: "Player",
+      });
+
+      expect(getRenderedGroupNames()).not.toContain("Text Style");
+
+      const expectedGroupNames = [
+        "Player",
+        "Miscellaneous Questions",
+        "Tier #1",
+        "Tier #2",
+        "Tier #3",
+        "Rarity #1",
+        "Rarity #2",
+        "Rarity #3",
+        "Effect #1",
+        "Effect #2",
+        "Effect #3",
+        "Drop #1"
+      ];
+      expect(getRenderedGroupNames()).toEqual(expectedGroupNames);
     });
 
     it("does not fail required string enum validation for an empty input object", async () => {

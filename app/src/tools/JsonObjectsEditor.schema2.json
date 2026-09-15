@@ -28,13 +28,18 @@
         "rarities.{index}.textStyle": "Text Style",
         "rarities.{index}": "Rarity #{index}",
         "effects.{index}.type": "Effect Type",
+        "effects.{index}.emojiIcon": "Emoji Icon",
         "effects.{index}.baseValue": "Base Value",
         "effects.{index}.maxValue": "Max Value",
+        "effects.{index}.nameTemplate": "Item Name Modification",
         "effects.{index}": "Effect #{index}",
         "player.directionChangeInterval": "Movement Direction Change Interval",
         "player.directionChangeMaxAngle": "Movement Direction Change Max Angle",
+        "player.rarityVisibilityThreshold": "Rarity Visibility Threshold",
+        "player.effectVisibilityThreshold": "Effect Visibility Threshold",
         "player": "Player",
-        "drops.{index}.baseName": "Name",
+        "drops.{index}.baseName": "Unidentified Item Name",
+        "drops.{index}.name": "Name",
         "drops.{index}.baseRarity": "Rarity",
         "drops.{index}.baseTier": "Tier",
         "drops.{index}.baseWeight": "Probability",
@@ -62,6 +67,8 @@
         "drops.{index}.effects.{index}.duration": "Duration",
         "drops.{index}.effects.{index}.weight": "Probability",
         "drops.{index}.effects.{index}.isHidden": "Is Hidden",
+        "drops.{index}.effects.{index}.minPctChange": "Min Adjustment Percentage",
+        "drops.{index}.effects.{index}.maxPctChange": "Max Adjustment Percentage",
         "drops.{index}.effects.{index}": "Effect #{index}",
         "drops.{index}.variants.{index}.name": "Name",
         "drops.{index}.variants.{index}.rarity": "Rarity",
@@ -116,13 +123,18 @@
         "rarities.{index}.textStyle": "テキストスタイル",
         "rarities.{index}": "{index}番目のレアリティ",
         "effects.{index}.type": "効果タイプ",
+        "effects.{index}.emojiIcon": "絵文字アイコン",
         "effects.{index}.baseValue": "基礎値",
         "effects.{index}.maxValue": "最大値",
+        "effects.{index}.nameTemplate": "アイテム名の変更",
         "effects.{index}": "{index}番目の効果",
         "player.directionChangeInterval": "移動方向変更間隔",
         "player.directionChangeMaxAngle": "移動方向変更最大角度",
+        "player.rarityVisibilityThreshold": "レアリティの表示閾値",
+        "player.effectVisibilityThreshold": "効果の表示閾値",
         "player": "プレイヤー",
-        "drops.{index}.baseName": "名前",
+        "drops.{index}.baseName": "未識別アイテム名",
+        "drops.{index}.name": "名前",
         "drops.{index}.baseRarity": "レアリティ",
         "drops.{index}.baseTier": "階層",
         "drops.{index}.baseWeight": "確率",
@@ -150,6 +162,8 @@
         "drops.{index}.effects.{index}.duration": "持続時間",
         "drops.{index}.effects.{index}.weight": "確率",
         "drops.{index}.effects.{index}.isHidden": "非表示",
+        "drops.{index}.effects.{index}.minPctChange": "最小調整度",
+        "drops.{index}.effects.{index}.maxPctChange": "最大調整度",
         "drops.{index}.effects.{index}": "{index}番目の効果",
         "drops.{index}.variants.{index}.name": "名前",
         "drops.{index}.variants.{index}.rarity": "レアリティ",
@@ -180,6 +194,122 @@
         "scoreFunctionParamB": "スコア関数パラメータB"
       }
     }
+  },
+  "editorDefaultValue": {
+    "tiers": [
+      {
+        "weight": 100,
+        "baseDropRate": 2,
+        "pGlobalEffect": 0.5
+      },
+      {
+        "weight": 10,
+        "baseDropRate": 1,
+        "pGlobalEffect": 0.05
+      },
+      {
+        "weight": 1,
+        "baseDropRate": 0.5,
+        "pGlobalEffect": 0.01
+      }
+    ],
+    "rarities": [
+      {
+        "name": "Common",
+        "weight": 100,
+        "textStyle": {}
+      },
+      {
+        "name": "Rare",
+        "weight": 10,
+        "textStyle": {
+          "backgroundColor": "#000000",
+          "fontColor": "#F9F018"
+        }
+      },
+      {
+        "name": "Legendary",
+        "weight": 1,
+        "textStyle": {
+          "backgroundColor": "#000000",
+          "fontColor": "#FF4500"
+        }
+      }
+    ],
+    "effects": [
+      {
+        "type": "movementSpeed",
+        "emojiIcon": "👟",
+        "baseValue": 20,
+        "maxValue": 200,
+        "nameTemplate": "{item} of jogging"
+      },
+      {
+        "type": "itemVisibility",
+        "emojiIcon": "🔍",
+        "baseValue": 1,
+        "maxValue": 10,
+        "nameTemplate": "{item} of visibility"
+      },
+      {
+        "type": "screenZoom",
+        "emojiIcon": "📺",
+        "baseValue": 1,
+        "maxValue": 10,
+        "nameTemplate": "{item} of zoom"
+      }
+    ],
+    "player": {
+      "directionChangeInterval": 4,
+      "directionChangeMaxAngle": 90,
+      "rarityVisibilityThreshold": 2,
+      "effectVisibilityThreshold": 2
+    },
+    "drops": [
+      {
+        "baseName": "Bottle",
+        "name": "Plastic Bottle",
+        "baseRarity": 0,
+        "baseTier": 0,
+        "baseWeight": 100,
+        "baseTextStyle": {
+          "fontColor": "#000000"
+        },
+        "baseMedia": [],
+        "animationOnPickup": "zoomOutAndFade",
+        "animationOnDrop": "zoomOutAndFade",
+        "effects": [
+          {
+            "type": "movementSpeed",
+            "duration": 20,
+            "weight": 100,
+            "isHidden": false,
+            "minPctChange": 50,
+            "maxPctChange": 70
+          },
+          {
+            "type": "itemVisibility",
+            "duration": 20,
+            "weight": 100,
+            "isHidden": true,
+            "minPctChange": 10,
+            "maxPctChange": 20
+          }
+        ],
+        "variants": [
+          {
+            "name": "Glass Bottle",
+            "rarity": 1,
+            "weight": 10,
+            "textStyle": {},
+            "media": []
+          }
+        ]
+      }
+    ],
+    "scoreFunction": "A * rarity * B ^ tier",
+    "scoreFunctionParamA": 10,
+    "scoreFunctionParamB": 1.05
   },
   "jsonSchema": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -319,17 +449,25 @@
                 "screenZoom"
               ]
             },
+            "emojiIcon": {
+              "type": "string"
+            },
             "baseValue": {
               "type": "number"
             },
             "maxValue": {
               "type": "number"
+            },
+            "nameTemplate": {
+              "type": "string"
             }
           },
           "required": [
             "type",
+            "emojiIcon",
             "baseValue",
-            "maxValue"
+            "maxValue",
+            "nameTemplate"
           ],
           "additionalProperties": false
         }
@@ -341,6 +479,14 @@
             "type": "number"
           },
           "directionChangeMaxAngle": {
+            "type": "number"
+          },
+          "rarityVisibilityThreshold": {
+            "default": 2,
+            "type": "number"
+          },
+          "effectVisibilityThreshold": {
+            "default": 2,
             "type": "number"
           }
         },
@@ -356,6 +502,9 @@
           "type": "object",
           "properties": {
             "baseName": {
+              "type": "string"
+            },
+            "name": {
               "type": "string"
             },
             "baseRarity": {
@@ -474,6 +623,14 @@
                   },
                   "isHidden": {
                     "type": "boolean"
+                  },
+                  "minPctChange": {
+                    "default": 0,
+                    "type": "number"
+                  },
+                  "maxPctChange": {
+                    "default": 10,
+                    "type": "number"
                   }
                 },
                 "required": [
@@ -597,6 +754,7 @@
           },
           "required": [
             "baseName",
+            "name",
             "baseRarity",
             "baseTextStyle",
             "baseMedia",
