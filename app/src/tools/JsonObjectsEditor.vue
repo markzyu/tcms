@@ -174,6 +174,16 @@ const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
     }
     knownPaths.add(field.fullPath);
 
+    const getGroupName = (fieldFullPath: string) => {
+      const preferredGroupName = fieldPathToGroupName[fieldFullPath];
+
+      // Fallback: if not specified in fieldGroups, try to group based on fieldLabels
+      const longestMatchingGroupPath = allNamedGroups.find((groupName) => fieldFullPath.startsWith(groupName + "."));
+      const matchingGroupName = longestMatchingGroupPath && fieldLabels[locale.value]?.[longestMatchingGroupPath];
+
+      return preferredGroupName || matchingGroupName;
+    };
+
     const fullPathParts = field.fullPath.split(".");
     const isArrayField = fullPathParts.length > 0 && fullPathParts[fullPathParts.length - 1] === "{index}";
     const isArraySubfield = !isArrayField && fullPathParts.length > 1 && fullPathParts[fullPathParts.length - 2] === "{index}";
@@ -182,22 +192,13 @@ const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
       return;
     }
 
-    const preferredGroupName = fieldPathToGroupName[field.fullPath];
-    if (preferredGroupName) {
-      const group = groupsByName[preferredGroupName] ||= newFieldGroup(preferredGroupName, locale.value, isValidArray ? 0 : undefined);
+    const groupName = getGroupName(field.fullPath);
+    if (groupName) {
+      const group = groupsByName[groupName] ||= newFieldGroup(groupName, locale.value, isValidArray ? 0 : undefined);
       group.fields.push(field);
       return;
     }
 
-    // Fallback: if not specified in fieldGroups, try to group based on fieldLabels
-    const longestMatchingGroupPath = allNamedGroups.find((groupName) => field.fullPath.startsWith(groupName + "."));
-    const matchingGroupName = longestMatchingGroupPath && fieldLabels[locale.value]?.[longestMatchingGroupPath];
-    if (matchingGroupName) {
-      groupsByName[matchingGroupName] ||= newFieldGroup(matchingGroupName, locale.value, isValidArray ? 0 : undefined);
-      groupsByName[matchingGroupName].fields.push(field);
-      return;
-    }
-    
     // Only Singleton groups can fall back to the misc group
     if (field.isSingleton) {
       miscGroup.fields.push(field);
