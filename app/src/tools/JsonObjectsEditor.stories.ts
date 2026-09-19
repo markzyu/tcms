@@ -62,9 +62,9 @@ export const WithArrayFields: Story = {
           [7, 8, 9],
         ],
         twoDimensionalArrayWithName: [
-          { column: [1, 2, 3] },
-          { column: [4, 5, 6] },
-          { column: [7, 8, 9] },
+          { rowName: "Row 1", columns: [1, 2, 3] },
+          { rowName: "Row 2", columns: [4, 5, 6] },
+          { rowName: "Row 3", columns: [7, 8, 9] },
         ],
         projects: [
           { title: 'Art', description: 'Drawings and sketches', url: 'https://example.com/art', tasks: ['Task 1', 'Task 2'] },
