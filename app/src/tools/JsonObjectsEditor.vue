@@ -19,10 +19,10 @@
     <ion-action-sheet trigger="open-action-sheet" :buttons="actionSheetButtons" @did-dismiss="onAction" />
     <div class="hidden py-10" data-testid="debug-json-data">Debug: {{ jsonData }}</div>
     <div data-testid="field-groups-grid" class="flex flex-col p-4 transition-all duration-300 ease-in-out md:max-w-[720px] lg:max-w-[960px] md:mx-auto md:grid md:grid-flow-col md:gap-x-4 lg:gap-x-8 md:grid-cols-2" :style="gridStyles">
-      <div class="h-full md:flex md:flex-col" v-for="fieldGroup in allFieldGroups" :key="fieldGroup?.name">
-        <div v-if="fieldGroup">
+      <div class="h-full md:flex md:flex-col" v-for="fieldGroup in allFieldGroups" :key="fieldGroup?.name" data-testid="field-group">
+        <div v-if="fieldGroup" data-testid="field-group-header">
           <div class="mx-3 h-10 flex items-center gap-2">
-            {{ fieldGroup.name }}
+            <span data-testid="field-group-header-text">{{ fieldGroup.name }}</span>
             <div class="w-full flex-shrink flex-1" />
             <ion-button v-if="!fieldGroup.isSingleton" size="small" fill="outline" @click="onEditDetails(fieldGroup)">{{ editDetailsButtonText }}</ion-button>
             <ion-button v-if="!fieldGroup.isSingleton && confirmDeletionOfGroupName !== fieldGroup.name" size="small" fill="outline" color="danger" @click="onDeleteArrayItem(fieldGroup)">{{ deleteButtonText }}</ion-button>
@@ -31,9 +31,9 @@
         </div>
 
         <!-- Placeholder to format Grid alignment on desktop/md viewports -->
-        <div v-if="!fieldGroup" class="hidden md:block"></div>
+        <div v-if="!fieldGroup" class="hidden md:block" data-testid="grid-placeholder"></div>
 
-        <ion-list v-else class="md:flex-1 rounded-[20px] border-0 border-gray-500 p-2 pr-6 jsonFieldsList">
+        <ion-list v-else class="md:flex-1 rounded-[20px] border-0 border-gray-500 p-2 pr-6 jsonFieldsList" data-testid="field-group-content">
           <div v-for="field in fieldGroup.fields" :key="field.name">
             <ion-item :data-testid="`field-${field.type}-${field.fullPath}`">
               <ion-textarea
@@ -174,10 +174,17 @@ const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
     }
     knownPaths.add(field.fullPath);
 
-    const isSingleton = field.isSingleton;
+    const fullPathParts = field.fullPath.split(".");
+    const isArrayField = fullPathParts.length > 0 && fullPathParts[fullPathParts.length - 1] === "{index}";
+    const isArraySubfield = !isArrayField && fullPathParts.length > 1 && fullPathParts[fullPathParts.length - 2] === "{index}";
+    const isValidArray = !field.isSingleton && (isArrayField || isArraySubfield);
+    if (!field.isSingleton && !isValidArray) {
+      return;
+    }
+
     const preferredGroupName = fieldPathToGroupName[field.fullPath];
     if (preferredGroupName) {
-      const group = groupsByName[preferredGroupName] ||= newFieldGroup(preferredGroupName, locale.value, isSingleton ? undefined : 0);
+      const group = groupsByName[preferredGroupName] ||= newFieldGroup(preferredGroupName, locale.value, isValidArray ? 0 : undefined);
       group.fields.push(field);
       return;
     }
@@ -186,7 +193,7 @@ const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
     const longestMatchingGroupPath = allNamedGroups.find((groupName) => field.fullPath.startsWith(groupName + "."));
     const matchingGroupName = longestMatchingGroupPath && fieldLabels[locale.value]?.[longestMatchingGroupPath];
     if (matchingGroupName) {
-      groupsByName[matchingGroupName] ||= newFieldGroup(matchingGroupName, locale.value, isSingleton ? undefined : 0);
+      groupsByName[matchingGroupName] ||= newFieldGroup(matchingGroupName, locale.value, isValidArray ? 0 : undefined);
       groupsByName[matchingGroupName].fields.push(field);
       return;
     }
