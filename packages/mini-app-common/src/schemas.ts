@@ -14,9 +14,18 @@ const unionDiscriminatorLabel: Record<AppLanguages, string> = {
   ja: "種類",
 };
 
+// To specify the label for iterating all items in an array. Example:
+//    {"projects.{index}.tasks": "Task #{index}"}
 const arrayGroupLabel: Record<AppLanguages, string> = {
   en: "{title} #{index}",
   ja: "{index}番目の{title}",
+};
+
+// To specify the label for one specific item in an array. Example:
+//    {"projects.{index}.tasks.{index}": "Task"}
+const arrayItemGroupLabel: Record<AppLanguages, string> = {
+  en: "{title}",
+  ja: "{title}",
 };
 
 export const EditorUiTextareaFieldSchema = z.object({
@@ -191,13 +200,17 @@ export const defineEditorUiField = <T extends z.ZodType>(
         });
       });
 
-      // It's helpful to copy the current group name to the final fieldLabels.
+      // Copy the inner group name to the fieldLabels of the parent group.
       // * Arrays can reuse the item type's group name as Array item name
       // * String enums only store individual variant labels. We handle the parent group label here.
-      const groupPath = Array.isArray(rawField) ? `${key}.{index}` : key;
       Object.entries(fieldGroup.labelByLanguage || {}).forEach(([language, label]) => {
         const arrLabel = arrayGroupLabel[language as AppLanguages].replace("{title}", label);
-        fieldLabels[language as AppLanguages][groupPath] = Array.isArray(rawField) ? arrLabel : label;
+        const arrItemLabel = arrayItemGroupLabel[language as AppLanguages].replace("{title}", label);
+        fieldLabels[language as AppLanguages][key] = label;
+        if (Array.isArray(rawField)) {
+          fieldLabels[language as AppLanguages][key] = arrLabel;
+          fieldLabels[language as AppLanguages][`${key}.{index}`] = arrItemLabel;
+        }
       });
     }
   });
