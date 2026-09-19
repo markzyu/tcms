@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "ThorCMS",
+  "productName": "ThursdayCMS",
   "version": "../package.json",
   "identifier": "dev.markzyu.thorcms",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "ThorCMS",
+        "title": "ThursdayCMS",
         "width": 800,
         "height": 600,
         "minWidth": 400,

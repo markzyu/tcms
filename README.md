@@ -69,7 +69,7 @@ To verify the baseline correctness of all packages, templates, and the app, run:
 yarn prepush
 ```
 
-Meanwhile, you can start the development server for the ThorCMS app:
+Meanwhile, you can start the development server for the ThursdayCMS app:
 
 For Desktop development, run:
 ```bash
@@ -143,4 +143,4 @@ Or, for vim extension users, add the following to VSCode User Settings:
 
 ## License
 
-Thor CMS (TCMS) is licensed under the [MIT License](LICENSE). Copyright © 2026 Zhongzhi Yu.
+Thursday CMS (TCMS) is licensed under the [MIT License](LICENSE). Copyright © 2026 Zhongzhi Yu.

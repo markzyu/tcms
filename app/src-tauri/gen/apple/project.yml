@@ -12,7 +12,7 @@ configs:
 settingGroups:
   app:
     base:
-      PRODUCT_NAME: ThorCMS
+      PRODUCT_NAME: ThursdayCMS
       PRODUCT_BUNDLE_IDENTIFIER: dev.markzyu.thorcms
 targetTemplates:
   app:

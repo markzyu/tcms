@@ -35,7 +35,7 @@ export const LcdnInstanceConfigSchema = z.object({
 export type LcdnInstanceConfig = z.infer<typeof LcdnInstanceConfigSchema>;
 
 export const InstallStatusSchema = z.object({
-  // The version of the ThorCMS app. (Same as app/package.json)
+  // The version of the ThursdayCMS app. (Same as app/package.json)
   appVersion: z.string()
 });
 

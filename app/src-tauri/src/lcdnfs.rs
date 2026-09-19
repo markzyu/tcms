@@ -18,7 +18,7 @@ pub(crate) fn get_compat_os_data_dir(app_handle: &AppHandle) -> Result<PathBuf, 
     "android" => Ok(base_dir_android),
     "ios" => Ok(base_dir),
     _ => Err(format!(
-      "Unsupported operating system for ThorCMS: {}",
+      "Unsupported operating system for ThursdayCMS: {}",
       platform(),
     )),
   }

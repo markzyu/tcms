@@ -4,16 +4,16 @@ High-level architecture from design discussions. Intentionally brief; see **Open
 
 ## Naming
 
-* **TCMS** and **Thor CMS** both refer to the whole system, beyond just the mobile/desktop app.
-* **ThorCMS** refers to the app (store name, window title, and in-app branding).
+* **TCMS** and **Thursday CMS** both refer to the whole system, beyond just the mobile/desktop app.
+* **ThursdayCMS** refers to the app (store name, window title, and in-app branding).
 
-In prose, keep **app** when describing the installable product (e.g. “the ThorCMS app”). Use **Thor CMS** when referring to the CMS concept or the full TCMS expansion — not as the app’s display name.
+In prose, keep **app** when describing the installable product (e.g. “the ThursdayCMS app”). Use **Thursday CMS** when referring to the CMS concept or the full TCMS expansion — not as the app’s display name.
 
 ## Architecture summary
 
-**Thor CMS** is delivered by the **ThorCMS** native mobile app, which has multiple different Frontend parts, split into security levels:
+**Thursday CMS** is delivered by the **ThursdayCMS** native mobile app, which has multiple different Frontend parts, split into security levels:
 
-1. **Admin shell** — the main UI of the ThorCMS app, able to configure and launch hosted apps, able to launch tools as part of the configuration workflows; all privileged OS operations (starting http servers, etc).
+1. **Admin shell** — the main UI of the ThursdayCMS app, able to configure and launch hosted apps, able to launch tools as part of the configuration workflows; all privileged OS operations (starting http servers, etc).
 2. **Tools** — In MVP and v1, these are just helper components used by the Admin shell. In later versions they can be more modular and customizable, including even premade websites meant as productivity tools, that users can utilize to author CMS templates, and do basic OPS work on the phone; scoped OS features (opening files and storing them for mini app assets, but not starting http servers).
 3. **Mini app(s)** — one or more real **HTTP servers** on `127.0.0.1` serving CMS templates; rendered in a **sandboxed iframe** (no Tauri runtime).
 
@@ -26,7 +26,7 @@ But there is one more hidden backend component: Local CDN (LCDN)
 
 ### Local CDN
 
-In terms of security boundaries, Local CDN is a custom http server, implemented as part of the Tauri Rust binary. It just reads configurations and hosts static files. It runs in the **foreground** whenever there is at least one running mini app. On iOS, keeping servers alive requires the app to stay foregrounded; the ThorCMS app shows a **fullscreen screensaver** while serving (not shown in Developer Mode; see below).
+In terms of security boundaries, Local CDN is a custom http server, implemented as part of the Tauri Rust binary. It just reads configurations and hosts static files. It runs in the **foreground** whenever there is at least one running mini app. On iOS, keeping servers alive requires the app to stay foregrounded; the ThursdayCMS app shows a **fullscreen screensaver** while serving (not shown in Developer Mode; see below).
 
 Local CDN has two separate modes, static serving and custom backends.
 
@@ -44,11 +44,11 @@ Local CDN is the **single entry point** for mini apps: all traffic goes through 
 
 Local CDN should enforce CSP policies to only allow access from its own domain. Users should never have to visit the mini app's own server port.
 
-Local CDN is optimized for **local preview** inside Thor CMS. It is a poor fit for **public traffic** when the user publishes from the phone—even on WiFi, pushing all static assets through the handset is slow and fragile.
+Local CDN is optimized for **local preview** inside Thursday CMS. It is a poor fit for **public traffic** when the user publishes from the phone—even on WiFi, pushing all static assets through the handset is slow and fragile.
 
 ### Remote static CDN (the reverse of Local CDN)
 
-For phone publishing, Thor CMS supports a **reversed** Local CDN setup: authored content, assets, cached JS frameworks, and (optionally) HTML cache are **uploaded/synced** to a remote object store the user configures (GitHub, S3, Cloudflare R2, etc.) via a stored API token. *Side note:* GitHub, S3, R2, and similar targets are likely **separate integrations**—API behavior and pricing differ.
+For phone publishing, Thursday CMS supports a **reversed** Local CDN setup: authored content, assets, cached JS frameworks, and (optionally) HTML cache are **uploaded/synced** to a remote object store the user configures (GitHub, S3, Cloudflare R2, etc.) via a stored API token. *Side note:* GitHub, S3, R2, and similar targets are likely **separate integrations**—API behavior and pricing differ.
 
 Frontend routing is **context-aware**: in preview, prefer localhost / Local CDN; for external visitors, prefer the remote CDN.
 
@@ -66,7 +66,7 @@ There are 3 modes for users to publish their websites
 * Exporting to a personal server: Users must have a computer that is publicly accessible. Phone exports CDN static content + an install script for the server binaries.
 * (Static HTMLs only) Exporting to an external service: Phone exports CDN static content for templates that are completely static. User can upload this to Github Pages, netlify, or any service of their choice.
 
-There is technically a 4th mode: Serving on another phone. But it is basically the same as the "backup and restore" feature of ThorCMS app data.
+There is technically a 4th mode: Serving on another phone. But it is basically the same as the "backup and restore" feature of ThursdayCMS app data.
 
 ## Versioning and CAS
 
@@ -88,13 +88,13 @@ In MVP v0.1, the versioning system and CAS storage do not exist. Phase 0 uses pl
 
 (A) For the Admin shell, and for tools, we rely heavily on Tauri's security models. We would need to write Tauri commands that access Mobile Phone's OS. Here we should prefer **narrow, user-confirmed OS access** over broad commands that can access random parts of filesystem or wide network privileges.
 
-Tauri doesn't host the commands on a public socket and is instead only accessibile from its own webview, even when using the brownfield pattern. So the default brownfield security is enough. But we should still enable the Tauri Isolation Pattern, because: (1) we won't ever use Tauri commands to read a verbatim file into JS memory. Instead, everything goes through Local CDN (2) The isolation pattern can be useful to sanity check that Tools are not accidentally being used by users to open and edit files from other apps: All super user functions are restricted to files owned by the ThorCMS app, to comply with any potential app store requirements
+Tauri doesn't host the commands on a public socket and is instead only accessibile from its own webview, even when using the brownfield pattern. So the default brownfield security is enough. But we should still enable the Tauri Isolation Pattern, because: (1) we won't ever use Tauri commands to read a verbatim file into JS memory. Instead, everything goes through Local CDN (2) The isolation pattern can be useful to sanity check that Tools are not accidentally being used by users to open and edit files from other apps: All super user functions are restricted to files owned by the ThursdayCMS app, to comply with any potential app store requirements
 
 (B) For mini apps, we run them outside Tauri and as separate backends.
 
 Mini apps servers, and Local CDN are served on insecure HTTP. User must bring their own reverse proxy / port forwarding / hosting solutions.
 
-When in the ThorCMS app, Mini apps URLs and Local CDN URLs must always be opened from a sandboxed iframe, which does not have access to Tauri runtime.
+When in the ThursdayCMS app, Mini apps URLs and Local CDN URLs must always be opened from a sandboxed iframe, which does not have access to Tauri runtime.
 
 Mini apps' (LCDN or custom backend) server must open port on localhost only. Mini app servers would run with the same Filesystem/OS permssions as the app binary itself. Bundled backends only: each trusted server is **shipped with the app** as a single, static, codesigned binary (on iOS, may run in-process as a thread rather than a separate process). They serve **predefined template schemas only**, not arbitrary user-supplied server logic. Optional on-demand download bundles (see requirements) are still author-signed splits of the same trusted binaries—not user-defined custom servers.
 
@@ -105,7 +105,7 @@ Local CDN's CSP policy should be indirectly configurable, to allow adding record
 
 ## Developer Mode
 
-Developer mode is for power users who want to create their own templates while using a **backend HTTP server in another app** on the phone (e.g. Termux on Android, Pythonista on iPad). The ThorCMS app does not ship or trust that server; the user must find and run a separate app that can bind a localhost port.
+Developer mode is for power users who want to create their own templates while using a **backend HTTP server in another app** on the phone (e.g. Termux on Android, Pythonista on iPad). The ThursdayCMS app does not ship or trust that server; the user must find and run a separate app that can bind a localhost port.
 
 This requires adding Local CDN hosting rules to whitelist the developer's URL, which must be a new port and must be localhost only. Create a hidden menu within the Admin shell to enable this feature. (Assets, contents and JS frameworks would still load from Local CDN.)
 
@@ -118,7 +118,7 @@ Unrelated: There might eventually be a remote Admin UI, because super users woul
 - **Whitelist** what may load inside the shell WebView, including within templates and mini apps. Each mini app **manifest** must declare any external dependency (domains/hosts).
 - **Always allowed**: local CDN, and external, pre-approved **CDN hosts** for JS/CSS.
 - **Declared iframe hosts**: templates may embed third-party pages (e.g. sign-in or ordering) only for domains listed in the manifest; users must not use unlisted sites for those functions. A template may offer multiple listed choices.
-- **Not allowed inline**: undeclared external images, videos, and general third-party pages — these may exist as links; clicking opens the phone's browser, not the ThorCMS app.
+- **Not allowed inline**: undeclared external images, videos, and general third-party pages — these may exist as links; clicking opens the phone's browser, not the ThursdayCMS app.
 - Block non-whitelisted **top-level navigation**. Mini apps should either remain in iframe, or open in another app like the real browser
 
 ### Persistence and recovery
