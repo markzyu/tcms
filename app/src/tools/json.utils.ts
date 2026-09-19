@@ -14,6 +14,9 @@ export type FieldGroupDescriptor = {
   fields: FieldDescriptor[];
   // True = Contains only singleton fields. False = Contains only array fields.
   isSingleton: boolean;
+
+  // For single field groups, this is always false. For array field groups, this matters.
+  hasHiddenDetails: boolean;
 };
 
 // Unlike the EditorUiFieldGroup, the FieldDescriptors here reflect real data. Non existing fields are not included.
@@ -170,6 +173,7 @@ export const newFieldGroup = (nameTemplate: string, locale: string, index?: numb
   nameTemplate,
   fields: [],
   isSingleton: index === undefined,
+  hasHiddenDetails: false,
 });
 
 export const getShallowArrayPath = (fullPath: string) => {

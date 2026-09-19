@@ -24,7 +24,7 @@
           <div class="mx-3 h-10 flex items-center gap-2">
             <span data-testid="field-group-header-text">{{ fieldGroup.name }}</span>
             <div class="w-full flex-shrink flex-1" />
-            <ion-button v-if="!fieldGroup.isSingleton" size="small" fill="outline" @click="onEditDetails(fieldGroup)">{{ editDetailsButtonText }}</ion-button>
+            <ion-button v-if="!fieldGroup.isSingleton && fieldGroup.hasHiddenDetails" size="small" fill="outline" @click="onEditDetails(fieldGroup)">{{ editDetailsButtonText }}</ion-button>
             <ion-button v-if="!fieldGroup.isSingleton && confirmDeletionOfGroupName !== fieldGroup.name" size="small" fill="outline" color="danger" @click="onDeleteArrayItem(fieldGroup)">{{ deleteButtonText }}</ion-button>
             <ion-button v-if="!fieldGroup.isSingleton && confirmDeletionOfGroupName === fieldGroup.name" size="small" color="danger" @click="onDeleteArrayItem(fieldGroup)">{{ deleteConfirmButtonText }}</ion-button>
           </div>
@@ -174,11 +174,23 @@ const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
     }
     knownPaths.add(field.fullPath);
 
-    const getGroupName = (fieldFullPath: string) => {
+    const getGroupName = (fieldFullPath: string, isArray: boolean) => {
       const preferredGroupName = fieldPathToGroupName[fieldFullPath];
 
       // Fallback: if not specified in fieldGroups, try to group based on fieldLabels
-      const longestMatchingGroupPath = allNamedGroups.find((groupName) => fieldFullPath.startsWith(groupName + "."));
+      const longestMatchingGroupPath = allNamedGroups.find((groupName) => {
+        if (!isArray) {
+          // Singleton fields use their direct parent
+          return fieldFullPath.startsWith(groupName + ".");
+        }
+        if (fieldFullPath.endsWith(".{index}")) {
+          // Array non-object fields use their direct parent
+          return fieldFullPath == groupName + ".{index}";
+        } else {
+          // Array item object fields use their direct parent (the array item, not the array)
+          return fieldFullPath.startsWith(groupName + ".");
+        }
+      });
       const matchingGroupName = longestMatchingGroupPath && fieldLabels[locale.value]?.[longestMatchingGroupPath];
 
       return preferredGroupName || matchingGroupName;
@@ -189,10 +201,15 @@ const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
     const isArraySubfield = !isArrayField && fullPathParts.length > 1 && fullPathParts[fullPathParts.length - 2] === "{index}";
     const isValidArray = !field.isSingleton && (isArrayField || isArraySubfield);
     if (!field.isSingleton && !isValidArray) {
+      const groupName = getGroupName(field.fullPath, isValidArray);
+      if (groupName) {
+        const group = groupsByName[groupName] ||= newFieldGroup(groupName, locale.value, isValidArray ? 0 : undefined);
+        group.hasHiddenDetails ||= true;
+      }
       return;
     }
 
-    const groupName = getGroupName(field.fullPath);
+    const groupName = getGroupName(field.fullPath, isValidArray);
     if (groupName) {
       const group = groupsByName[groupName] ||= newFieldGroup(groupName, locale.value, isValidArray ? 0 : undefined);
       group.fields.push(field);
@@ -279,16 +296,22 @@ const arrayFieldGroups = computed<FieldGroupDescriptor[]>(() => {
     const validLength = Math.min(...arrayLengths);
 
     // Create new copies of the original abstract array groups, based on actual array lengths
-    return Array(validLength).fill(0).map((_, i) => {
-      const arrayItemGroup = newFieldGroup(group.nameTemplate, locale.value, i);
-      arrayItemGroup.fields = group.fields.map((field) => ({
+    // However, if two items have the same group name, we do need to merge them.
+    let mergedGroups: Record<string, FieldGroupDescriptor> = {};
+    Array(validLength).fill(0).forEach((_, i) => {
+      const newGroup = newFieldGroup(group.nameTemplate, locale.value, i);
+      const arrayItemGroup = mergedGroups[newGroup.name] ||= newGroup;
+      arrayItemGroup.hasHiddenDetails = group.hasHiddenDetails;
+      arrayItemGroup.fields.push(...group.fields.map((field) => ({
         ...field,
+        name: field.name.replace("{index}", String(i + 1)),
         fullPath: field.fullPathArrFilter.replace("{index}", String(i)),
         fullPathArrFilter: field.fullPathArrFilter.replace("{index}", String(i)),
         arrayIndex: i,
-      })).map(performFieldValidations);
+      })).map(performFieldValidations));
       return arrayItemGroup;
     });
+    return Object.values(mergedGroups);
   });
 });
 
