@@ -201,7 +201,8 @@ const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
     const isArraySubfield = !isArrayField && fullPathParts.length > 1 && fullPathParts[fullPathParts.length - 2] === "{index}";
     const isValidArray = !field.isSingleton && (isArrayField || isArraySubfield);
     if (!field.isSingleton && !isValidArray) {
-      const groupName = getGroupName(field.fullPath, isValidArray);
+      const parentArrayPath = getShallowArrayPath(field.fullPath);
+      const groupName = parentArrayPath && getGroupName(`${parentArrayPath}.{index}.`, false);
       if (groupName) {
         const group = groupsByName[groupName] ||= newFieldGroup(groupName, locale.value, isValidArray ? 0 : undefined);
         group.hasHiddenDetails ||= true;
