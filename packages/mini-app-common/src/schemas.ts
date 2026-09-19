@@ -15,17 +15,17 @@ const unionDiscriminatorLabel: Record<AppLanguages, string> = {
 };
 
 // To specify the label for iterating all items in an array. Example:
-//    {"projects.{index}.tasks": "Task #{index}"}
+//    {"projects.{index}.tasks": "Task"}
 const arrayGroupLabel: Record<AppLanguages, string> = {
-  en: "{title} #{index}",
-  ja: "{index}番目の{title}",
+  en: "{title}",
+  ja: "{title}",
 };
 
 // To specify the label for one specific item in an array. Example:
-//    {"projects.{index}.tasks.{index}": "Task"}
+//    {"projects.{index}.tasks.{index}": "Task {index}"}
 const arrayItemGroupLabel: Record<AppLanguages, string> = {
-  en: "{title}",
-  ja: "{title}",
+  en: "{title} #{index}",
+  ja: "{index}番目の{title}",
 };
 
 export const EditorUiTextareaFieldSchema = z.object({
