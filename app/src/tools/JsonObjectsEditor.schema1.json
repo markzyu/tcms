@@ -76,13 +76,13 @@
         "exampleDeepField.field1": "Question 1",
         "exampleDeepField.field2": "Question 2",
         "exampleDeepField.field3": "Question 3",
-        "projects": "Project {index}",
-        "projects.{index}": "Project",
+        "projects": "Project",
+        "projects.{index}": "Project {index}",
         "projects.{index}.title": "Title",
         "projects.{index}.description": "Description",
         "projects.{index}.url": "URL",
-        "projects.{index}.tasks": "Task {index}",
-        "projects.{index}.tasks.{index}": "Details"
+        "projects.{index}.tasks": "Task",
+        "projects.{index}.tasks.{index}": "Task {index}"
       },
       "ja": {
         "name": "名前",
@@ -99,12 +99,13 @@
         "exampleDeepField.field1": "質問 1",
         "exampleDeepField.field2": "質問 2",
         "exampleDeepField.field3": "質問 3",
+        "projects": "項目",
         "projects.{index}": "項目 {index}",
         "projects.{index}.title": "タイトル",
         "projects.{index}.description": "説明",
         "projects.{index}.url": "URL",
-        "projects.{index}.tasks": "タスク{index}",
-        "projects.{index}.tasks.{index}": "詳細"
+        "projects.{index}.tasks": "タスク",
+        "projects.{index}.tasks.{index}": "タスク{index}"
       }
     },
     "keyFieldsOfArrays": [
