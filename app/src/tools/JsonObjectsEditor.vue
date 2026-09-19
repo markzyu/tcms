@@ -25,8 +25,8 @@
             <span data-testid="field-group-header-text">{{ fieldGroup.name }}</span>
             <div class="w-full flex-shrink flex-1" />
             <ion-button v-if="!fieldGroup.isSingleton && fieldGroup.hasHiddenDetails" size="small" fill="outline" @click="onEditDetails(fieldGroup)">{{ editDetailsButtonText }}</ion-button>
-            <ion-button v-if="!fieldGroup.isSingleton && confirmDeletionOfGroupName !== fieldGroup.name" size="small" fill="outline" color="danger" @click="onDeleteArrayItem(fieldGroup)">{{ deleteButtonText }}</ion-button>
-            <ion-button v-if="!fieldGroup.isSingleton && confirmDeletionOfGroupName === fieldGroup.name" size="small" color="danger" @click="onDeleteArrayItem(fieldGroup)">{{ deleteConfirmButtonText }}</ion-button>
+            <ion-button v-if="!fieldGroup.isSingleton && !fieldGroup.isArrayOfNonObjects && confirmDeletionOfGroupName !== fieldGroup.name" size="small" fill="outline" color="danger" @click="onDeleteArrayItem(fieldGroup)">{{ deleteButtonText }}</ion-button>
+            <ion-button v-if="!fieldGroup.isSingleton && !fieldGroup.isArrayOfNonObjects && confirmDeletionOfGroupName === fieldGroup.name" size="small" color="danger" @click="onDeleteArrayItem(fieldGroup)">{{ deleteConfirmButtonText }}</ion-button>
           </div>
         </div>
 
@@ -213,6 +213,7 @@ const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
     const groupName = getGroupName(field.fullPath, isValidArray);
     if (groupName) {
       const group = groupsByName[groupName] ||= newFieldGroup(groupName, locale.value, isValidArray ? 0 : undefined);
+      group.isArrayOfNonObjects ||= isArrayField;
       group.fields.push(field);
       return;
     }
@@ -303,6 +304,7 @@ const arrayFieldGroups = computed<FieldGroupDescriptor[]>(() => {
       const newGroup = newFieldGroup(group.nameTemplate, locale.value, i);
       const arrayItemGroup = mergedGroups[newGroup.name] ||= newGroup;
       arrayItemGroup.hasHiddenDetails = group.hasHiddenDetails;
+      arrayItemGroup.isArrayOfNonObjects = group.isArrayOfNonObjects;
       arrayItemGroup.fields.push(...group.fields.map((field) => ({
         ...field,
         name: field.name.replace("{index}", String(i + 1)),
