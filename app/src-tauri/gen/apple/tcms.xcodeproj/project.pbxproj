@@ -30,7 +30,7 @@
 		288B60F29FC02F9CCB04B09D /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		2A9F1D588CCDEFA31D0E0D0A /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
 		378799A42613A7AF433C81E9 /* tcms_iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = tcms_iOS.entitlements; sourceTree = "<group>"; };
-		498EA14C91D282DA8115B6AA /* ThorCMS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ThorCMS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		498EA14C91D282DA8115B6AA /* ThursdayCMS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ThursdayCMS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		578B141EEA68CC256822D3F4 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		6CD03B5D6B209A9CE0C0FB98 /* main.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = main.rs; sourceTree = "<group>"; };
 		746D83472450411FCEEEDE90 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -72,7 +72,7 @@
 		5652FE428A5D117F336A883A /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				498EA14C91D282DA8115B6AA /* ThorCMS.app */,
+				498EA14C91D282DA8115B6AA /* ThursdayCMS.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -172,7 +172,7 @@
 			packageProductDependencies = (
 			);
 			productName = tcms_iOS;
-			productReference = 498EA14C91D282DA8115B6AA /* ThorCMS.app */;
+			productReference = 498EA14C91D282DA8115B6AA /* ThursdayCMS.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -289,7 +289,7 @@
 					"$(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = dev.markzyu.thorcms;
-				PRODUCT_NAME = ThorCMS;
+				PRODUCT_NAME = ThursdayCMS;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALID_ARCHS = "arm64  x86_64";
@@ -334,7 +334,7 @@
 					"$(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = dev.markzyu.thorcms;
-				PRODUCT_NAME = ThorCMS;
+				PRODUCT_NAME = ThursdayCMS;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALID_ARCHS = "arm64  x86_64";

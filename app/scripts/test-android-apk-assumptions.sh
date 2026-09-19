@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Verify Android APK packaging assumptions required by ThorCMS on Android.
+# Verify Android APK packaging assumptions required by ThursdayCMS on Android.
 #
 # See Workaround 2 from docs/tech-caveats-and-choices.md: prefab templates and instances
 # are shipped as .zip files because tauri-plugin-fs mishandles Android assets that

@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "3AA005EB53AD13810AA2CADA"
-               BuildableName = "ThorCMS.app"
+               BuildableName = "ThursdayCMS.app"
                BlueprintName = "tcms_iOS"
                ReferencedContainer = "container:tcms.xcodeproj">
             </BuildableReference>
@@ -31,7 +31,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "3AA005EB53AD13810AA2CADA"
-            BuildableName = "ThorCMS.app"
+            BuildableName = "ThursdayCMS.app"
             BlueprintName = "tcms_iOS"
             ReferencedContainer = "container:tcms.xcodeproj">
          </BuildableReference>
@@ -66,7 +66,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "3AA005EB53AD13810AA2CADA"
-            BuildableName = "ThorCMS.app"
+            BuildableName = "ThursdayCMS.app"
             BlueprintName = "tcms_iOS"
             ReferencedContainer = "container:tcms.xcodeproj">
          </BuildableReference>
@@ -95,7 +95,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "3AA005EB53AD13810AA2CADA"
-            BuildableName = "ThorCMS.app"
+            BuildableName = "ThursdayCMS.app"
             BlueprintName = "tcms_iOS"
             ReferencedContainer = "container:tcms.xcodeproj">
          </BuildableReference>

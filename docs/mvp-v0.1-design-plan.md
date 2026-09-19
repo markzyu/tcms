@@ -54,7 +54,7 @@ Forward-looking shapes (CAS, multi-page manifest, rich editor UI, LCDN/rcdn ops 
 2. `**instance.json**` (per mini-app instance, user data)
 3. **Variant content files** — `content/{pageShortName}.{variant}.json` (contact card: `main.en.json`, etc.)
 4. Directory layout under app sandbox (see below)
-5. **Standalone example-info-card1 site** — React CSR reading the active variant content file; runnable without the ThorCMS app shell for dev/demo
+5. **Standalone example-info-card1 site** — React CSR reading the active variant content file; runnable without the ThursdayCMS app shell for dev/demo
 
 ### Directory layout
 
@@ -295,7 +295,7 @@ As for the storage of templates vs instances: Templates are stored as zipfiles u
 * Implement the Admin shell with ability to edit and preview instances.
 * Formalize the architecture of Tools as mere Vue components.
 
-We do not import any premade websites as tools for now. But this design should make it possible to eventually include premade rust-native servers and any website hosted on it, into the ThorCMS app. And shipping additional binaries on the phone is out of the question for MVP v0.1
+We do not import any premade websites as tools for now. But this design should make it possible to eventually include premade rust-native servers and any website hosted on it, into the ThursdayCMS app. And shipping additional binaries on the phone is out of the question for MVP v0.1
 
 ### Formalizing the Architecture of "Tools"
 
@@ -320,7 +320,7 @@ This simplifies things so that, the admin shell only really needs to implement t
 * Implementing the Preview and Edit tools with a reusable prop interface
 * Connecting tools to the admin shell
 
-Beyond the MVP scope: we could one day support adding an "External Edit" tool which copies out small files for external apps to process. But this is not a core feature of the ThorCMS app. And it's more of an additional action button that can be shown in a dropdown menu. It's also not meant for large files. Those should be preprocessed before importing into ThorCMS.
+Beyond the MVP scope: we could one day support adding an "External Edit" tool which copies out small files for external apps to process. But this is not a core feature of the ThursdayCMS app. And it's more of an additional action button that can be shown in a dropdown menu. It's also not meant for large files. Those should be preprocessed before importing into ThursdayCMS.
 
 ### Assumptions and Requirements for the Edit tools
 
