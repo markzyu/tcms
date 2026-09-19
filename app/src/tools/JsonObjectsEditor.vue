@@ -174,10 +174,17 @@ const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
     }
     knownPaths.add(field.fullPath);
 
-    const isSingleton = field.isSingleton;
+    const fullPathParts = field.fullPath.split(".");
+    const isArrayField = fullPathParts.length > 0 && fullPathParts[fullPathParts.length - 1] === "{index}";
+    const isArraySubfield = !isArrayField && fullPathParts.length > 1 && fullPathParts[fullPathParts.length - 2] === "{index}";
+    const isValidArray = !field.isSingleton && (isArrayField || isArraySubfield);
+    if (!field.isSingleton && !isValidArray) {
+      return;
+    }
+
     const preferredGroupName = fieldPathToGroupName[field.fullPath];
     if (preferredGroupName) {
-      const group = groupsByName[preferredGroupName] ||= newFieldGroup(preferredGroupName, locale.value, isSingleton ? undefined : 0);
+      const group = groupsByName[preferredGroupName] ||= newFieldGroup(preferredGroupName, locale.value, isValidArray ? 0 : undefined);
       group.fields.push(field);
       return;
     }
@@ -186,7 +193,7 @@ const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
     const longestMatchingGroupPath = allNamedGroups.find((groupName) => field.fullPath.startsWith(groupName + "."));
     const matchingGroupName = longestMatchingGroupPath && fieldLabels[locale.value]?.[longestMatchingGroupPath];
     if (matchingGroupName) {
-      groupsByName[matchingGroupName] ||= newFieldGroup(matchingGroupName, locale.value, isSingleton ? undefined : 0);
+      groupsByName[matchingGroupName] ||= newFieldGroup(matchingGroupName, locale.value, isValidArray ? 0 : undefined);
       groupsByName[matchingGroupName].fields.push(field);
       return;
     }
