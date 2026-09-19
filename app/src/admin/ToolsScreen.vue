@@ -66,6 +66,8 @@ const convertPath = async (path: GenericFilePath): Promise<string> => {
   throw new Error(`Unsupported path type: ${path.type}`);
 };
 
+const { startWorkflow } = useWorkflow();
+
 const onAction = async (action: ToolAction) => {
   switch (action.type) {
     case "closeWorkflow":
@@ -76,6 +78,9 @@ const onAction = async (action: ToolAction) => {
       };
       window.dispatchEvent(new WorkflowFinishedEvent(data));
       history.back();
+      return;
+    case "startWorkflow":
+      await startWorkflow(action.workflowId, action.inputJson);
       return;
     case "saveText":
       const path = await convertPath(action.filePath);
