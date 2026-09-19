@@ -81,8 +81,8 @@
         "projects.{index}.title": "Title",
         "projects.{index}.description": "Description",
         "projects.{index}.url": "URL",
-        "projects.{index}.tasks": "Task",
-        "projects.{index}.tasks.{index}": "Task {index}"
+        "projects.{index}.tasks": "Tasks",
+        "projects.{index}.tasks.{index}": "#{index}"
       },
       "ja": {
         "name": "名前",
@@ -105,7 +105,7 @@
         "projects.{index}.description": "説明",
         "projects.{index}.url": "URL",
         "projects.{index}.tasks": "タスク",
-        "projects.{index}.tasks.{index}": "タスク{index}"
+        "projects.{index}.tasks.{index}": "{index}."
       }
     },
     "keyFieldsOfArrays": [
