@@ -76,6 +76,13 @@
         "exampleDeepField.field1": "Question 1",
         "exampleDeepField.field2": "Question 2",
         "exampleDeepField.field3": "Question 3",
+        "twoDimensionalArray": "Example: Two Dimensional Array",
+        "twoDimensionalArray.{index}": "Row {index}",
+        "twoDimensionalArray.{index}.{index}": "Col {index}",
+        "twoDimensionalArrayWithName": "Example: Named Two Dimensional Array",
+        "twoDimensionalArrayWithName.{index}": "Row {index}",
+        "twoDimensionalArrayWithName.{index}.column": "Columns",
+        "twoDimensionalArrayWithName.{index}.column.{index}": "Col {index}",
         "projects": "Project",
         "projects.{index}": "Project {index}",
         "projects.{index}.title": "Title",
@@ -99,6 +106,13 @@
         "exampleDeepField.field1": "質問 1",
         "exampleDeepField.field2": "質問 2",
         "exampleDeepField.field3": "質問 3",
+        "twoDimensionalArray": "例：二次元配列",
+        "twoDimensionalArray.{index}": "行 {index}",
+        "twoDimensionalArray.{index}.{index}": "列 {index}",
+        "twoDimensionalArrayWithName": "例：名前付き二次元配列",
+        "twoDimensionalArrayWithName.{index}": "行 {index}",
+        "twoDimensionalArrayWithName.{index}.column": "列",
+        "twoDimensionalArrayWithName.{index}.column.{index}": "列 {index}",
         "projects": "項目",
         "projects.{index}": "項目 {index}",
         "projects.{index}.title": "タイトル",
@@ -163,6 +177,22 @@
         "required": [
           "field3"
         ]
+      },
+      "twoDimensionalArray": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "twoDimensionalArrayWithName": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "column": { "type": "array", "items": { "type": "string" } }
+          }
+        }
       },
       "projects": {
         "type": "array",
