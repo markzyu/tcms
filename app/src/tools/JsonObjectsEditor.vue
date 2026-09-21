@@ -24,7 +24,7 @@
           <div class="mx-3 h-10 flex items-center gap-2">
             <span data-testid="field-group-header-text">{{ fieldGroup.name }}</span>
             <div class="w-full flex-shrink flex-1" />
-            <ion-button v-if="!fieldGroup.isSingleton && fieldGroup.hasHiddenDetails" size="small" fill="outline" @click="onEditDetails(fieldGroup)">{{ editDetailsButtonText }}</ion-button>
+            <ion-button v-if="!fieldGroup.isSingleton && fieldGroup.hasHiddenDetails" size="small" fill="outline" @click="onEditDetails(fieldGroup)" data-testid="edit-details-btn">{{ editDetailsButtonText }}</ion-button>
             <ion-button v-if="!fieldGroup.isSingleton && !fieldGroup.isArrayOfNonObjects && confirmDeletionOfGroupName !== fieldGroup.name" size="small" fill="outline" color="danger" @click="onDeleteArrayItem(fieldGroup)">{{ deleteButtonText }}</ion-button>
             <ion-button v-if="!fieldGroup.isSingleton && !fieldGroup.isArrayOfNonObjects && confirmDeletionOfGroupName === fieldGroup.name" size="small" color="danger" @click="onDeleteArrayItem(fieldGroup)">{{ deleteConfirmButtonText }}</ion-button>
           </div>

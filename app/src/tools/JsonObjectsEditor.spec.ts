@@ -15,6 +15,7 @@ import {
   fieldsInsideArrayProps,
   fieldsInsideTaskProps,
   singletonOnlyGroupNames,
+  testIds,
   withArrayFieldsInitialDebugJson,
   withArrayFieldsInitialRender,
   withArrayFieldsJson,
@@ -262,6 +263,12 @@ describe("JsonObjectsEditor", () => {
       for (const group of withArrayFieldsInitialRender.groups) {
         const groupContainer = getGroupContainer(group.name);
         expect(groupContainer).toBeInTheDocument();
+
+        if (group.hasEditDetails) {
+          expect(within(groupContainer).getByTestId(testIds.editDetailsBtn)).toBeInTheDocument();
+        } else {
+          expect(within(groupContainer).queryByTestId(testIds.editDetailsBtn)).not.toBeInTheDocument();
+        }
 
         for (const field of group.fields) {
           expect(within(groupContainer).getByTestId(field.testId)).toBeInTheDocument();
@@ -555,6 +562,12 @@ describe("JsonObjectsEditor", () => {
       for (const group of fieldsInsideArrayInitialRender.groups) {
         const groupContainer = getGroupContainer(group.name);
         expect(groupContainer).toBeInTheDocument();
+
+        if (group.hasEditDetails) {
+          expect(within(groupContainer).getByTestId(testIds.editDetailsBtn)).toBeInTheDocument();
+        } else {
+          expect(within(groupContainer).queryByTestId(testIds.editDetailsBtn)).not.toBeInTheDocument();
+        }
 
         for (const field of group.fields) {
           expect(within(groupContainer).getByTestId(field.testId)).toBeInTheDocument();
