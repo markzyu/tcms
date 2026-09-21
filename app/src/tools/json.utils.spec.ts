@@ -257,6 +257,8 @@ describe("newFieldGroup", () => {
       nameTemplate: "Basic Information",
       fields: [],
       isSingleton: true,
+      hasHiddenDetails: false,
+      isArrayOfNonObjects: false,
     });
   });
 
@@ -266,6 +268,8 @@ describe("newFieldGroup", () => {
       nameTemplate: "Project {index}",
       fields: [],
       isSingleton: false,
+      hasHiddenDetails: false,
+      isArrayOfNonObjects: false,
     });
   });
 });
@@ -286,6 +290,8 @@ describe("getShallowArrayPaths", () => {
       name: "Project 1",
       nameTemplate: "Project {index}",
       isSingleton: false,
+      hasHiddenDetails: false,
+      isArrayOfNonObjects: false,
       fields: [
         {
           name: "Title",

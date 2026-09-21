@@ -138,9 +138,7 @@ export const allGroupNames = [
   "Project 5",
   "Project {index}",
   "Project ",
-  "Task 1",
-  "Task 2",
-  "Task 3",
+  "Tasks",
   "Task {index}",
   "Task ",
 ];
@@ -161,7 +159,7 @@ export const fieldsInsideArrayInitialDebugJson = {
 };
 
 export const fieldsInsideArrayInitialRender = {
-  groupNames: ["Project ", "Task 1", "Task 2"],
+  groupNames: ["Project ", "Tasks"],
   groups: [
     {
       name: "Project ",
@@ -172,15 +170,10 @@ export const fieldsInsideArrayInitialRender = {
       ],
     },
     {
-      name: "Task 1",
+      name: "Tasks",
       fields: [
-        { testId: "field-undefined-projects.1.tasks.0", label: "Details", value: "Task 3" },
-      ],
-    },
-    {
-      name: "Task 2",
-      fields: [
-        { testId: "field-undefined-projects.1.tasks.1", label: "Details", value: "Task 4" },
+        { testId: "field-undefined-projects.1.tasks.0", label: "#1", value: "Task 3" },
+        { testId: "field-undefined-projects.1.tasks.1", label: "#2", value: "Task 4" },
       ],
     },
   ],
@@ -194,16 +187,4 @@ export const fieldsInsideTaskProps = {
     ...withArrayFieldsProps.input,
     jsonPath: fieldsInsideTaskJsonPath,
   },
-};
-
-export const fieldsInsideTaskInitialRender = {
-  groupNames: ["Task "],
-  groups: [
-    {
-      name: "Task ",
-      fields: [
-        { testId: "field-undefined-projects.1.tasks.0", label: "Details", value: "Task 3" },
-      ],
-    },
-  ],
 };
