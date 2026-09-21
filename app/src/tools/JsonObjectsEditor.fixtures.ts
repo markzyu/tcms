@@ -136,11 +136,9 @@ export const allGroupNames = [
   "Project 3",
   "Project 4",
   "Project 5",
-  "Project {index}",
-  "Project ",
+  "Project",
   "Tasks",
-  "Task {index}",
-  "Task ",
+  "Task",
 ];
 
 /** Matches the FieldsInsideArray story: edit projects[1] only. */
@@ -159,10 +157,10 @@ export const fieldsInsideArrayInitialDebugJson = {
 };
 
 export const fieldsInsideArrayInitialRender = {
-  groupNames: ["Project ", "Tasks"],
+  groupNames: ["Project", "Tasks"],
   groups: [
     {
-      name: "Project ",
+      name: "Project",
       fields: [
         { testId: "field-undefined-projects.1.title", label: "Title", value: "Music" },
         { testId: "field-undefined-projects.1.description", label: "Description", value: "Compositions and recordings" },

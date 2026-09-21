@@ -78,7 +78,7 @@ async function clickMediaPicker(fieldTestId: string) {
 }
 
 function getArrayGroupNames() {
-  return getRenderedGroupNames().filter((name) => name.startsWith("Project "));
+  return getRenderedGroupNames().filter((name) => name.startsWith("Project"));
 }
 
 function getTaskGroupNames() {
