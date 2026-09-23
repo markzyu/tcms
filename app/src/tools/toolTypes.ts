@@ -57,7 +57,7 @@ export type GenericFilePath = z.infer<typeof GenericFilePathSchema>;
 /** Input as a JSON object with a corresponding schema. */
 export const ToolJsonWithSchemaInputSchema = z.object({
   type: z.literal("jsonWithSchema"),
-  json: z.any(),
+  json: z.unknown(),
   /** The path within the json object that is being edited */
   jsonPath: z.string().optional(),
   /** The location of json data on disk, for writing / refreshing the data from / to RAM */

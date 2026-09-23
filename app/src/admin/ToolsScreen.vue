@@ -8,9 +8,9 @@ import { useRoute, useRouter } from 'vue-router';
 import { WorkflowRegistry } from '../tools/workflowTypes';
 import { GenericFilePath, ToolAction, ToolInput, ToolRegistry } from '../tools/toolTypes';
 import { JsonObjectsEditorTool } from '../tools/JsonObjectsEditor.tool';
-import { onMounted } from 'vue';
-import { IonPage, IonRouterOutlet } from '@ionic/vue';
-import { exists, writeTextFile } from '@tauri-apps/plugin-fs';
+import { onMounted, ref } from 'vue';
+import { IonPage, IonRouterOutlet, onIonViewWillEnter } from '@ionic/vue';
+import { exists, readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
 import { join } from '@tauri-apps/api/path';
 import { invokeWithType, WorkflowFinishedEvent, WorkflowFinishedEventData, WorkflowFinishedPromise } from './types.ts';
 import { v4 as uuidv4 } from 'uuid';
@@ -19,17 +19,32 @@ import { z } from 'zod';
 const route = useRoute();
 const workflowId = route.params.workflowId as string;
 const inputId = route.params.inputId as string;
-const inputJson = sessionStorage.getItem(inputId);
-const input = inputJson && JSON.parse(inputJson);
+const origInputJson = sessionStorage.getItem(inputId);
+const origInput = origInputJson && JSON.parse(origInputJson);
+const input = ref<ToolInput | null>(null);
 
 onMounted(() => {
-  if (!input) {
+  if (!origInput) {
     history.back();
   }
 
   // clean up session storage for privacy reasons
   sessionStorage.removeItem(inputId);
 });
+
+onIonViewWillEnter(() => {
+  if (!origInput) {
+    history.back();
+    return;
+  }
+
+  refreshToolInput(origInput).then(result => {
+    input.value = result;
+  }).catch(error => {
+    console.error("Failed to load JSON data for tool input:", error);
+    history.back();
+  });
+})
 
 const workflowRegistry: WorkflowRegistry = {
   "template-editor": {
@@ -92,14 +107,36 @@ const onAction = async (action: ToolAction) => {
 </script>
 
 <script lang="ts">
+const refreshToolInput = async (toolInput: ToolInput) => {
+  if (toolInput.type !== "jsonWithSchema" || toolInput.filePath.type !== "miniAppContent") return toolInput;
+
+  const { filePath: { instanceId, _pathAsUrl } } = toolInput;
+  const osDataDir = await invokeWithType(z.string(), "ensure_os_data_dir");
+  const urlParts = _pathAsUrl.split("/").filter(part => part);
+  const conetntJsonPath = await join(osDataDir, "public", "instances", instanceId, ...urlParts);
+  const contentJson = await readTextFile(conetntJsonPath);
+  const result: ToolInput = {
+    ...toolInput,
+    json: JSON.parse(contentJson),
+  };
+  return result;
+};
+
 export const useWorkflow = () => {
   const router = useRouter();
   const startWorkflow = async (workflowId: string, input: ToolInput): WorkflowFinishedPromise => {
+    // Sanity check: input shouldn't contain actual json data. (Downstream will fetch it from admin shell)
+    if (input && "json" in input && input.json) {
+      input.json = null;
+    }
+
+    // Passing the input
     const inputString = JSON.stringify(input);
     const uuid = uuidv4();
     const inputId = `workflow-${uuid}`;
     sessionStorage.setItem(inputId, inputString);
     router.push(`/tools/${workflowId}/${inputId}`);
+
     return new Promise((resolve) => {
       window.addEventListener("workflow-finished", (event: CustomEvent) => {
         if (!(event instanceof WorkflowFinishedEvent)) {
@@ -113,7 +150,7 @@ export const useWorkflow = () => {
         if (workflowId !== eventWorkflowId) {
           return;
         }
-        if (inputId !== eventInputId) {
+        if (eventInputId !== inputId) {
           return;
         }
         resolve(result);

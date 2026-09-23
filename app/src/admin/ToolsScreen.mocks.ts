@@ -12,8 +12,8 @@ import ToolsScreen, { useWorkflow } from "./ToolsScreen.vue";
 import { WorkflowFinishedPromise } from "./types.ts";
 
 export const TEST_INSTANCE_ID = "test-instance";
-export const TEST_CONTENT_PATH = "/content/main.en.json";
-export const TEST_JSON = { name: "John Doe" };
+export const TEST_CONTENT_PATH = "/content/tool-screen-test1.en.json";
+export const TEST_JSON = { name: "this-value-should-be-ignored" };
 
 export const mockWorkflowPromises = ref(new Map<string, WorkflowFinishedPromise>());
 

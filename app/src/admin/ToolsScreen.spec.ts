@@ -73,7 +73,7 @@ describe("ToolsScreen", () => {
     await clickIonButton("json-objects-editor-save-button");
     await flushPromises();
 
-    const expectedPath = `./public/public/instances/${TEST_INSTANCE_ID}//content/main.en.json`;
+    const expectedPath = `./public/public/instances/${TEST_INSTANCE_ID}//content/tool-screen-test1.en.json`;
     expect(mockFs.writeTextFile).toHaveBeenCalledWith(
       expectedPath,
       expect.stringContaining('"name": "John Doe"'),
