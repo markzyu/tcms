@@ -24,9 +24,9 @@
           <div class="mx-3 h-10 flex items-center gap-2">
             <span data-testid="field-group-header-text">{{ fieldGroup.name }}</span>
             <div class="w-full flex-shrink flex-1" />
-            <ion-button v-if="!fieldGroup.isSingleton" size="small" fill="outline" @click="onEditDetails(fieldGroup)">{{ editDetailsButtonText }}</ion-button>
-            <ion-button v-if="!fieldGroup.isSingleton && confirmDeletionOfGroupName !== fieldGroup.name" size="small" fill="outline" color="danger" @click="onDeleteArrayItem(fieldGroup)">{{ deleteButtonText }}</ion-button>
-            <ion-button v-if="!fieldGroup.isSingleton && confirmDeletionOfGroupName === fieldGroup.name" size="small" color="danger" @click="onDeleteArrayItem(fieldGroup)">{{ deleteConfirmButtonText }}</ion-button>
+            <ion-button v-if="!fieldGroup.isSingleton && fieldGroup.hasHiddenDetails" size="small" fill="outline" @click="onEditDetails(fieldGroup)" data-testid="edit-details-btn">{{ editDetailsButtonText }}</ion-button>
+            <ion-button v-if="!fieldGroup.isSingleton && !fieldGroup.isArrayOfNonObjects && confirmDeletionOfGroupName !== fieldGroup.name" size="small" fill="outline" color="danger" @click="onDeleteArrayItem(fieldGroup)">{{ deleteButtonText }}</ion-button>
+            <ion-button v-if="!fieldGroup.isSingleton && !fieldGroup.isArrayOfNonObjects && confirmDeletionOfGroupName === fieldGroup.name" size="small" color="danger" @click="onDeleteArrayItem(fieldGroup)">{{ deleteConfirmButtonText }}</ion-button>
           </div>
         </div>
 
@@ -174,33 +174,68 @@ const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
     }
     knownPaths.add(field.fullPath);
 
+    const getGroupName = (fieldFullPath: string, isArray: boolean) => {
+      const preferredGroupName = fieldPathToGroupName[fieldFullPath];
+
+      // Fallback: if not specified in fieldGroups, try to group based on fieldLabels
+      const longestMatchingGroupPath = allNamedGroups.find((groupName) => {
+        if (isArray && fieldFullPath.endsWith(".{index}")) {
+          // Array non-object fields use their direct parent
+          return fieldFullPath == groupName + ".{index}";
+        } else {
+          // Array item objects, and singleton fields use their direct parent
+          return fieldFullPath.startsWith(groupName + ".");
+        }
+      });
+      const matchingGroupName = longestMatchingGroupPath && fieldLabels[locale.value]?.[longestMatchingGroupPath];
+
+      return preferredGroupName || matchingGroupName;
+    };
+
     const fullPathParts = field.fullPath.split(".");
     const isArrayField = fullPathParts.length > 0 && fullPathParts[fullPathParts.length - 1] === "{index}";
     const isArraySubfield = !isArrayField && fullPathParts.length > 1 && fullPathParts[fullPathParts.length - 2] === "{index}";
-    const isValidArray = !field.isSingleton && (isArrayField || isArraySubfield);
-    if (!field.isSingleton && !isValidArray) {
+    const isPathArray = isArrayField || isArraySubfield;
+    const isValidArray = !field.isSingleton && isPathArray;
+
+    // Special case 1: Schema indicates an array item field, but JSON path indicates the field is too deep.
+    // Special case 2: Schema indicates a singleton field, but JSON path indicates the field is inside an array.
+    if ((!field.isSingleton && !isPathArray) || (field.isSingleton && isPathArray)) {
+      const parentArrayPath = getShallowArrayPath(field.fullPath);
+
+      // Note: We are passing isArray=false to getGroupName, because neither of the two special cases
+      //       from above would cover a non-object array item field.
+      const arrName = parentArrayPath && getGroupName(`${parentArrayPath}.`, false);
+      const arrItemName = parentArrayPath && getGroupName(`${parentArrayPath}.{index}.`, false);
+      const groupName = field.isSingleton ? arrName : arrItemName;
+
+      if (groupName) {
+        const group = groupsByName[groupName] ||= newFieldGroup(groupName, locale.value, isValidArray ? 0 : undefined);
+        if (field.isSingleton) {
+          group.fields.push(field);
+        }
+      }
       return;
     }
 
-    const preferredGroupName = fieldPathToGroupName[field.fullPath];
-    if (preferredGroupName) {
-      const group = groupsByName[preferredGroupName] ||= newFieldGroup(preferredGroupName, locale.value, isValidArray ? 0 : undefined);
+    const groupName = getGroupName(field.fullPath, isValidArray);
+    if (groupName) {
+      const group = groupsByName[groupName] ||= newFieldGroup(groupName, locale.value, isValidArray ? 0 : undefined);
+      group.isArrayOfNonObjects ||= isArrayField;
       group.fields.push(field);
       return;
     }
 
-    // Fallback: if not specified in fieldGroups, try to group based on fieldLabels
-    const longestMatchingGroupPath = allNamedGroups.find((groupName) => field.fullPath.startsWith(groupName + "."));
-    const matchingGroupName = longestMatchingGroupPath && fieldLabels[locale.value]?.[longestMatchingGroupPath];
-    if (matchingGroupName) {
-      groupsByName[matchingGroupName] ||= newFieldGroup(matchingGroupName, locale.value, isValidArray ? 0 : undefined);
-      groupsByName[matchingGroupName].fields.push(field);
-      return;
-    }
-    
     // Only Singleton groups can fall back to the misc group
     if (field.isSingleton) {
       miscGroup.fields.push(field);
+    }
+  });
+
+  // Remove empty groups
+  Object.keys(groupsByName).forEach((groupName) => {
+    if (!groupsByName?.[groupName]?.fields?.length) {
+      delete groupsByName[groupName];
     }
   });
 
@@ -272,22 +307,37 @@ const singletonFieldGroups = computed<FieldGroupDescriptor[]>(() => {
 const arrayFieldGroups = computed<FieldGroupDescriptor[]>(() => {
   const groups = abstractFieldGroups.value.filter((group) => !group.isSingleton);
   return groups.flatMap((group) => {
-    const arrayLengths = getShallowArrayPaths(group).map((path) =>
+    const arrayPaths = getShallowArrayPaths(group);
+    const arrayLengths = arrayPaths.map((path) =>
       get(jsonData.value, path)?.length ?? 0
     );
     const validLength = Math.min(...arrayLengths);
 
+    // Find the array with the minimum length
+    const minArrayIdx = arrayLengths.indexOf(validLength);
+    const minArrayPath = arrayPaths[minArrayIdx < 0 ? 0 : minArrayIdx];
+    const actualArray = minArrayPath && get(jsonData.value, minArrayPath);
+
     // Create new copies of the original abstract array groups, based on actual array lengths
-    return Array(validLength).fill(0).map((_, i) => {
-      const arrayItemGroup = newFieldGroup(group.nameTemplate, locale.value, i);
-      arrayItemGroup.fields = group.fields.map((field) => ({
+    // However, if two items have the same group name, we do need to merge them.
+    let mergedGroups: Record<string, FieldGroupDescriptor> = {};
+    Array(validLength).fill(0).forEach((_, i) => {
+      const newGroup = newFieldGroup(group.nameTemplate, locale.value, i);
+      const arrayItemGroup = mergedGroups[newGroup.name] ||= newGroup;
+      const numFieldsInGroup = group.fields.length;
+      const numActualFields = Object.keys(actualArray?.[0] ?? {}).length;
+      arrayItemGroup.hasHiddenDetails = !group.isArrayOfNonObjects && numActualFields > numFieldsInGroup;
+      arrayItemGroup.isArrayOfNonObjects = group.isArrayOfNonObjects;
+      arrayItemGroup.fields.push(...group.fields.map((field) => ({
         ...field,
+        name: field.name.replace("{index}", String(i + 1)),
         fullPath: field.fullPathArrFilter.replace("{index}", String(i)),
         fullPathArrFilter: field.fullPathArrFilter.replace("{index}", String(i)),
         arrayIndex: i,
-      })).map(performFieldValidations);
+      })).map(performFieldValidations));
       return arrayItemGroup;
     });
+    return Object.values(mergedGroups);
   });
 });
 

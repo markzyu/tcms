@@ -96,7 +96,7 @@
       const schema: PageContentSchemaJson = JSON.parse(schemaString);
       const input: ToolInput = {
         type: "jsonWithSchema",
-        json: JSON.parse(contentJson.value ?? "{}"),
+        json: null,
         filePath: {
           type: "miniAppContent",
           instanceId: props.instanceId,

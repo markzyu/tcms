@@ -99,6 +99,7 @@ export const withArrayFieldsInitialRender = {
         { testId: "field-undefined-projects.0.description", label: "Description", value: "Drawings and sketches" },
         { testId: "field-undefined-projects.0.url", label: "URL", value: "https://example.com/art" },
       ],
+      hasEditDetails: true,
     },
     {
       name: "Project 2",
@@ -107,6 +108,7 @@ export const withArrayFieldsInitialRender = {
         { testId: "field-undefined-projects.1.description", label: "Description", value: "Compositions and recordings" },
         { testId: "field-undefined-projects.1.url", label: "URL", value: "https://example.com/music" },
       ],
+      hasEditDetails: true,
     },
     {
       name: "Project 3",
@@ -115,6 +117,7 @@ export const withArrayFieldsInitialRender = {
         { testId: "field-undefined-projects.2.description", label: "Description", value: "Software development" },
         { testId: "field-undefined-projects.2.url", label: "URL", value: "https://example.com/programming" },
       ],
+      hasEditDetails: true,
     },
   ],
 };
@@ -136,13 +139,9 @@ export const allGroupNames = [
   "Project 3",
   "Project 4",
   "Project 5",
-  "Project {index}",
-  "Project ",
-  "Task 1",
-  "Task 2",
-  "Task 3",
-  "Task {index}",
-  "Task ",
+  "Project",
+  "Tasks",
+  "Task",
 ];
 
 /** Matches the FieldsInsideArray story: edit projects[1] only. */
@@ -161,10 +160,10 @@ export const fieldsInsideArrayInitialDebugJson = {
 };
 
 export const fieldsInsideArrayInitialRender = {
-  groupNames: ["Project ", "Task 1", "Task 2"],
+  groupNames: ["Project", "Tasks"],
   groups: [
     {
-      name: "Project ",
+      name: "Project",
       fields: [
         { testId: "field-undefined-projects.1.title", label: "Title", value: "Music" },
         { testId: "field-undefined-projects.1.description", label: "Description", value: "Compositions and recordings" },
@@ -172,16 +171,12 @@ export const fieldsInsideArrayInitialRender = {
       ],
     },
     {
-      name: "Task 1",
+      name: "Tasks",
       fields: [
-        { testId: "field-undefined-projects.1.tasks.0", label: "Details", value: "Task 3" },
+        { testId: "field-undefined-projects.1.tasks.0", label: "#1", value: "Task 3" },
+        { testId: "field-undefined-projects.1.tasks.1", label: "#2", value: "Task 4" },
       ],
-    },
-    {
-      name: "Task 2",
-      fields: [
-        { testId: "field-undefined-projects.1.tasks.1", label: "Details", value: "Task 4" },
-      ],
+      hasEditDetails: false,
     },
   ],
 };
@@ -196,14 +191,6 @@ export const fieldsInsideTaskProps = {
   },
 };
 
-export const fieldsInsideTaskInitialRender = {
-  groupNames: ["Task "],
-  groups: [
-    {
-      name: "Task ",
-      fields: [
-        { testId: "field-undefined-projects.1.tasks.0", label: "Details", value: "Task 3" },
-      ],
-    },
-  ],
-};
+export const testIds = {
+  editDetailsBtn: "edit-details-btn",
+} as const;

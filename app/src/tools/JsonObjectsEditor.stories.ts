@@ -56,6 +56,16 @@ export const WithArrayFields: Story = {
       type: 'jsonWithSchema',
       json: {
         name: 'John Doe',
+        twoDimensionalArray: [
+          [1, 2, 3],
+          [4, 5, 6],
+          [7, 8, 9],
+        ],
+        twoDimensionalArrayWithName: [
+          { rowName: "Row 1", columns: [1, 2, 3] },
+          { rowName: "Row 2", columns: [4, 5, 6] },
+          { rowName: "Row 3", columns: [7, 8, 9] },
+        ],
         projects: [
           { title: 'Art', description: 'Drawings and sketches', url: 'https://example.com/art', tasks: ['Task 1', 'Task 2'] },
           { title: 'Music', description: 'Compositions and recordings', url: 'https://example.com/music', tasks: ['Task 3', 'Task 4'] },

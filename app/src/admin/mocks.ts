@@ -4,6 +4,7 @@ import { LcdnInstanceConfig, LcdnStatus } from "./types";
 export const INITIAL_SLUG = "my-contact-card";
 export const INSTANCE_ID = "6fa27a2f-2f1e-413d-a842-424242424242";
 export const INITIAL_CONTENT_JSON = '{"title":"hello"}';
+export const TOOLS_SCREEN_TEST1_CONTENT_JSON = '{"name":"John Doe"}';
 
 export const defaultInstanceConfig: LcdnInstanceConfig = {
   instanceId: INSTANCE_ID,
@@ -25,6 +26,9 @@ function createReadTextFileImplementation() {
     }
     if (path.includes("/content/main.en.json")) {
       return INITIAL_CONTENT_JSON;
+    }
+    if (path.includes("/content/tool-screen-test1.en.json")) {
+      return TOOLS_SCREEN_TEST1_CONTENT_JSON;
     }
     throw new Error(`Unexpected read path: ${path}`);
   });

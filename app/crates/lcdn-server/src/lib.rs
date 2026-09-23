@@ -115,8 +115,6 @@ pub async fn start_lcdn_server(app_state: AppState) -> Result<(), LcdnError> {
     .map_err(LcdnError::CannotRun)?;
 
   let server_task = tokio::spawn(async move {
-    SHOULD_SHUTDOWN.store(false, Ordering::Release);
-
     // Start the server
     let app = make_app(app_state.clone());
     let result = axum::serve(listener, app)
@@ -133,7 +131,6 @@ pub async fn start_lcdn_server(app_state: AppState) -> Result<(), LcdnError> {
 
     // Mark the server as stopped
     SHOULD_RELOAD_CONFIGS.store(false, Ordering::Release);
-    SHOULD_SHUTDOWN.store(false, Ordering::Release);
     PORT.store(0, Ordering::Release);
     result
   });
@@ -160,12 +157,14 @@ pub async fn stop_lcdn_server() -> Result<(), LcdnError> {
     .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
     .is_err()
   {
-    return Ok(());
+    return Err(LcdnError::ShutdownInProgress);
   }
 
   while is_lcdn_server_running() {
     tokio::time::sleep(Duration::from_millis(100)).await;
   }
+
+  SHOULD_SHUTDOWN.store(false, Ordering::Release);
   Ok(())
 }
 

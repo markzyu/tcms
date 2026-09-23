@@ -76,12 +76,21 @@
         "exampleDeepField.field1": "Question 1",
         "exampleDeepField.field2": "Question 2",
         "exampleDeepField.field3": "Question 3",
+        "twoDimensionalArray": "Row of Two Dimensional Array",
+        "twoDimensionalArray.{index}": "Row {index}",
+        "twoDimensionalArray.{index}.{index}": "Col {index}",
+        "twoDimensionalArrayWithName": "Row of Named Two Dimensional Array",
+        "twoDimensionalArrayWithName.{index}": "Row {index}",
+        "twoDimensionalArrayWithName.{index}.rowName": "Row Name",
+        "twoDimensionalArrayWithName.{index}.columns": "Columns",
+        "twoDimensionalArrayWithName.{index}.columns.{index}": "Col {index}",
+        "projects": "Project",
         "projects.{index}": "Project {index}",
         "projects.{index}.title": "Title",
         "projects.{index}.description": "Description",
         "projects.{index}.url": "URL",
-        "projects.{index}.tasks": "Task {index}",
-        "projects.{index}.tasks.{index}": "Details"
+        "projects.{index}.tasks": "Tasks",
+        "projects.{index}.tasks.{index}": "#{index}"
       },
       "ja": {
         "name": "名前",
@@ -98,12 +107,21 @@
         "exampleDeepField.field1": "質問 1",
         "exampleDeepField.field2": "質問 2",
         "exampleDeepField.field3": "質問 3",
+        "twoDimensionalArray": "二次元配列の行",
+        "twoDimensionalArray.{index}": "行 {index}",
+        "twoDimensionalArray.{index}.{index}": "列 {index}",
+        "twoDimensionalArrayWithName": "名前付き二次元配列の行",
+        "twoDimensionalArrayWithName.{index}": "行 {index}",
+        "twoDimensionalArrayWithName.{index}.rowName": "行名",
+        "twoDimensionalArrayWithName.{index}.columns": "列",
+        "twoDimensionalArrayWithName.{index}.columns.{index}": "列 {index}",
+        "projects": "項目",
         "projects.{index}": "項目 {index}",
         "projects.{index}.title": "タイトル",
         "projects.{index}.description": "説明",
         "projects.{index}.url": "URL",
-        "projects.{index}.tasks": "タスク{index}",
-        "projects.{index}.tasks.{index}": "詳細"
+        "projects.{index}.tasks": "タスク",
+        "projects.{index}.tasks.{index}": "{index}."
       }
     },
     "keyFieldsOfArrays": [
@@ -161,6 +179,22 @@
         "required": [
           "field3"
         ]
+      },
+      "twoDimensionalArray": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "twoDimensionalArrayWithName": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "column": { "type": "array", "items": { "type": "string" } }
+          }
+        }
       },
       "projects": {
         "type": "array",
