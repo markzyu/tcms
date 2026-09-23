@@ -179,15 +179,11 @@ const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
 
       // Fallback: if not specified in fieldGroups, try to group based on fieldLabels
       const longestMatchingGroupPath = allNamedGroups.find((groupName) => {
-        if (!isArray) {
-          // Singleton fields use their direct parent
-          return fieldFullPath.startsWith(groupName + ".");
-        }
-        if (fieldFullPath.endsWith(".{index}")) {
+        if (isArray && fieldFullPath.endsWith(".{index}")) {
           // Array non-object fields use their direct parent
           return fieldFullPath == groupName + ".{index}";
         } else {
-          // Array item object fields use their direct parent (the array item, not the array)
+          // Array item objects, and singleton fields use their direct parent
           return fieldFullPath.startsWith(groupName + ".");
         }
       });
@@ -199,13 +195,25 @@ const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
     const fullPathParts = field.fullPath.split(".");
     const isArrayField = fullPathParts.length > 0 && fullPathParts[fullPathParts.length - 1] === "{index}";
     const isArraySubfield = !isArrayField && fullPathParts.length > 1 && fullPathParts[fullPathParts.length - 2] === "{index}";
-    const isValidArray = !field.isSingleton && (isArrayField || isArraySubfield);
-    if (!field.isSingleton && !isValidArray) {
+    const isPathArray = isArrayField || isArraySubfield;
+    const isValidArray = !field.isSingleton && isPathArray;
+
+    // Special case 1: Schema indicates an array item field, but JSON path indicates the field is too deep.
+    // Special case 2: Schema indicates a singleton field, but JSON path indicates the field is inside an array.
+    if ((!field.isSingleton && !isPathArray) || (field.isSingleton && isPathArray)) {
       const parentArrayPath = getShallowArrayPath(field.fullPath);
-      const groupName = parentArrayPath && getGroupName(`${parentArrayPath}.{index}.`, false);
+
+      // Note: We are passing isArray=false to getGroupName, because neither of the two special cases
+      //       from above would cover a non-object array item field.
+      const arrName = parentArrayPath && getGroupName(`${parentArrayPath}.`, false);
+      const arrItemName = parentArrayPath && getGroupName(`${parentArrayPath}.{index}.`, false);
+      const groupName = field.isSingleton ? arrName : arrItemName;
+
       if (groupName) {
         const group = groupsByName[groupName] ||= newFieldGroup(groupName, locale.value, isValidArray ? 0 : undefined);
-        group.hasHiddenDetails ||= true;
+        if (field.isSingleton) {
+          group.fields.push(field);
+        }
       }
       return;
     }
@@ -221,6 +229,13 @@ const abstractFieldGroups = computed<FieldGroupDescriptor[]>(() => {
     // Only Singleton groups can fall back to the misc group
     if (field.isSingleton) {
       miscGroup.fields.push(field);
+    }
+  });
+
+  // Remove empty groups
+  Object.keys(groupsByName).forEach((groupName) => {
+    if (!groupsByName?.[groupName]?.fields?.length) {
+      delete groupsByName[groupName];
     }
   });
 
@@ -292,10 +307,16 @@ const singletonFieldGroups = computed<FieldGroupDescriptor[]>(() => {
 const arrayFieldGroups = computed<FieldGroupDescriptor[]>(() => {
   const groups = abstractFieldGroups.value.filter((group) => !group.isSingleton);
   return groups.flatMap((group) => {
-    const arrayLengths = getShallowArrayPaths(group).map((path) =>
+    const arrayPaths = getShallowArrayPaths(group);
+    const arrayLengths = arrayPaths.map((path) =>
       get(jsonData.value, path)?.length ?? 0
     );
     const validLength = Math.min(...arrayLengths);
+
+    // Find the array with the minimum length
+    const minArrayIdx = arrayLengths.indexOf(validLength);
+    const minArrayPath = arrayPaths[minArrayIdx < 0 ? 0 : minArrayIdx];
+    const actualArray = minArrayPath && get(jsonData.value, minArrayPath);
 
     // Create new copies of the original abstract array groups, based on actual array lengths
     // However, if two items have the same group name, we do need to merge them.
@@ -303,7 +324,9 @@ const arrayFieldGroups = computed<FieldGroupDescriptor[]>(() => {
     Array(validLength).fill(0).forEach((_, i) => {
       const newGroup = newFieldGroup(group.nameTemplate, locale.value, i);
       const arrayItemGroup = mergedGroups[newGroup.name] ||= newGroup;
-      arrayItemGroup.hasHiddenDetails = group.hasHiddenDetails;
+      const numFieldsInGroup = group.fields.length;
+      const numActualFields = Object.keys(actualArray?.[0] ?? {}).length;
+      arrayItemGroup.hasHiddenDetails = !group.isArrayOfNonObjects && numActualFields > numFieldsInGroup;
       arrayItemGroup.isArrayOfNonObjects = group.isArrayOfNonObjects;
       arrayItemGroup.fields.push(...group.fields.map((field) => ({
         ...field,
