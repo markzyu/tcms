@@ -1,6 +1,6 @@
 {
   "name": "@tcms/mini-app-react-test-utils",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "license": "MIT",
   "type": "module",
   "exports": {
@@ -28,9 +28,9 @@
     "react-dom": "^18.0.0"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.14",
+    "@types/jest": "^30.0.0",
     "@types/react": "^18.3.12",
-    "jest": "^29.7.0",
+    "jest": "^30.5.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "typescript": "~6.0.3"

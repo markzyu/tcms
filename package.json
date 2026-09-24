@@ -19,5 +19,8 @@
   },
   "devDependencies": {
     "husky": "^9.1.7"
+  },
+  "resolutions": {
+    "minimatch": "10"
   }
 }
